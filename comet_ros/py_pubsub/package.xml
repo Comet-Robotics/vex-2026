@@ -1,11 +1,14 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>comet_ros</name>
+  <name>py_pubsub</name>
   <version>0.0.0</version>
-  <description>ROS package to be used on our Jetson Orin Nano</description>
+  <description>Simple pubsub package to act as placeholder.</description>
   <maintainer email="jessehuffine3735@gmail.com">Jesse Huffine</maintainer>
   <license>Apache-2.0</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

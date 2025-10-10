@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'comet_ros'
+package_name = 'py_pubsub'
 
 setup(
     name=package_name,
@@ -15,7 +15,7 @@ setup(
     zip_safe=True,
     maintainer='Jesse Huffine',
     maintainer_email='jessehuffine3735@gmail.com',
-    description='ROS package to be used on our Jetson Orin Nano',
+    description='Simple pubsub package to act as placeholder.',
     license='Apache-2.0',
     extras_require={
         'test': [
@@ -24,6 +24,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'talker = py_pubsub.publisher_member_function:main',
+            'listener = py_pubsub.subscriber_member_function:main',
         ],
     },
 )
