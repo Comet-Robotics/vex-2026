@@ -1,5 +1,11 @@
+<<<<<<< HEAD
 comet_ros/build/
 comet_ros/install/
 comet_ros/log/
+=======
+build/
+install/
+log/
+>>>>>>> 0856632e4266cae50d6217040b05e23854347b93
 
 .vscode/
