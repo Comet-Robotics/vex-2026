@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'msgs'
+package_name = 'vex_serial_interface'
 
 setup(
     name=package_name,
@@ -13,9 +13,9 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='jetson2',
-    maintainer_email='jetson2@todo.todo',
-    description='TODO: Package description',
+    maintainer='Jesse Huffine',
+    maintainer_email='jessehuffine3735@gmail.com',
+    description='Handles serial between Jetson and VEX Brain',
     license='Apache-2.0',
     extras_require={
         'test': [
@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'talker = vex_serial_interface.serial_interface:main'
         ],
     },
 )
