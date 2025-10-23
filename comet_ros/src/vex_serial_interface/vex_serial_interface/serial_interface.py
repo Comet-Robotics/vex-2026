@@ -32,7 +32,7 @@ class SerialInterface(Node):
 
         self.connect_serial()
                 
-        self.timer = self.create_timer(0.02, self.serial_loop)
+        self.timer = self.create_timer(0.01, self.serial_loop)
     
     def serial_loop(self):
         if not self.ser or not self.ser.is_open:
