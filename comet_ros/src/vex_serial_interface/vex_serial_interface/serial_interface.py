@@ -5,6 +5,7 @@ import rclpy
 import serial
 from rclpy.node import Node
 from msgs.msg import SensorMsg
+import json
 
 from std_msgs.msg import String
 
@@ -18,6 +19,7 @@ class SerialInterface(Node):
 
         # Publishers
         self.publisher_ = self.create_publisher(SensorMsg, 'sensors', 10)
+        self.string_publisher_ = self.create_publisher(String, 'serial_output', 10)
 
         # Subscribers
         self.subscription_ = self.create_subscription(
@@ -26,8 +28,14 @@ class SerialInterface(Node):
             self.command_callback,
             10
         )
+        self.string_subscription_ = self.create_subscription(
+            String,
+            'serial_commands',
+            self.string_command_callback,
+            10
+        )
         
-        self.declare_parameter('port', '/dev/ttyACM1')
+        self.declare_parameter('port', '/dev/ttyACM2')
         self.declare_parameter('baudrate', 115200)
 
         self.connect_serial()
@@ -44,30 +52,20 @@ class SerialInterface(Node):
             line = self.ser.readline().decode("utf-8", "replace").strip()
             line = "".join(c for c in line if ord(c) < 128 and ord(c) > 0)
 
-            # gets rid of weird sout prefix before every line
-            line = line[5:]
-
-            if len(line) < 8:
-                self.get_logger().warn("Received line too short, skipping.")
+            if len(line) == 0:
                 return
 
-            try:
-                # r1:?r2:?
-                r1 = line[3]
-                r2 = line[7]
+            self.get_logger().info(f"Read line from serial: {line}")
 
-                self.get_logger().info(f"Parsed values - r1: {r1}, r2: {r2}")
+            # get everything after sout
+            if "sout" in line:
+                line = line.split("sout")[-1].strip()
 
-                msg = SensorMsg()
-                msg.r1 = int(r1)
-                msg.r2 = int(r2)
-                self.publisher_.publish(msg)
+            msg = String()
+            msg.data = line
+            self.string_publisher_.publish(msg)
+            self.get_logger().info(f"Published serial output: {line}")
 
-                self.get_logger().info(f"Published SensorMsg: r1={msg.r1}, r2={msg.r2}")
-
-            except Exception as e:
-                self.get_logger().error(f"Error parsing line '{line}': {e}")
-                
         except Exception as e:
             self.get_logger().error(f"Error in serial loop: {e}")
 
@@ -78,9 +76,20 @@ class SerialInterface(Node):
                 self.ser.write((msg.data).encode())
                 self.get_logger().info(f"Sent command to serial: {msg.data}")
             except Exception as e:
-                self.get_logger().error(f"Failed to send command to serial: {e}")
+                self.get_logger().error(f"Failed to send command to serial: {e}")   
         else:
             self.get_logger().warn("Serial port not open. Cannot send command.")
+
+    def string_command_callback(self, msg):
+        self.get_logger().info(f"Received serial command: {msg.data}")
+        if self.ser and self.ser.is_open:
+            try:
+                self.ser.write((msg.data + "\n").encode())
+                self.get_logger().info(f"Sent string command to serial: {msg.data}")
+            except Exception as e:
+                self.get_logger().error(f"Failed to send string command to serial: {e}")
+        else:
+            self.get_logger().warn("Serial port not open. Cannot send string command.")
 
     def connect_serial(self):
         port = self.get_parameter('port').value
@@ -97,7 +106,7 @@ class SerialInterface(Node):
                 if i % 10 == 0:
                     self.get_logger().error(f"Failed to connect to serial port {port}: {e}")
                 self.ser = None
-                time.sleep(0.1)     
+                time.sleep(0.1)
                 i += 1
 
 def main(args=None):
@@ -160,4 +169,4 @@ def service_serial():
             time.sleep(1.0)
 
 service_serial()
-'''
+''' 
