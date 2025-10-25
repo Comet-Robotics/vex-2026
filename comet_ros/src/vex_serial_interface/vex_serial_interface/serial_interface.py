@@ -21,13 +21,6 @@ class SerialInterface(Node):
         self.publisher_ = self.create_publisher(SensorMsg, 'sensors', 10)
         self.string_publisher_ = self.create_publisher(String, 'serial_output', 10)
 
-        # Subscribers
-        self.subscription_ = self.create_subscription(
-            String,
-            'motor_commands',
-            self.command_callback,
-            10
-        )
         self.string_subscription_ = self.create_subscription(
             String,
             'serial_commands',
@@ -35,7 +28,7 @@ class SerialInterface(Node):
             10
         )
         
-        self.declare_parameter('port', '/dev/ttyACM2')
+        self.declare_parameter('port', '/dev/ttyACM1')
         self.declare_parameter('baudrate', 115200)
 
         self.connect_serial()
@@ -50,16 +43,17 @@ class SerialInterface(Node):
         try:
             # reads a line from serial and takes only ascii characters
             line = self.ser.readline().decode("utf-8", "replace").strip()
-            line = "".join(c for c in line if ord(c) < 128 and ord(c) > 0)
-
             if len(line) == 0:
                 return
 
-            self.get_logger().info(f"Read line from serial: {line}")
+            # line = "".join(c for c in line if ord(c) < 128 and ord(c) > 0)
+
 
             # get everything after sout
             if "sout" in line:
                 line = line.split("sout")[-1].strip()
+
+            self.get_logger().info(f"Read line from serial: {line}")
 
             msg = String()
             msg.data = line
@@ -68,17 +62,6 @@ class SerialInterface(Node):
 
         except Exception as e:
             self.get_logger().error(f"Error in serial loop: {e}")
-
-    def command_callback(self, msg):
-        self.get_logger().info(f"Received motor command: {msg.data}")
-        if self.ser and self.ser.is_open:
-            try:
-                self.ser.write((msg.data).encode())
-                self.get_logger().info(f"Sent command to serial: {msg.data}")
-            except Exception as e:
-                self.get_logger().error(f"Failed to send command to serial: {e}")   
-        else:
-            self.get_logger().warn("Serial port not open. Cannot send command.")
 
     def string_command_callback(self, msg):
         self.get_logger().info(f"Received serial command: {msg.data}")

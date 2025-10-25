@@ -4,6 +4,8 @@
 #include "std_msgs/msg/string.hpp"
 #include <nlohmann/json.hpp>
 #include "utils/PID.h"
+#include "msgs/message_generated.h"
+#include "msgs/response_generated.h"
 
 using std::placeholders::_1;
 
@@ -19,41 +21,60 @@ class JsonTest : public rclcpp::Node
     }
 
   private:
+    std::vector<uint8_t> buildCommand(int voltage) {
+        flatbuffers::FlatBufferBuilder builder(1024);
+        auto motor = messages::CreateResponse(builder, voltage);
+        builder.Finish(motor);
+
+        uint8_t* buf = builder.GetBufferPointer();
+        int size = builder.GetSize();
+        return std::vector<uint8_t>(buf, buf + size);
+    }
+
+    std::string toHex(const std::vector<uint8_t>& data) {
+        std::ostringstream oss;
+        for (auto b : data)
+            oss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(b);
+        return oss.str();
+    }
+
+    std::vector<uint8_t> fromHex(const std::string& hex) {
+        std::vector<uint8_t> data;
+        data.reserve(hex.size() / 2);
+        for (size_t i = 0; i < hex.size(); i += 2) {
+            if (i + 1 >= hex.size()) break;  // odd length safety
+            uint8_t byte = static_cast<uint8_t>(strtol(hex.substr(i, 2).c_str(), nullptr, 16));
+            data.push_back(byte);
+        }
+        return data;
+    }
+
     void topic_callback(const std_msgs::msg::String::SharedPtr msg)
     {
         RCLCPP_INFO(this->get_logger(), "I heard: '%s'", msg->data.c_str());
+        // decode hex string
+        std::vector<uint8_t> data = fromHex(msg->data);
 
-        // Process the received message
-        int odom_value = 0, motor_value = 0;
-        try {
-            auto json_msg = nlohmann::json::parse(msg->data);
-            if (json_msg.contains("odom")) {
-                odom_value = json_msg["odom"];
-                RCLCPP_INFO(this->get_logger(), "Odom Value: %d", odom_value);
-            } else {
-                RCLCPP_WARN(this->get_logger(), "Received JSON does not contain 'odom' field.");
-            }
-
-            if (json_msg.contains("motor")) {
-                motor_value = json_msg["motor"];
-                RCLCPP_INFO(this->get_logger(), "Motor Value: %d", motor_value);
-            } else {
-                RCLCPP_WARN(this->get_logger(), "Received JSON does not contain 'motor' field.");
-            }
-
-            int output = pid.update(odom_value, motor_value);
-            RCLCPP_INFO(this->get_logger(), "PID Output: %d", output);
-
-            nlohmann::json output_json = nlohmann::json::object();
-            output_json["motor"] = output;
-
-            // Publish PID output
-            auto output_msg = std_msgs::msg::String();
-            output_msg.data = output_json.dump();
-            publisher_->publish(output_msg);
-        } catch (nlohmann::json::parse_error& e) {
-            RCLCPP_ERROR(this->get_logger(), "Failed to parse JSON: %s", e.what());
+        // verify and parse flatbuffer
+        auto verifier = flatbuffers::Verifier(data.data(), data.size());
+        if (!messages::VerifyCommandBuffer(verifier)) {
+            RCLCPP_ERROR(this->get_logger(), "Invalid flatbuffer message");
+            return;
         }
+
+        auto cmd = messages::GetCommand(data.data());
+        RCLCPP_INFO(this->get_logger(), "Odom: %d, Motor: %d", cmd->odom(), cmd->motor());
+
+        // run PID controller
+        int output = pid.update(cmd->odom(), cmd->motor());
+        RCLCPP_INFO(this->get_logger(), "PID output: %d", output);
+
+        // create response flatbuffer
+        auto buf = buildCommand(output);
+        std::string hexStr = toHex(buf);
+        auto outMsg = std_msgs::msg::String();
+        outMsg.data = hexStr;
+        publisher_->publish(outMsg);
     }
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
