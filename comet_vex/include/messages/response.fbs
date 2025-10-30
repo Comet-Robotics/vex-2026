@@ -1,0 +1,7 @@
+namespace messages;
+
+table Response {
+    voltage:int;
+}
+
+root_type Response;

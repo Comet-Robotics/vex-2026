@@ -1,0 +1,8 @@
+namespace messages;
+
+table Command {
+    odom:int;
+    motor:int;
+}
+
+root_type Command;
