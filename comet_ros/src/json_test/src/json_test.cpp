@@ -2,6 +2,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
+#include "std_msgs/msg/int32.hpp"
 #include <nlohmann/json.hpp>
 #include "utils/PID.h"
 #include "msgs/message_generated.h"
@@ -18,6 +19,8 @@ class JsonTest : public rclcpp::Node
         subscription_ = this->create_subscription<std_msgs::msg::String>(
             "serial_output", 10, std::bind(&JsonTest::topic_callback, this, _1));
         publisher_ = this->create_publisher<std_msgs::msg::String>("serial_commands", 10);
+        odom_publisher_ = this->create_publisher<std_msgs::msg::Int32>("odom", 10);
+        motor_publisher_ = this->create_publisher<std_msgs::msg::Int32>("motor", 10);
     }
 
   private:
@@ -51,7 +54,7 @@ class JsonTest : public rclcpp::Node
 
     void topic_callback(const std_msgs::msg::String::SharedPtr msg)
     {
-        RCLCPP_INFO(this->get_logger(), "I heard: '%s'", msg->data.c_str());
+        // RCLCPP_INFO(this->get_logger(), "I heard: '%s'", msg->data.c_str());
         // decode hex string
         std::vector<uint8_t> data = fromHex(msg->data);
 
@@ -59,26 +62,41 @@ class JsonTest : public rclcpp::Node
         auto verifier = flatbuffers::Verifier(data.data(), data.size());
         if (!messages::VerifyCommandBuffer(verifier)) {
             RCLCPP_ERROR(this->get_logger(), "Invalid flatbuffer message");
+            RCLCPP_ERROR(this->get_logger(), "Data size: %zu", data.size());
+            RCLCPP_ERROR(this->get_logger(), "Hex: %s", msg->data.c_str());
+            RCLCPP_ERROR(this->get_logger(), "Buffer: %s", toHex(data).c_str());
             return;
         }
 
         auto cmd = messages::GetCommand(data.data());
-        RCLCPP_INFO(this->get_logger(), "Odom: %d, Motor: %d", cmd->odom(), cmd->motor());
+        // RCLCPP_INFO(this->get_logger(), "Odom: %d, Motor: %d", cmd->odom(), cmd->motor());
 
         // run PID controller
         int output = pid.update(cmd->odom(), cmd->motor());
-        RCLCPP_INFO(this->get_logger(), "PID output: %d", output);
+        // RCLCPP_INFO(this->get_logger(), "PID output: %d", output);
 
         // create response flatbuffer
         auto buf = buildCommand(output);
         std::string hexStr = toHex(buf);
         auto outMsg = std_msgs::msg::String();
         outMsg.data = hexStr;
+
+        auto odomMsg = std_msgs::msg::Int32();
+        auto motorMsg = std_msgs::msg::Int32();
+
+        odomMsg.data = cmd->odom();
+        motorMsg.data = cmd->motor();
+
+        odom_publisher_->publish(odomMsg);
+        motor_publisher_->publish(motorMsg);
+
         publisher_->publish(outMsg);
     }
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
-    PID pid{30.0, 0.0, 0.1};
+    rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr odom_publisher_;
+    rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr motor_publisher_;
+    PID pid{20.0, 0.0, 0.5};
 };
 
 int main(int argc, char * argv[])
