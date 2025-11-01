@@ -126,6 +126,7 @@ class Serial : public Device {
 	 * pros::Serial serial(1);
 	 * serial.flush();
 	 * \endcode
+	 
 	 */
 	virtual std::int32_t flush() const;
 

@@ -1,5 +1,4 @@
 #include "tasks/teleop.h"
-#include "nlohmann/json.hpp"
 #include "pros/misc.h"
 #include "pros/misc.hpp"
 #include "pros/motors.hpp"
@@ -8,7 +7,13 @@
 #include "flatbuffers/flatbuffers.h"
 #include "messages/message_generated.h"
 #include "messages/response_generated.h"
+#include <cstdint>
 #include <fstream>
+#include "pros/serial.h"
+#include "pros/serial.hpp"
+#include "pros/adi.hpp"
+extern "C" int32_t inp_buffer_read(uint32_t timeout);
+
 
 void opcontrol_initialize() {}
 
@@ -40,6 +45,22 @@ std::vector<uint8_t> fromHex(const std::string& hex) {
     return data;
 }
 
+std::string read_serial_nonblocking(size_t maxlen = 256) {
+    if (maxlen == 0) return std::string();
+
+    std::string out;
+    out.reserve(maxlen);
+
+    for (size_t i = 0; i < maxlen; ++i) {
+        int32_t c = inp_buffer_read(0); // 0 = non-blocking read
+        if (c == -1) break; // no more data
+        out.push_back(static_cast<char>(c));
+        if (c == '\n') break; // stop at new line
+    }
+    return out;
+}
+
+
 void opcontrol() {  
     flatbuffers::FlatBufferBuilder builder;
 
@@ -60,17 +81,16 @@ void opcontrol() {
         printf("%s\n", hexStr.c_str());
 
         // receive data
-        std::string input;
-        std::cin >> input;
+        std::string input = read_serial_nonblocking(1024);
 
         if (!input.empty()) {
             // decode hex string to byte array
-            auto receivedBuf = fromHex(input);
+            auto receivedBuf = fromHex(input);  
 
             // verify and parse
             auto verifier = flatbuffers::Verifier(receivedBuf.data(), receivedBuf.size());
             if (!messages::VerifyCommandBuffer(verifier)) {
-                return;
+                continue;
             }
             auto cmd = messages::GetResponse(receivedBuf.data());
             int voltage = cmd->voltage();
