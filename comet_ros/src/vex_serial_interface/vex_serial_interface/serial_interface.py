@@ -27,9 +27,9 @@ class SerialInterface(Node):
             self.string_command_callback,
             10
         )
-        
-        self.declare_parameter('port', '/dev/ttyACM1')
-        self.declare_parameter('baudrate', 115200)
+
+        self.ports = ['/dev/ttyACM1', '/dev/ttyACM2']
+        self.baudrate = 115200
 
         self.connect_serial()
                 
@@ -43,15 +43,14 @@ class SerialInterface(Node):
         try:
             # reads a line from serial and takes only ascii characters
             line = self.ser.readline().decode("utf-8", "replace").strip()
+            if "sout" in line:
+                line = line.split("sout")[-1].strip()
+                
             if len(line) == 0:
                 return
 
             # line = "".join(c for c in line if ord(c) < 128 and ord(c) > 0)
 
-
-            # get everything after sout
-            if "sout" in line:
-                line = line.split("sout")[-1].strip()
 
             self.get_logger().info(f"Read line from serial: {line}")
 
@@ -60,37 +59,40 @@ class SerialInterface(Node):
             self.string_publisher_.publish(msg)
             self.get_logger().info(f"Published serial output: {line}")
 
+        except serial.SerialException as e:
+            self.get_logger().error(f"Serial exception: {e}")
+            self.connect_serial()  # if serial disconnects somehow, probably the weird tty1->tty2 switch
+
         except Exception as e:
             self.get_logger().error(f"Error in serial loop: {e}")
 
     def string_command_callback(self, msg):
-        self.get_logger().info(f"Received serial command: {msg.data}")
+        # self.get_logger().info(f"Received serial command: {msg.data}")
         if self.ser and self.ser.is_open:
             try:
                 self.ser.write((msg.data + "\n").encode())
-                self.get_logger().info(f"Sent string command to serial: {msg.data}")
+                # self.get_logger().info(f"Sent string command to serial: {msg.data}")
             except Exception as e:
                 self.get_logger().error(f"Failed to send string command to serial: {e}")
         else:
             self.get_logger().warn("Serial port not open. Cannot send string command.")
 
     def connect_serial(self):
-        port = self.get_parameter('port').value
-        baudrate = self.get_parameter('baudrate').value
-
         connected = False
         i = 0
         while not connected:
-            try:
-                self.ser = serial.Serial(port, baudrate, timeout=0.01)
-                self.get_logger().info(f"Connected to serial port {port} at {baudrate} baud.")
-                connected = True
-            except serial.SerialException as e:
-                if i % 10 == 0:
-                    self.get_logger().error(f"Failed to connect to serial port {port}: {e}")
-                self.ser = None
-                time.sleep(0.1)
-                i += 1
+            for port in self.ports:
+                if i % 6767 == 0:
+                    self.get_logger().info(f"Trying port: {port}")
+                try:
+                    self.ser = serial.Serial(port, self.baudrate, timeout=0.01)
+                    self.get_logger().info(f"Connected to serial port {port} at {self.baudrate} baud.")
+                    connected = True
+                    break
+                except serial.SerialException as e:
+                    if i % 6767 == 0:
+                        self.get_logger().error(f"Failed to connect to serial port {port}: {e}")
+                    i += 1
 
 def main(args=None):
     rclpy.init(args=args)
