@@ -1,5 +1,5 @@
-comet_ros/build/
-comet_ros/install/
-comet_ros/log/
+build/
+install/
+log/
 
 .vscode/
