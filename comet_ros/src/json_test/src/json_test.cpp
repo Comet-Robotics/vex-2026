@@ -27,7 +27,7 @@ class JsonTest : public rclcpp::Node
     }
 
     private:
-    std::vector<uint8_t> buildCommand(std::vector<int> voltages) {
+    std::vector<uint8_t> buildResponse(std::vector<int> voltages) {
         flatbuffers::FlatBufferBuilder builder(1024);
         auto v_offset = builder.CreateVector(voltages);
         auto voltages_offset = messages::CreateVoltages(builder, v_offset);
@@ -75,18 +75,25 @@ class JsonTest : public rclcpp::Node
         }
 
         auto cmd = messages::GetController(data.data());
-        // RCLCPP_INFO(this->get_logger(), "Odom: %d, Motor: %d", cmd->odom(), cmd->motor());
 
         float left_stick_x = cmd->left_stick_x();
         float left_stick_y = cmd->left_stick_y();
         float right_stick_x = cmd->right_stick_x();
         float right_stick_y = cmd->right_stick_y();
 
+        RCLCPP_INFO(this->get_logger(), "Left Stick: (%.2f, %.2f), Right Stick: (%.2f, %.2f)",
+                        left_stick_x, left_stick_y, right_stick_x, right_stick_y);
+
         drivebase->errorDrive(left_stick_y, right_stick_x);
+
+        RCLCPP_INFO(this->get_logger(), "Voltages:");
+        for (size_t i = 0; i < voltages.size(); i++) {
+            RCLCPP_INFO(this->get_logger(), " Motor %zu: %d", i + 1, voltages[i]);
+        }
 
         // create response flatbuffer
         std::vector<int> voltagesVec = std::vector<int>(voltages.begin(), voltages.end());
-        auto buf = buildCommand(voltagesVec);
+        auto buf = buildResponse(voltagesVec);
         std::string hexStr = toHex(buf);
         auto outMsg = std_msgs::msg::String();
         outMsg.data = hexStr;

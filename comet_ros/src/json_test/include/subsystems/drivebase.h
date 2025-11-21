@@ -8,9 +8,6 @@ class Drivebase
     public:
     void errorDrive(float drive, float turn)
     {
-        drive /= 127.0;
-        turn /= 127.0;
-
         turn /= ((drive < 0.5) ? 1.5 : 1.2);
 
         // int driveSign = ((drive >= 0)? 1 : -1);
@@ -22,15 +19,15 @@ class Drivebase
         int left_voltage = (drive + turn) * 12000;
         int right_voltage = (drive - turn) * 12000;
 
-        for (size_t i = 0; i < drivebase::LEFT_PORTS.size(); i++) {
+        for (int port : drivebase::LEFT_PORTS) {
             // left motors
-            int port = drivebase::LEFT_PORTS[i];
-            voltages[i] = left_voltage;
+            setVoltage(port, left_voltage);
+            // printf("Left Motor %d Voltage: %d\n", port, left_voltage);
         }
-        for (size_t i = 0; i < drivebase::RIGHT_PORTS.size(); i++) {
+        for (int port : drivebase::RIGHT_PORTS) {
             // right motors
-            int port = drivebase::RIGHT_PORTS[i];
-            voltages[i] = right_voltage;
+            setVoltage(port, right_voltage);
+            // printf("Right Motor %d Voltage: %d\n", port, right_voltage);
         }
     }
     
