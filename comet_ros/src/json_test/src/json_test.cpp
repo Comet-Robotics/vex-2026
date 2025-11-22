@@ -7,27 +7,32 @@
 #include "utils/PID.h"
 #include "msgs/message_generated.h"
 #include "msgs/response_generated.h"
+#include "subsystems/drivebase.h"
+#include "constants.h"
+#include <vector>
 
 using std::placeholders::_1;
 
 class JsonTest : public rclcpp::Node
 {
-  public:
+    public:
     JsonTest()
     : Node("json_test")
     {
         subscription_ = this->create_subscription<std_msgs::msg::String>(
             "serial_output", 10, std::bind(&JsonTest::topic_callback, this, _1));
         publisher_ = this->create_publisher<std_msgs::msg::String>("serial_commands", 10);
-        odom_publisher_ = this->create_publisher<std_msgs::msg::Int32>("odom", 10);
-        motor_publisher_ = this->create_publisher<std_msgs::msg::Int32>("motor", 10);
+
+        drivebase = new Drivebase();
     }
 
-  private:
-    std::vector<uint8_t> buildCommand(int voltage) {
+    private:
+    std::vector<uint8_t> buildResponse(std::vector<int> voltages) {
         flatbuffers::FlatBufferBuilder builder(1024);
-        auto motor = messages::CreateResponse(builder, voltage);
-        builder.Finish(motor);
+        auto v_offset = builder.CreateVector(voltages);
+        auto voltages_offset = messages::CreateVoltages(builder, v_offset);
+        auto response_offset = messages::CreateResponse(builder, voltages_offset);
+        builder.Finish(response_offset);
 
         uint8_t* buf = builder.GetBufferPointer();
         int size = builder.GetSize();
@@ -54,13 +59,14 @@ class JsonTest : public rclcpp::Node
 
     void topic_callback(const std_msgs::msg::String::SharedPtr msg)
     {
+        RCLCPP_INFO(this->get_logger(), "Received message: %s", msg->data.c_str());
         // RCLCPP_INFO(this->get_logger(), "I heard: '%s'", msg->data.c_str());
         // decode hex string
         std::vector<uint8_t> data = fromHex(msg->data);
 
         // verify and parse flatbuffer
         auto verifier = flatbuffers::Verifier(data.data(), data.size());
-        if (!messages::VerifyCommandBuffer(verifier)) {
+        if (!messages::VerifyControllerBuffer(verifier)) {
             RCLCPP_ERROR(this->get_logger(), "Invalid flatbuffer message");
             RCLCPP_ERROR(this->get_logger(), "Data size: %zu", data.size());
             RCLCPP_ERROR(this->get_logger(), "Hex: %s", msg->data.c_str());
@@ -68,41 +74,44 @@ class JsonTest : public rclcpp::Node
             return;
         }
 
-        auto cmd = messages::GetCommand(data.data());
-        // RCLCPP_INFO(this->get_logger(), "Odom: %d, Motor: %d", cmd->odom(), cmd->motor());
+        auto cmd = messages::GetController(data.data());
 
-        // run PID controller
-        int output = pid.update(cmd->odom(), cmd->motor());
-        // RCLCPP_INFO(this->get_logger(), "PID output: %d", output);
+        float left_stick_x = cmd->left_stick_x();
+        float left_stick_y = cmd->left_stick_y();
+        float right_stick_x = cmd->right_stick_x();
+        float right_stick_y = cmd->right_stick_y();
+
+        RCLCPP_INFO(this->get_logger(), "Left Stick: (%.2f, %.2f), Right Stick: (%.2f, %.2f)",
+                        left_stick_x, left_stick_y, right_stick_x, right_stick_y);
+
+        drivebase->errorDrive(left_stick_y, right_stick_x);
+
+        RCLCPP_INFO(this->get_logger(), "Voltages:");
+        for (size_t i = 0; i < voltages.size(); i++) {
+            RCLCPP_INFO(this->get_logger(), " Motor %zu: %d", i + 1, voltages[i]);
+        }
 
         // create response flatbuffer
-        auto buf = buildCommand(output);
+        std::vector<int> voltagesVec = std::vector<int>(voltages.begin(), voltages.end());
+        auto buf = buildResponse(voltagesVec);
         std::string hexStr = toHex(buf);
         auto outMsg = std_msgs::msg::String();
         outMsg.data = hexStr;
 
-        auto odomMsg = std_msgs::msg::Int32();
-        auto motorMsg = std_msgs::msg::Int32();
-
-        odomMsg.data = cmd->odom();
-        motorMsg.data = cmd->motor();
-
-        odom_publisher_->publish(odomMsg);
-        motor_publisher_->publish(motorMsg);
-
         publisher_->publish(outMsg);
+        RCLCPP_INFO(this->get_logger(), "Published response: %s", outMsg.data.c_str());
     }
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
     rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr odom_publisher_;
     rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr motor_publisher_;
-    PID pid{20.0, 0.0, 0.5};
+    Drivebase* drivebase;
 };
 
 int main(int argc, char * argv[])
 {
-  rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<JsonTest>());
-  rclcpp::shutdown();
-  return 0;
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<JsonTest>());
+    rclcpp::shutdown();
+    return 0;
 }

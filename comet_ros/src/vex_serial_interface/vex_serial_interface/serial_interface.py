@@ -18,7 +18,6 @@ class SerialInterface(Node):
         print("Starting Serial Interface Node")
 
         # Publishers
-        self.publisher_ = self.create_publisher(SensorMsg, 'sensors', 10)
         self.string_publisher_ = self.create_publisher(String, 'serial_output', 10)
 
         self.string_subscription_ = self.create_subscription(
@@ -67,11 +66,11 @@ class SerialInterface(Node):
             self.get_logger().error(f"Error in serial loop: {e}")
 
     def string_command_callback(self, msg):
-        # self.get_logger().info(f"Received serial command: {msg.data}")
+        self.get_logger().info(f"Received serial command: {msg.data}")
         if self.ser and self.ser.is_open:
             try:
                 self.ser.write((msg.data + "\n").encode())
-                # self.get_logger().info(f"Sent string command to serial: {msg.data}")
+                self.get_logger().info(f"Sent string command to serial: {msg.data}")
             except Exception as e:
                 self.get_logger().error(f"Failed to send string command to serial: {e}")
         else:
@@ -110,48 +109,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
-
-'''
-import serial
-import json
-import time
- 
-def service_serial():
-    port = "/dev/ttyACM1"
-    baud = 115200
-    ser = serial.Serial(port, baud, timeout=None)
- 
-    while True:
-        try:
-            if not ser:
-                ser = serial.Serial(port, baud, timeout=None)
-            line = ser.readline().decode("utf-8", "replace").strip()
-            line = "".join(c for c in line if ord(c) < 128 and ord(c) > 0)
-            line = line[5:]
-
-            print(line)
-            if len(line) < 8 :
-                print("line too short, continuing with next")
-                continue
-
-            try:
-                r1 = line[3]
-                r2 = line[7]
-
-                print("attempting parse - r1:", r1, "r2:", r2)
-
-                ser.write((str((int(r1) - int(r2)) * 6000) + "\n").encode())
-
-            except Exception as e:
-                print("encountered error with line, continuing with next")
-                print(e)
-                continue
-            time.sleep(1.0 / 50.0)  
-        except serial.SerialException as e:
-            print("Encountered error in serial loop:", e)
-            del ser
-            time.sleep(1.0)
-
-service_serial()
-''' 
