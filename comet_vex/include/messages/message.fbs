@@ -1,8 +1,10 @@
 namespace messages;
 
-table Command {
-    odom:int;
-    motor:int;
+table Controller {
+    left_stick_x:float;
+    left_stick_y:float;
+    right_stick_x:float;
+    right_stick_y:float;
 }
 
-root_type Command;
+root_type Controller;

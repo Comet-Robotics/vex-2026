@@ -15,20 +15,75 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
 
 namespace messages {
 
+struct Voltages;
+struct VoltagesBuilder;
+
 struct Response;
 struct ResponseBuilder;
+
+struct Voltages FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef VoltagesBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_V = 4
+  };
+  const ::flatbuffers::Vector<int32_t> *v() const {
+    return GetPointer<const ::flatbuffers::Vector<int32_t> *>(VT_V);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_V) &&
+           verifier.VerifyVector(v()) &&
+           verifier.EndTable();
+  }
+};
+
+struct VoltagesBuilder {
+  typedef Voltages Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_v(::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> v) {
+    fbb_.AddOffset(Voltages::VT_V, v);
+  }
+  explicit VoltagesBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Voltages> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Voltages>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Voltages> CreateVoltages(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> v = 0) {
+  VoltagesBuilder builder_(_fbb);
+  builder_.add_v(v);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<Voltages> CreateVoltagesDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const std::vector<int32_t> *v = nullptr) {
+  auto v__ = v ? _fbb.CreateVector<int32_t>(*v) : 0;
+  return messages::CreateVoltages(
+      _fbb,
+      v__);
+}
 
 struct Response FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef ResponseBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_VOLTAGE = 4
+    VT_VOLTAGES = 4
   };
-  int32_t voltage() const {
-    return GetField<int32_t>(VT_VOLTAGE, 0);
+  const messages::Voltages *voltages() const {
+    return GetPointer<const messages::Voltages *>(VT_VOLTAGES);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_VOLTAGE, 4) &&
+           VerifyOffset(verifier, VT_VOLTAGES) &&
+           verifier.VerifyTable(voltages()) &&
            verifier.EndTable();
   }
 };
@@ -37,8 +92,8 @@ struct ResponseBuilder {
   typedef Response Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_voltage(int32_t voltage) {
-    fbb_.AddElement<int32_t>(Response::VT_VOLTAGE, voltage, 0);
+  void add_voltages(::flatbuffers::Offset<messages::Voltages> voltages) {
+    fbb_.AddOffset(Response::VT_VOLTAGES, voltages);
   }
   explicit ResponseBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -53,9 +108,9 @@ struct ResponseBuilder {
 
 inline ::flatbuffers::Offset<Response> CreateResponse(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    int32_t voltage = 0) {
+    ::flatbuffers::Offset<messages::Voltages> voltages = 0) {
   ResponseBuilder builder_(_fbb);
-  builder_.add_voltage(voltage);
+  builder_.add_voltages(voltages);
   return builder_.Finish();
 }
 

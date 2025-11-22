@@ -7,6 +7,7 @@
 #include "flatbuffers/flatbuffers.h"
 #include "messages/message_generated.h"
 #include "messages/response_generated.h"
+#include <cassert>
 #include <cstdint>
 #include <fstream>
 #include "pros/serial.h"
@@ -17,9 +18,15 @@ extern "C" int32_t inp_buffer_read(uint32_t timeout);
 
 void opcontrol_initialize() {}
 
-std::vector<uint8_t> buildCommand(int odom_pos, int motor_pos) {
+std::vector<uint8_t> buildController(float left_x, float left_y, float right_x, float right_y) {
     flatbuffers::FlatBufferBuilder builder(1024);
-    auto motor = messages::CreateCommand(builder, odom_pos, motor_pos);
+    auto motor = messages::CreateController(
+        builder, 
+        left_x, 
+        left_y, 
+        right_x, 
+        right_y
+    );
     builder.Finish(motor);
 
     uint8_t* buf = builder.GetBufferPointer();
@@ -45,7 +52,7 @@ std::vector<uint8_t> fromHex(const std::string& hex) {
     return data;
 }
 
-std::string read_serial_nonblocking(size_t maxlen = 256) {
+std::string read_serial_nonblocking(size_t maxlen) {
     if (maxlen == 0) return std::string();
 
     std::string out;
@@ -65,39 +72,70 @@ void opcontrol() {
     flatbuffers::FlatBufferBuilder builder;
 
     pros::Controller master(pros::E_CONTROLLER_MASTER);
-    pros::Rotation odom(13);
-    pros::Motor motor(16);
+    std::vector<pros::Motor> motors;
+    for (int i = 1; i <= 20; ++i) {
+        motors.push_back(pros::Motor(i));
+    }
 
-    odom.reset_position();
+    
 
     while (true) {
-        int odom_pos = odom.get_position();
-        int motor_pos = motor.get_position();
+        // printf("Starting loop\n");
 
         // send data
-        auto buf = buildCommand(odom_pos, motor_pos);
+        auto buf = buildController(
+            master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X) / 127.0f,
+            master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) / 127.0f,
+            master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X) / 127.0f,
+            master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) / 127.0f
+        );
         auto hexStr = toHex(buf);
 
+        fflush(stdout);
         printf("%s\n", hexStr.c_str());
 
         // receive data
-        std::string input = read_serial_nonblocking(1024);
+        // printf("Receiving data...\n");
+        std::string input = read_serial_nonblocking(2048);
+        // printf("Received string: %s\n", input.c_str());
 
         if (!input.empty()) {
             // decode hex string to byte array
-            auto receivedBuf = fromHex(input);  
+            auto receivedBuf = fromHex(input);
+
+            // printf("Received %zu bytes\n", receivedBuf.size());
 
             // verify and parse
             auto verifier = flatbuffers::Verifier(receivedBuf.data(), receivedBuf.size());
-            if (!messages::VerifyCommandBuffer(verifier)) {
+            if (!messages::VerifyResponseBuffer(verifier)) {
+                printf("Could not verify response buffer on VEX side\n");
                 continue;
             }
             auto cmd = messages::GetResponse(receivedBuf.data());
-            int voltage = cmd->voltage();
 
-            // apply voltage to motor
-            motor.move_voltage(voltage);
+            int motor_voltages[20];
+            
+            size_t motor_count = cmd->voltages()->v()->size();
+            size_t apply_count = std::min(motor_count, motors.size());
+
+            for (size_t i = 0; i < apply_count; ++i) {
+                int voltage = cmd->voltages()->v()->Get(i);
+                // printf("Motor %zu voltage: %d mV\n", i + 1, voltage);
+                motor_voltages[i] = voltage;
+            }
+
+            for (size_t i = 0; i < apply_count; ++i) {
+                motors[i].move_voltage(motor_voltages[i]);
+            }
+
+            if (motor_count != apply_count) {
+                printf("Warning: got %zu voltages but only %zu motors\n",
+                    motor_count, motors.size());
+            }
+
         }
+
+        // printf("Loop complete\n");
 
         pros::delay(10);
     }

@@ -16,7 +16,7 @@ constexpr double ROBOT_MAX_ANGULAR_SPEED = 3.14159;
 constexpr double LIDAR_MAX_RANGE = 15.0;
 constexpr int NUM_LIDAR_BEAMS = 20;
 constexpr double MEAS_NOISE_LIDAR = 0.1;
-constexpr int NUM_PARTICLES = 250;
+constexpr int NUM_PARTICLES = 500;
 constexpr double PARTICLE_DROP_FRACTION = 0.75;
 
 // Simulation settings
@@ -114,15 +114,19 @@ std::vector<Pose> predict_particles(const std::vector<Pose>& particles, double s
     new_particles.reserve(NUM_PARTICLES);
     double xy_noise = 0.03;
     double theta_noise = 0.0075;
+    double speed_noise = 0.1;
+    double angular_noise = 0.05;
 
     for (const auto& p : particles) {
         double noise_x = noise_dist(rng) * xy_noise;
         double noise_y = noise_dist(rng) * xy_noise;
         double noise_theta = noise_dist(rng) * theta_noise;
+        double noise_speed = noise_dist(rng) * speed_noise;
+        double noise_angular = noise_dist(rng) * angular_noise;
         new_particles.push_back({
-            p.x + std::cos(p.theta) * speed * dt + noise_x,
-            p.y + std::sin(p.theta) * speed * dt + noise_y,
-            p.theta + angular_speed * dt + noise_theta
+            p.x + std::cos(p.theta) * (speed + noise_speed) * dt + noise_x,
+            p.y + std::sin(p.theta) * (speed + noise_speed) * dt + noise_y,
+            p.theta + (angular_speed + noise_angular) * dt + noise_theta
         });
     }
     return new_particles;

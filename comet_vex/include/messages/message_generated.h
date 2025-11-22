@@ -15,87 +15,107 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
 
 namespace messages {
 
-struct Command;
-struct CommandBuilder;
+struct Controller;
+struct ControllerBuilder;
 
-struct Command FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef CommandBuilder Builder;
+struct Controller FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ControllerBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ODOM = 4,
-    VT_MOTOR = 6
+    VT_LEFT_STICK_X = 4,
+    VT_LEFT_STICK_Y = 6,
+    VT_RIGHT_STICK_X = 8,
+    VT_RIGHT_STICK_Y = 10
   };
-  int32_t odom() const {
-    return GetField<int32_t>(VT_ODOM, 0);
+  float left_stick_x() const {
+    return GetField<float>(VT_LEFT_STICK_X, 0.0f);
   }
-  int32_t motor() const {
-    return GetField<int32_t>(VT_MOTOR, 0);
+  float left_stick_y() const {
+    return GetField<float>(VT_LEFT_STICK_Y, 0.0f);
+  }
+  float right_stick_x() const {
+    return GetField<float>(VT_RIGHT_STICK_X, 0.0f);
+  }
+  float right_stick_y() const {
+    return GetField<float>(VT_RIGHT_STICK_Y, 0.0f);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_ODOM, 4) &&
-           VerifyField<int32_t>(verifier, VT_MOTOR, 4) &&
+           VerifyField<float>(verifier, VT_LEFT_STICK_X, 4) &&
+           VerifyField<float>(verifier, VT_LEFT_STICK_Y, 4) &&
+           VerifyField<float>(verifier, VT_RIGHT_STICK_X, 4) &&
+           VerifyField<float>(verifier, VT_RIGHT_STICK_Y, 4) &&
            verifier.EndTable();
   }
 };
 
-struct CommandBuilder {
-  typedef Command Table;
+struct ControllerBuilder {
+  typedef Controller Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_odom(int32_t odom) {
-    fbb_.AddElement<int32_t>(Command::VT_ODOM, odom, 0);
+  void add_left_stick_x(float left_stick_x) {
+    fbb_.AddElement<float>(Controller::VT_LEFT_STICK_X, left_stick_x, 0.0f);
   }
-  void add_motor(int32_t motor) {
-    fbb_.AddElement<int32_t>(Command::VT_MOTOR, motor, 0);
+  void add_left_stick_y(float left_stick_y) {
+    fbb_.AddElement<float>(Controller::VT_LEFT_STICK_Y, left_stick_y, 0.0f);
   }
-  explicit CommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  void add_right_stick_x(float right_stick_x) {
+    fbb_.AddElement<float>(Controller::VT_RIGHT_STICK_X, right_stick_x, 0.0f);
+  }
+  void add_right_stick_y(float right_stick_y) {
+    fbb_.AddElement<float>(Controller::VT_RIGHT_STICK_Y, right_stick_y, 0.0f);
+  }
+  explicit ControllerBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Command> Finish() {
+  ::flatbuffers::Offset<Controller> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Command>(end);
+    auto o = ::flatbuffers::Offset<Controller>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Command> CreateCommand(
+inline ::flatbuffers::Offset<Controller> CreateController(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    int32_t odom = 0,
-    int32_t motor = 0) {
-  CommandBuilder builder_(_fbb);
-  builder_.add_motor(motor);
-  builder_.add_odom(odom);
+    float left_stick_x = 0.0f,
+    float left_stick_y = 0.0f,
+    float right_stick_x = 0.0f,
+    float right_stick_y = 0.0f) {
+  ControllerBuilder builder_(_fbb);
+  builder_.add_right_stick_y(right_stick_y);
+  builder_.add_right_stick_x(right_stick_x);
+  builder_.add_left_stick_y(left_stick_y);
+  builder_.add_left_stick_x(left_stick_x);
   return builder_.Finish();
 }
 
-inline const messages::Command *GetCommand(const void *buf) {
-  return ::flatbuffers::GetRoot<messages::Command>(buf);
+inline const messages::Controller *GetController(const void *buf) {
+  return ::flatbuffers::GetRoot<messages::Controller>(buf);
 }
 
-inline const messages::Command *GetSizePrefixedCommand(const void *buf) {
-  return ::flatbuffers::GetSizePrefixedRoot<messages::Command>(buf);
+inline const messages::Controller *GetSizePrefixedController(const void *buf) {
+  return ::flatbuffers::GetSizePrefixedRoot<messages::Controller>(buf);
 }
 
-inline bool VerifyCommandBuffer(
+inline bool VerifyControllerBuffer(
     ::flatbuffers::Verifier &verifier) {
-  return verifier.VerifyBuffer<messages::Command>(nullptr);
+  return verifier.VerifyBuffer<messages::Controller>(nullptr);
 }
 
-inline bool VerifySizePrefixedCommandBuffer(
+inline bool VerifySizePrefixedControllerBuffer(
     ::flatbuffers::Verifier &verifier) {
-  return verifier.VerifySizePrefixedBuffer<messages::Command>(nullptr);
+  return verifier.VerifySizePrefixedBuffer<messages::Controller>(nullptr);
 }
 
-inline void FinishCommandBuffer(
+inline void FinishControllerBuffer(
     ::flatbuffers::FlatBufferBuilder &fbb,
-    ::flatbuffers::Offset<messages::Command> root) {
+    ::flatbuffers::Offset<messages::Controller> root) {
   fbb.Finish(root);
 }
 
-inline void FinishSizePrefixedCommandBuffer(
+inline void FinishSizePrefixedControllerBuffer(
     ::flatbuffers::FlatBufferBuilder &fbb,
-    ::flatbuffers::Offset<messages::Command> root) {
+    ::flatbuffers::Offset<messages::Controller> root) {
   fbb.FinishSizePrefixed(root);
 }
 

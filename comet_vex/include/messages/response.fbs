@@ -1,7 +1,11 @@
 namespace messages;
 
+table Voltages {
+  v:[int];
+}
+
 table Response {
-    voltage:int;
+  voltages:Voltages;
 }
 
 root_type Response;
