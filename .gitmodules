@@ -1,0 +1,4 @@
+[submodule "comet_ros/src/rplidar_ros"]
+	path = comet_ros/src/rplidar_ros
+	url = https://github.com/Slamtec/rplidar_ros.git
+	branch = ros2
