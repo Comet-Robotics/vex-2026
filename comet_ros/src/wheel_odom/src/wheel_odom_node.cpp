@@ -25,8 +25,10 @@ private:
         velocityMsg.w = msg.w;
 
         velocityPublisher->publish(velocityMsg);
+        prev = msg;
     }
 
+    msgs::msg::Brain prev;
     rclcpp::Subscription<msgs::msg::Brain>::SharedPtr brainSubscriber;
     rclcpp::Publisher<msgs::msg::Velocity>::SharedPtr velocityPublisher;
     
