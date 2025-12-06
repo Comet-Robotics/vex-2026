@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(particle_filter)
+project(constants)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -10,26 +10,10 @@ find_package(ament_cmake REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(nav_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(tf2 REQUIRED)
-find_package(tf2_ros REQUIRED)
-find_package(tf2_geometry_msgs REQUIRED)
 
-add_executable(particle_filter src/particle_filter_node.cpp)
-
-install(TARGETS particle_filter
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-ament_target_dependencies(particle_filter
-  rclcpp
-  nav_msgs
-  sensor_msgs
-  tf2
-  tf2_ros
-  tf2_geometry_msgs
+install(
+  FILES include/constants/constants.py
+  DESTINATION lib/python3.10/site-packages
 )
 
 if(BUILD_TESTING)

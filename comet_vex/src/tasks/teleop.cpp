@@ -83,7 +83,7 @@ void opcontrol() {
         master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y)};
     std::vector<int> motorPositions;
     for (auto m : motors) {
-      motorPositions.push_back(m.get_position());
+      motorPositions.push_back(m.get_actual_velocity());
     }
 
     // Combine controller inputs and motor positions into one vector

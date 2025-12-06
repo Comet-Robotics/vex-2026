@@ -73,7 +73,7 @@ class ParticleFilter
         * @param noise The measurement noise to be added
         * @return A LaserScan struct containing the simulated scan data
         */
-        LaserScan lidar_scan(Particle p, double noise) {
+        LaserScan lidar_scan(Particle p) {
             // std::vector<LidarMeasurement> measurements;
             // measurements.reserve(NUM_LIDAR_BEAMS);
             // Point ray_start{rx, ry};
@@ -184,7 +184,11 @@ class ParticleFilter
                 double y_new = p.y + dy_world + xy_jitter;
                 double theta_new = angleNormalize(p.theta + dtheta + theta_jitter);
 
-                predictedParticles.push_back({x_new, y_new, theta_new});
+                pPred.x = x_new;
+                pPred.y = y_new;
+                pPred.theta = theta_new;
+
+                predictedParticles.push_back(pPred);
             }
             return predictedParticles;
         }
@@ -225,7 +229,7 @@ class ParticleFilter
 
             for (int i = 0; i < N; i++) {
                 const auto& p = particles[i];
-                auto z_hat_data = lidar_scan(p, sigma);
+                auto z_hat_data = lidar_scan(p);
                 std::vector<double> errs;
                 std::vector<double> abs_errs;
                 errs.reserve(numBeams);
@@ -319,7 +323,7 @@ class ParticleFilter
                 weights.begin(), weights.end()
             );
 
-            for (int i = 0; i < particles.size(); ++i) {
+            for (size_t i = 0; i < particles.size(); ++i) {
                 new_particles.push_back(particles[dist(gen)]);
             }
 
@@ -342,10 +346,8 @@ class ParticleFilter
             double y = 0.0;
             double sin = 0.0; 
             double cos = 0.0;
-            int32_t numParticles = particles.size();
             for (const auto &p : particles) {
                 double w = p.weight / weight_sum;
-
                 x += p.x * w;
                 y += p.y * w;
                 sin += std::sin(p.theta) * w;
