@@ -2,6 +2,8 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "particle_filter.hpp"
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 class ParticleFilterNode : public rclcpp::Node
 {
@@ -13,7 +15,16 @@ class ParticleFilterNode : public rclcpp::Node
                 "odom", 10, std::bind(&ParticleFilterNode::odomCallback, this, std::placeholders::_1));
             scanSubscriber = this->create_subscription<sensor_msgs::msg::LaserScan>(
                 "/scan", 10, std::bind(&ParticleFilterNode::scanCallback, this, std::placeholders::_1));
-            publisher = this->create_publisher<nav_msgs::msg::Odometry>("particle_filter_estimate", 10);            
+            publisher = this->create_publisher<nav_msgs::msg::Odometry>("particle_filter_estimate", 10);
+            pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("estimated_pose", 10);
+
+            double hz = 20.0;                 // <<< choose your rate
+            double period = 1.0 / hz;
+
+            timer_ = this->create_wall_timer(
+                std::chrono::duration<double>(period),
+                std::bind(&ParticleFilterNode::timerCallback, this)
+            );
         }
     private:
         rclcpp::Time lastOdomTime_;
@@ -84,12 +95,33 @@ class ParticleFilterNode : public rclcpp::Node
             publisher->publish(odomMsg);
 
         }
+
+        void timerCallback()
+        {
+            auto poseEstimate = pf.estimatePose(particles_);
+
+            geometry_msgs::msg::PoseStamped poseMsg;
+            poseMsg.header.stamp = this->now();
+            odomMsg.header.frame_id = "map";
+            odomMsg.child_frame_id = "base_link";
+
+            poseMsg.pose.position.x = poseEstimate[0];
+            poseMsg.pose.position.y = poseEstimate[1];
+            
+            tf2::Quaternion q;
+            q.setRPY(0, 0, poseEstimate[2]);
+            poseMsg.pose.orientation = tf2::toMsg(q);
+            
+            pose_pub_->publish(poseMsg);
+        }
         
         ParticleFilter pf;
         std::vector<ParticleFilter::Particle> particles_;
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odomSubscriber;
         rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scanSubscriber;
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr publisher;
+        rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub_;
+        rclcpp::TimerBase::SharedPtr timer_;
 };
 
 int main(int argc, char * argv[])
