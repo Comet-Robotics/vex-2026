@@ -10,6 +10,7 @@
 #include <cassert>
 #include <cstdint>
 #include <fstream>
+#include <sstream>
 #include "pros/serial.h"
 #include "pros/serial.hpp"
 #include "pros/adi.hpp"
