@@ -17,26 +17,16 @@ class ParticleFilterNode : public rclcpp::Node
                 "/scan", 10, std::bind(&ParticleFilterNode::scanCallback, this, std::placeholders::_1));
             publisher = this->create_publisher<nav_msgs::msg::Odometry>("particle_filter_estimate", 10);
             pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("estimated_pose", 10);
-
-            double hz = 20.0;                 // <<< choose your rate
-            double period = 1.0 / hz;
-
-            timer_ = this->create_wall_timer(
-                std::chrono::duration<double>(period),
-                std::bind(&ParticleFilterNode::timerCallback, this)
-            );
         }
     private:
         rclcpp::Time lastOdomTime_;
         bool firstOdomReceived_ = false;
         ParticleFilter::Odometry latestOdom_;
-        void odomCallback(const nav_msgs::msg::Odometry::ConstPtr msg)
+        void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
         {
-            RCLCPP_INFO(this->get_logger(), "Receieved odom data");
-            
             rclcpp::Time currentTime = msg->header.stamp;
 
-            double dt = 0.05; // default fallback
+            double dt = 0.05;
             if (firstOdomReceived_) {
                 dt = (currentTime - lastOdomTime_).seconds(); // seconds as double
             } else {
@@ -72,7 +62,7 @@ class ParticleFilterNode : public rclcpp::Node
             // RCLCPP_INFO(this->get_logger(), "Received odom velocities: dx='%f', dy='%f', w='%f'", dx, dy, w);
         }
 
-        void scanCallback(const sensor_msgs::msg::LaserScan::ConstPtr msg)
+        void scanCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
         {
             RCLCPP_INFO(this->get_logger(), "Received scan data");
 
@@ -94,25 +84,6 @@ class ParticleFilterNode : public rclcpp::Node
             odomMsg.pose.pose.orientation.w = cos(poseEstimate[2] / 2.0);
             publisher->publish(odomMsg);
 
-        }
-
-        void timerCallback()
-        {
-            auto poseEstimate = pf.estimatePose(particles_);
-
-            geometry_msgs::msg::PoseStamped poseMsg;
-            poseMsg.header.stamp = this->now();
-            odomMsg.header.frame_id = "map";
-            odomMsg.child_frame_id = "base_link";
-
-            poseMsg.pose.position.x = poseEstimate[0];
-            poseMsg.pose.position.y = poseEstimate[1];
-            
-            tf2::Quaternion q;
-            q.setRPY(0, 0, poseEstimate[2]);
-            poseMsg.pose.orientation = tf2::toMsg(q);
-            
-            pose_pub_->publish(poseMsg);
         }
         
         ParticleFilter pf;

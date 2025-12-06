@@ -8,6 +8,7 @@ from rclpy.node import Node
 from msgs.msg import Brain, Velocity
 from nav_msgs.msg import Odometry
 from std_msgs.msg import String, Header
+import constants
 
 
 class SerialInterface(Node):
@@ -69,10 +70,10 @@ class SerialInterface(Node):
             controller_inputs.append(val)
         
         # Parse motor positions (8 ints)
-        motor_positions = []
+        motor_velocities = []
         for i in range(8):
             val = struct.unpack('>i', data_bytes[16 + i*4:16 + (i+1)*4])[0]
-            motor_positions.append(val)
+            motor_velocities.append(val)
         
         # Parse IMU heading (1 double)
         imu_heading = struct.unpack('>d', data_bytes[48:56])[0]
@@ -84,7 +85,7 @@ class SerialInterface(Node):
                 'rightX': controller_inputs[2],
                 'rightY': controller_inputs[3]
             },
-            'motor_positions': motor_positions,
+            'motor_velocities': motor_velocities,
             'imu_heading': imu_heading
         }
     
@@ -122,13 +123,20 @@ class SerialInterface(Node):
             
             # Calculate average positions for left and right motors
             # Motors 0-3 are left, motors 4-7 are right
-            left_positions = parsed_data['motor_positions'][:4]
-            right_positions = parsed_data['motor_positions'][4:8]
+            left_positions = parsed_data['motor_velocities'][:4]
+            right_positions = parsed_data['motor_velocities'][4:8]
             
-            brain_msg.left_pos = float(sum(left_positions)) / len(left_positions) if left_positions else 0.0
-            brain_msg.right_pos = float(sum(right_positions)) / len(right_positions) if right_positions else 0.0
+            brain_msg.left_vel = float(sum(left_positions)) / len(left_positions) if left_positions else 0.0
+            brain_msg.right_vel = float(sum(right_positions)) / len(right_positions) if right_positions else 0.0
             brain_msg.w = float(parsed_data['imu_heading'])
+
+            # rpm * in/r = in/m * m/s = in/s
+            brain_msg.left_vel = brain_msg.left_vel * 2 * 3.14159 * constants.WHEEL_RADIUS * 12 / 60.0  # assuming wheel radius 3.25 inches
+            brain_msg.right_vel = brain_msg.right_vel * 2 * 3.14159 * constants.WHEEL_RADIUS * 12 / 60.0
             
+            brain_msg.left_vel = brain_msg.left_vel * constants.DRIVETRAIN_GEAR_RATIO
+            brain_msg.right_vel = brain_msg.right_vel * constants.DRIVETRAIN_GEAR_RATIO
+
             self.brain_publisher_.publish(brain_msg)
 
         except serial.SerialException as e:
