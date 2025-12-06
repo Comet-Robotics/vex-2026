@@ -11,6 +11,7 @@ find_package(builtin_interfaces REQUIRED)
 # -------------------------------------------------------------
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/SensorMsg.msg"
+  "msg/Velocity.msg"
   DEPENDENCIES builtin_interfaces std_msgs
 )
 
