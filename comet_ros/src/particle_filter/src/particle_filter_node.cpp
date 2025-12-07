@@ -22,6 +22,11 @@ class ParticleFilterNode : public rclcpp::Node
         rclcpp::Time lastOdomTime_;
         bool firstOdomReceived_ = false;
         ParticleFilter::Odometry latestOdom_;
+
+        /**
+        * Callback for wheel odometry messages
+        * @param msg The received odometry message
+        */
         void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
         {
             rclcpp::Time currentTime = msg->header.stamp;
@@ -62,6 +67,10 @@ class ParticleFilterNode : public rclcpp::Node
             // RCLCPP_INFO(this->get_logger(), "Received odom velocities: dx='%f', dy='%f', w='%f'", dx, dy, w);
         }
 
+        /**
+        * Callback for laser scan messages
+        * @param msg The received laser scan message
+        */
         void scanCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
         {
             RCLCPP_INFO(this->get_logger(), "Received scan data");
