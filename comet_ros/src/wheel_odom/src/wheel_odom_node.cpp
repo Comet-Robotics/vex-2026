@@ -15,7 +15,7 @@ private:
         msgs::msg::Velocity velocityMsg;
 
         velocityMsg.vx = 0;
-        velocityMsg.vy = (msg->left_vel) + (msg->right_vel - msg->left_vel) / 2;
+        velocityMsg.vy = (msg->left_vel) + (msg->right_vel - msg->left_vel) / 2; 
         velocityMsg.w = msg->w;
 
         velocityPublisher->publish(velocityMsg);
@@ -24,7 +24,7 @@ private:
 
     msgs::msg::Brain::SharedPtr prev;
     rclcpp::Subscription<msgs::msg::Brain>::SharedPtr brainSubscriber;
-    rclcpp::Publisher<msgs::msg::Velocity>::SharedPtr velocityPublisher;  
+    rclcpp::Publisher<msgs::msg::Velocity>::SharedPtr velocityPublisher;
 };
 
 int main(int argc, char **argv)

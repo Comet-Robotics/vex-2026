@@ -16,7 +16,6 @@ class ParticleFilterNode : public rclcpp::Node
             scanSubscriber = this->create_subscription<sensor_msgs::msg::LaserScan>(
                 "/scan", 10, std::bind(&ParticleFilterNode::scanCallback, this, std::placeholders::_1));
             publisher = this->create_publisher<nav_msgs::msg::Odometry>("particle_filter_estimate", 10);
-            pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("estimated_pose", 10);
         }
     private:
         rclcpp::Time lastOdomTime_;
@@ -100,7 +99,6 @@ class ParticleFilterNode : public rclcpp::Node
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odomSubscriber;
         rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scanSubscriber;
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr publisher;
-        rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub_;
         rclcpp::TimerBase::SharedPtr timer_;
 };
 
