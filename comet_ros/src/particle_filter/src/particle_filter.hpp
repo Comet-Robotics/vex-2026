@@ -50,6 +50,59 @@ class ParticleFilter
         };
 
         /**
+        * Resample a laser scan to a new angular resolution
+        * @param in The input laser scan
+        * @param new_min_angle The minimum angle of the resampled scan
+        * @param new_max_angle The maximum angle of the resampled scan
+        * @param num_beams The number of beams in the resampled scan
+        * @return The resampled laser scan
+        */
+        sensor_msgs::msg::LaserScan resampleLaserScan(
+            const sensor_msgs::msg::LaserScan &in,
+            float new_min_angle,
+            float new_max_angle,
+            int num_beams) {
+            sensor_msgs::msg::LaserScan out;
+
+            // Copy basic metadata
+            out.header = in.header;
+            out.range_min = in.range_min;
+            out.range_max = in.range_max;
+
+            // Define output scan properties
+            out.angle_min = new_min_angle;
+            out.angle_max = new_max_angle;
+            out.angle_increment = (new_max_angle - new_min_angle) / (num_beams - 1);
+
+            out.ranges.resize(num_beams);
+            out.intensities.resize(num_beams);
+
+            // For each output beam, compute the corresponding input index
+            for (int i = 0; i < num_beams; i++) {
+                float angle = new_min_angle + i * out.angle_increment;
+
+                // Convert angle -> original index
+                float idx_f = (angle - in.angle_min) / in.angle_increment;
+                int idx = static_cast<int>(std::round(idx_f));
+
+                // Bounds check
+                if (idx >= 0 && idx < (int)in.ranges.size()) {
+                    out.ranges[i] = in.ranges[idx];
+                    if (!in.intensities.empty())
+                        out.intensities[i] = in.intensities[idx];
+                    else
+                        out.intensities[i] = 0.0f;
+                } else {
+                    // Out of original bounds — set max range or NaN
+                    out.ranges[i] = out.range_max;
+                    out.intensities[i] = 0.0f;
+                }
+            }
+
+            return out;
+        }
+
+        /**
         * Initialize particles randomly within the map boundaries
         * @return A vector of initialized particles
         */
@@ -374,7 +427,7 @@ class ParticleFilter
         const int32_t numParticles;
         const double maxScanRange;
         const int32_t numBeams;
-        const double particleDropFraction = 0.3; // Fraction of particles to drop based on error
+        const double particleDropFraction = 0.7; // Fraction of particles to drop
         const Map map_;
 
         std::mt19937 gen{std::random_device{}()};
