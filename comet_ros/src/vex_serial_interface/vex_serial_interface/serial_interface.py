@@ -37,7 +37,7 @@ class SerialInterface(Node):
             10
         )
 
-        self.ports = ['/dev/ttyACM1', '/dev/ttyACM2']
+        self.ports = ['/dev/vexbrain']
         self.baudrate = 115200
 
         self.connect_serial()
@@ -115,6 +115,8 @@ class SerialInterface(Node):
             if parsed_data is None:
                 return
 
+            self.get_logger().warn(f"Got data: {parsed_data}")
+
             # Publish Brain message for wheel_odom
             brain_msg = Brain()
             brain_msg.header = Header()
@@ -136,6 +138,8 @@ class SerialInterface(Node):
             
             brain_msg.left_vel = brain_msg.left_vel * constants.DRIVETRAIN_GEAR_RATIO
             brain_msg.right_vel = brain_msg.right_vel * constants.DRIVETRAIN_GEAR_RATIO
+
+            rclpy("info", "Serial Interface", "Left Vel: %.2f in/s, Right Vel: %.2f in/s, Heading: %.2f deg",)
 
             self.brain_publisher_.publish(brain_msg)
 

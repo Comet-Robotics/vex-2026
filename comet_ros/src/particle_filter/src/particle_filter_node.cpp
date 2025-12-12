@@ -4,6 +4,7 @@
 #include "particle_filter.hpp"
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include "msgs/msg/velocity.hpp"
 
 class ParticleFilterNode : public rclcpp::Node
 {
@@ -11,8 +12,10 @@ class ParticleFilterNode : public rclcpp::Node
         ParticleFilterNode()
         : Node("particle_filter_node")
         {
-            odomSubscriber = this->create_subscription<nav_msgs::msg::Odometry>(
-                "odom", 10, std::bind(&ParticleFilterNode::odomCallback, this, std::placeholders::_1));
+            particles_ = pf.initializeParticles();
+
+            odomSubscriber = this->create_subscription<msgs::msg::Velocity>(
+                "wheel_odometry", 10, std::bind(&ParticleFilterNode::odomCallback, this, std::placeholders::_1));
             scanSubscriber = this->create_subscription<sensor_msgs::msg::LaserScan>(
                 "/scan", 10, std::bind(&ParticleFilterNode::scanCallback, this, std::placeholders::_1));
             publisher = this->create_publisher<nav_msgs::msg::Odometry>("particle_filter_estimate", 10);
@@ -26,8 +29,10 @@ class ParticleFilterNode : public rclcpp::Node
         * Callback for wheel odometry messages
         * @param msg The received odometry message
         */
-        void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
+        void odomCallback(const msgs::msg::Velocity::SharedPtr msg)
         {
+            RCLCPP_INFO(this->get_logger(), "Received odom data");
+
             rclcpp::Time currentTime = msg->header.stamp;
 
             double dt = 0.05;
@@ -39,9 +44,9 @@ class ParticleFilterNode : public rclcpp::Node
 
             lastOdomTime_ = currentTime;
 
-            latestOdom_.vx = msg->twist.twist.linear.x;
-            latestOdom_.vy = msg->twist.twist.linear.y;
-            latestOdom_.w  = msg->twist.twist.angular.z;
+            latestOdom_.vx = msg->vx;
+            latestOdom_.vy = msg->vy;
+            latestOdom_.w  = msg->w;
 
             // update particles with actual dt
             if (particles_.empty()) {
@@ -96,7 +101,7 @@ class ParticleFilterNode : public rclcpp::Node
         
         ParticleFilter pf;
         std::vector<ParticleFilter::Particle> particles_;
-        rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odomSubscriber;
+        rclcpp::Subscription<msgs::msg::Velocity>::SharedPtr odomSubscriber;
         rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scanSubscriber;
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr publisher;
         rclcpp::TimerBase::SharedPtr timer_;

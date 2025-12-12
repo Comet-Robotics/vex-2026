@@ -61,7 +61,15 @@ class ParticleFilter
             const sensor_msgs::msg::LaserScan &in,
             float new_min_angle,
             float new_max_angle,
-            int num_beams) {
+            int num_beams) 
+        {
+
+            std::cout << "Resampling laser scan from "
+                 << in.angle_min << " to " << in.angle_max
+                 << " with " << in.ranges.size() << " beams "
+                 << "to new scan from " << new_min_angle << " to " << new_max_angle
+                 << " with " << num_beams << " beams." << std::endl;
+
             sensor_msgs::msg::LaserScan out;
 
             // Copy basic metadata
@@ -225,17 +233,18 @@ class ParticleFilter
 
                 double vxb = odom.vx + vx_noise;
                 double vyb = odom.vy + vy_noise;
-                double wb = odom.w + gamma_noise;
+                // double wb = odom.w + gamma_noise;
 
                 // transform body-frame delta to world-frame using current heading
                 // dx_body = vxb * dt ; dy_body = vyb * dt
                 double dx_world = std::cos(p.theta) * (vxb * dt) - std::sin(p.theta) * (vyb * dt);
                 double dy_world = std::sin(p.theta) * (vxb * dt) + std::cos(p.theta) * (vyb * dt);
-                double dtheta = wb * dt;
+                // double dtheta = wb * dt;
 
                 double x_new = p.x + dx_world + xy_jitter;
                 double y_new = p.y + dy_world + xy_jitter;
-                double theta_new = angleNormalize(p.theta + dtheta + theta_jitter);
+                // double theta_new = angleNormalize(p.theta + dtheta + theta_jitter);
+                double theta_new = angleNormalize(odom.w + theta_jitter);
 
                 pPred.x = x_new;
                 pPred.y = y_new;
@@ -285,8 +294,6 @@ class ParticleFilter
                 auto z_hat_data = lidar_scan(p);
                 std::vector<double> errs;
                 std::vector<double> abs_errs;
-                errs.reserve(numBeams);
-                abs_errs.reserve(numBeams);
 
                 for (int k = 0; k < numBeams; k++) {
                     double e = metersToFeet(scan.ranges[k]) - z_hat_data.ranges[k];
