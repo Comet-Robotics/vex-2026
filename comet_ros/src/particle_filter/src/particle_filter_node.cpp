@@ -96,7 +96,6 @@ class ParticleFilterNode : public rclcpp::Node
             odomMsg.pose.pose.orientation.z = sin(poseEstimate[2] / 2.0);
             odomMsg.pose.pose.orientation.w = cos(poseEstimate[2] / 2.0);
             publisher->publish(odomMsg);
-
         }
         
         ParticleFilter pf;

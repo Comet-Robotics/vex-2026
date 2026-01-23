@@ -21,6 +21,7 @@ class SerialInterface(Node):
         # Publishers
         self.brain_publisher_ = self.create_publisher(Brain, 'brain', 10)
         self.odom_publisher_ = self.create_publisher(Odometry, 'odom', 10)
+        self.serial_command_publisher_ = self.create_publisher(String, 'serial_commands', 10)
 
         # Subscriptions
         self.string_subscription_ = self.create_subscription(
@@ -96,6 +97,17 @@ class SerialInterface(Node):
 
             self.get_logger().info(f"Left Vel: {brain_msg.left_vel:.2f} in/s, Right Vel: {brain_msg.right_vel:.2f} in/s, Heading: {brain_msg.w:.2f} deg",)
             self.brain_publisher_.publish(brain_msg)
+
+            # Controller inputs - TEMPORARY TESTING
+            self.get_logger().info(f"Controller LX: {lx}, LY: {ly}, RX: {rx}, RY: {ry}")
+            left_vel = (ly + rx) / 2.0 * (12000.0 / 127.0)  # scale to -12000 to 12000
+            right_vel = (ly - rx) / 2.0 * (12000.0 / 127.0)
+            voltages = [int(left_vel)] * 4 + [int(right_vel)] * 4
+            command_str = ",".join(str(v) for v in voltages)
+            self.get_logger().info(f"Sending command to teleop: {command_str}")
+            msg = String()
+            msg.data = command_str
+            self.serial_command_publisher_.publish(msg)
 
         except serial.SerialException as e:
             self.get_logger().error(f"Serial exception: {e}")
