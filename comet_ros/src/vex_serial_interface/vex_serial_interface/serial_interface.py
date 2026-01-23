@@ -44,51 +44,6 @@ class SerialInterface(Node):
                 
         self.timer = self.create_timer(0.01, self.serial_loop)
     
-    def from_hex(self, hex_str):
-        """Convert hex string to bytes."""
-        return bytes.fromhex(hex_str)
-    
-    def parse_teleop_data(self, data_bytes):
-        """
-        Parse data according to teleop.cpp format:
-        Bytes 0-3:   leftX (int, big-endian)
-        Bytes 4-7:   leftY (int, big-endian)
-        Bytes 8-11:  rightX (int, big-endian)
-        Bytes 12-15: rightY (int, big-endian)
-        Bytes 16-31: leftMotors[4] (4 ints, big-endian)
-        Bytes 32-47: rightMotors[4] (4 ints, big-endian)
-        Bytes 48-55: imuHeading (double, big-endian)
-        """
-        if len(data_bytes) < 56:
-            self.get_logger().warn(f"Data too short: {len(data_bytes)} bytes, expected 56")
-            return None
-        
-        # Parse controller inputs (4 ints)
-        controller_inputs = []
-        for i in range(4):
-            val = struct.unpack('>i', data_bytes[i*4:(i+1)*4])[0]
-            controller_inputs.append(val)
-        
-        # Parse motor positions (8 ints)
-        motor_velocities = []
-        for i in range(8):
-            val = struct.unpack('>i', data_bytes[16 + i*4:16 + (i+1)*4])[0]
-            motor_velocities.append(val)
-        
-        # Parse IMU heading (1 double)
-        imu_heading = struct.unpack('>d', data_bytes[48:56])[0]
-        
-        return {
-            'controller': {
-                'leftX': controller_inputs[0],
-                'leftY': controller_inputs[1],
-                'rightX': controller_inputs[2],
-                'rightY': controller_inputs[3]
-            },
-            'motor_velocities': motor_velocities,
-            'imu_heading': imu_heading
-        }
-    
     def serial_loop(self):
         if not self.ser or not self.ser.is_open:
             self.get_logger().warn("Serial port not open. Retrying...")
@@ -103,19 +58,19 @@ class SerialInterface(Node):
             if len(line) == 0:
                 return
 
-            # Parse hex string to bytes
-            try:
-                data_bytes = self.from_hex(line)
-            except ValueError as e:
-                self.get_logger().warn(f"Invalid hex string: {line[:50]}...")
-                return
-
-            # Parse teleop data
-            parsed_data = self.parse_teleop_data(data_bytes)
-            if parsed_data is None:
-                return
-
             self.get_logger().warn(f"Got data: {parsed_data}")
+
+            parts = line.split(',')
+            if len(parts) != 13: # FIND SOME WAY TO MAKE THIS DYNAMIC
+                self.get_logger().warn(f"Bad packet length: {len(parts)} → {line}")
+                return
+            
+            values = [int(p) for p in parts]
+
+            lx, ly, rx, ry = values[0:4]
+            motor_vels = values[4:12]
+            imu_scaled = values[12]
+            imu_heading = imu_scaled / 100.0  # degrees
 
             # Publish Brain message for wheel_odom
             brain_msg = Brain()
@@ -125,22 +80,21 @@ class SerialInterface(Node):
             
             # Calculate average positions for left and right motors
             # Motors 0-3 are left, motors 4-7 are right
-            left_positions = parsed_data['motor_velocities'][:4]
-            right_positions = parsed_data['motor_velocities'][4:8]
-            
-            brain_msg.left_vel = float(sum(left_positions)) / len(left_positions) if left_positions else 0.0
-            brain_msg.right_vel = float(sum(right_positions)) / len(right_positions) if right_positions else 0.0
-            brain_msg.w = float(parsed_data['imu_heading'])
+            left_velocities = motor_vels[:4]
+            right_velocities = motor_vels[4:8]
 
-            # rpm * in/r = in/m * m/s = in/s
-            brain_msg.left_vel = brain_msg.left_vel * 2 * 3.14159 * constants.WHEEL_RADIUS * 12 / 60.0  # assuming wheel radius 3.25 inches
-            brain_msg.right_vel = brain_msg.right_vel * 2 * 3.14159 * constants.WHEEL_RADIUS * 12 / 60.0
+            brain_msg.left_vel = float(sum(left_velocities)) / len(left_velocities) if left_velocities else 0.0
+            brain_msg.right_vel = float(sum(right_velocities)) / len(right_velocities) if right_velocities else 0.0
+            brain_msg.w = float(imu_heading)
+
+            # rot/min * in/rot = in/min * 1 min/60 sec = in/sec * 1 foot/12 in = ft/sec
+            brain_msg.left_vel = brain_msg.left_vel * 2 * 3.14159 * constants.WHEEL_RADIUS / (12.0 * 60.0)  # assuming wheel radius 3.25 inches
+            brain_msg.right_vel = brain_msg.right_vel * 2 * 3.14159 * constants.WHEEL_RADIUS / (12.0 * 60.0)
             
             brain_msg.left_vel = brain_msg.left_vel * constants.DRIVETRAIN_GEAR_RATIO
             brain_msg.right_vel = brain_msg.right_vel * constants.DRIVETRAIN_GEAR_RATIO
 
-            rclpy("info", "Serial Interface", "Left Vel: %.2f in/s, Right Vel: %.2f in/s, Heading: %.2f deg",)
-
+            self.get_logger().info(f"Left Vel: {brain_msg.left_vel:.2f} in/s, Right Vel: {brain_msg.right_vel:.2f} in/s, Heading: {brain_msg.w:.2f} deg",)
             self.brain_publisher_.publish(brain_msg)
 
         except serial.SerialException as e:
