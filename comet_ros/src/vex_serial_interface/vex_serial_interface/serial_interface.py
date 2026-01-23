@@ -51,15 +51,20 @@ class SerialInterface(Node):
             self.connect_serial()
 
         try:
+            # self.get_logger().info("Reading from serial...")
+            # print("Reading from serial...")
             # Read a line from serial (hex string)
             line = self.ser.readline().decode("utf-8", "replace").strip()
+
+            self.get_logger().info(f"Raw line: {line}")
+
             if "sout" in line:
                 line = line.split("sout")[-1].strip()
                 
             if len(line) == 0:
                 return
 
-            self.get_logger().warn(f"Got data: {parsed_data}")
+            self.get_logger().warn(f"Got data: {line}")
 
             parts = line.split(',')
             if len(parts) != 13: # FIND SOME WAY TO MAKE THIS DYNAMIC
@@ -89,19 +94,19 @@ class SerialInterface(Node):
             brain_msg.w = float(imu_heading)
 
             # rot/min * in/rot = in/min * 1 min/60 sec = in/sec * 1 foot/12 in = ft/sec
-            brain_msg.left_vel = brain_msg.left_vel * 2 * 3.14159 * constants.WHEEL_RADIUS / (12.0 * 60.0)  # assuming wheel radius 3.25 inches
+            brain_msg.left_vel = brain_msg.left_vel * 2 * 3.14159 * constants.WHEEL_RADIUS / (12.0 * 60.0)  # assuming wheel radius 3.25 / 2 inches
             brain_msg.right_vel = brain_msg.right_vel * 2 * 3.14159 * constants.WHEEL_RADIUS / (12.0 * 60.0)
             
             brain_msg.left_vel = brain_msg.left_vel * constants.DRIVETRAIN_GEAR_RATIO
             brain_msg.right_vel = brain_msg.right_vel * constants.DRIVETRAIN_GEAR_RATIO
 
-            self.get_logger().info(f"Left Vel: {brain_msg.left_vel:.2f} in/s, Right Vel: {brain_msg.right_vel:.2f} in/s, Heading: {brain_msg.w:.2f} deg",)
+            self.get_logger().info(f"Left Vel: {brain_msg.left_vel:.2f} ft/s, Right Vel: {brain_msg.right_vel:.2f} ft/s, Heading: {brain_msg.w:.2f} deg",)
             self.brain_publisher_.publish(brain_msg)
 
             # Controller inputs - TEMPORARY TESTING
             self.get_logger().info(f"Controller LX: {lx}, LY: {ly}, RX: {rx}, RY: {ry}")
-            left_vel = (ly + rx) / 2.0 * (12000.0 / 127.0)  # scale to -12000 to 12000
-            right_vel = (ly - rx) / 2.0 * (12000.0 / 127.0)
+            left_vel = (ly + rx) * (12000.0 / 127.0)  # scale to -12000 to 12000
+            right_vel = (ly - rx) * (12000.0 / 127.0)
             voltages = [int(left_vel)] * 4 + [int(right_vel)] * 4
             command_str = ",".join(str(v) for v in voltages)
             self.get_logger().info(f"Sending command to teleop: {command_str}")

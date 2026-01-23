@@ -121,7 +121,7 @@ class ParticleFilter
                 Particle p;
                 p.x = static_cast<double>(rand()) / RAND_MAX * 12.0 - 6.0;
                 p.y = static_cast<double>(rand()) / RAND_MAX * 12.0 - 6.0;
-                p.theta = static_cast<double>(rand()) / RAND_MAX * 2.0 * M_PI;
+                p.theta = 0;
                 p.weight = 1.0;
                 particles.push_back(p);
             }
