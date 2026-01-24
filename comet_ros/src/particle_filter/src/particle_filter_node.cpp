@@ -46,7 +46,7 @@ class ParticleFilterNode : public rclcpp::Node
 
             latestOdom_.vx = msg->vx;
             latestOdom_.vy = msg->vy;
-            latestOdom_.w  = msg->w;
+            latestOdom_.theta = msg->theta;
 
             // update particles with actual dt
             if (particles_.empty()) {
@@ -93,8 +93,8 @@ class ParticleFilterNode : public rclcpp::Node
             odomMsg.header.stamp = msg->header.stamp;
             odomMsg.pose.pose.position.x = poseEstimate[0];
             odomMsg.pose.pose.position.y = poseEstimate[1];
-            odomMsg.pose.pose.orientation.z = sin(poseEstimate[2] / 2.0);
-            odomMsg.pose.pose.orientation.w = cos(poseEstimate[2] / 2.0);
+            odomMsg.pose.pose.orientation.z = poseEstimate[2];  // USING STUPID QUATERNION REPRESENTATION AS NORMAL BETTER SUPERIOR THETA. L ODOM MSG
+            // odomMsg.pose.pose.orientation.w = cos(poseEstimate[2] / 2.0);
             publisher->publish(odomMsg);
         }
         

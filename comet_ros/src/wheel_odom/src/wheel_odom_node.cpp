@@ -16,7 +16,7 @@ private:
 
         velocityMsg.vx = 0;
         velocityMsg.vy = (msg->left_vel) + (msg->right_vel - msg->left_vel) / 2; 
-        velocityMsg.w = msg->w;
+        velocityMsg.theta = msg->theta;
 
         velocityPublisher->publish(velocityMsg);
         prev = std::make_shared<msgs::msg::Brain>(*msg);

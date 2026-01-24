@@ -9,7 +9,7 @@ class ParticleFilter
 {
     public:
         ParticleFilter() : numParticles(100), maxScanRange(metersToFeet(6.0)), numBeams(20), particleDropFraction(0.3) {}
-        
+                                                        // 6 meters max range
         struct Point {
             double x, y;
         };
@@ -22,11 +22,12 @@ class ParticleFilter
             std::vector<LineSegment> walls;
 
             Map() {
+                // center is at (0,0), size is 12ft x 12ft
                 walls = {
-                    {-6.0, -6.0, 6.0, -6.0},       // bottom wall
+                    {-6.0, -6.0, 6.0, -6.0},   // bottom wall
                     {6.0, -6.0, 6.0, 6.0},     // right wall
                     {6.0, 6.0, -6.0, 6.0},     // top wall
-                    {-6.0, 6.0, -6.0, -6.0}        // left wall
+                    {-6.0, 6.0, -6.0, -6.0}    // left wall
                 };
             }
         };
@@ -41,7 +42,7 @@ class ParticleFilter
         struct Odometry {
             double vx;
             double vy;
-            double w;
+            double theta;
         };
 
         struct LaserScan {
@@ -112,16 +113,17 @@ class ParticleFilter
 
         /**
         * Initialize particles randomly within the map boundaries
+        * @param heading Optional fixed heading for all particles; if -1.0, random headings are assigned [0, 360)
         * @return A vector of initialized particles
         */
-        std::vector<Particle> initializeParticles()
+        std::vector<Particle> initializeParticles(double heading = -1.0)
         {
             std::vector<Particle> particles;
             for (int i = 0; i < numParticles; i++) {
                 Particle p;
                 p.x = static_cast<double>(rand()) / RAND_MAX * 12.0 - 6.0;
                 p.y = static_cast<double>(rand()) / RAND_MAX * 12.0 - 6.0;
-                p.theta = 0;
+                p.theta = (heading == -1.0) ? static_cast<double>(rand()) / RAND_MAX * 2.0 * M_PI : heading;
                 p.weight = 1.0;
                 particles.push_back(p);
             }
@@ -135,43 +137,6 @@ class ParticleFilter
         * @return A LaserScan struct containing the simulated scan data
         */
         LaserScan lidar_scan(Particle p) {
-            // std::vector<LidarMeasurement> measurements;
-            // measurements.reserve(NUM_LIDAR_BEAMS);
-            // Point ray_start{rx, ry};
-
-            // for (int i = 0; i < NUM_LIDAR_BEAMS; ++i) {
-            //     double angle = robot_theta + (static_cast<double>(i) / NUM_LIDAR_BEAMS) * M_PI_2;
-            //     double min_dist = LIDAR_MAX_RANGE;
-            //     std::optional<Point> hit_point = std::nullopt;
-            //     Point ray_end{
-            //         rx + std::cos(angle) * LIDAR_MAX_RANGE,
-            //         ry + std::sin(angle) * LIDAR_MAX_RANGE
-            //     };
-
-            //     for (const auto& edge : obstacle_edges) {
-            //         Point p0{edge.x1, edge.y1};
-            //         Point p1{edge.x2, edge.y2};
-            //         auto pt = intersect_ray_segment(p0, p1, ray_start, ray_end);
-            //         if (pt) {
-            //             double d = std::hypot(pt->x - rx, pt->y - ry);
-            //             if (d < min_dist) {
-            //                 min_dist = d;
-            //                 hit_point = pt;
-            //             }
-            //         }
-            //     }
-
-            //     double noise = noise_dist(rng) * MEAS_NOISE_LIDAR;
-            //     min_dist = std::max(0.0, std::min(LIDAR_MAX_RANGE, min_dist + noise));
-            //     measurements.push_back({
-            //         angle,
-            //         min_dist,
-            //         hit_point ? hit_point->x : std::numeric_limits<double>::quiet_NaN(),
-            //         hit_point ? hit_point->y : std::numeric_limits<double>::quiet_NaN()
-            //     });
-            // }
-            // return measurements;
-
             LaserScan scan;
             Point ray_start{p.x, p.y};
             double minAngle = 0.0;
@@ -228,12 +193,13 @@ class ParticleFilter
                 double vx_noise = gaussianDistribution(0, vxy_sigma);
                 double vy_noise = gaussianDistribution(0, vxy_sigma);
                 double gamma_noise = gaussianDistribution(0, gamma_sigma);
-                double xy_jitter = gaussianDistribution(0, xy_sigma);
+                double x_jitter = gaussianDistribution(0, xy_sigma);
+                double y_jitter = gaussianDistribution(0, xy_sigma);
                 double theta_jitter = gaussianDistribution(0, theta_sigma);
 
                 double vxb = odom.vx + vx_noise;
                 double vyb = odom.vy + vy_noise;
-                // double wb = odom.w + gamma_noise;
+                // double wb = odom.theta + gamma_noise;
 
                 // transform body-frame delta to world-frame using current heading
                 // dx_body = vxb * dt ; dy_body = vyb * dt
@@ -241,10 +207,10 @@ class ParticleFilter
                 double dy_world = std::sin(p.theta) * (vxb * dt) + std::cos(p.theta) * (vyb * dt);
                 // double dtheta = wb * dt;
 
-                double x_new = p.x + dx_world + xy_jitter;
-                double y_new = p.y + dy_world + xy_jitter;
+                double x_new = p.x + dx_world + x_jitter;
+                double y_new = p.y + dy_world + y_jitter;
                 // double theta_new = angleNormalize(p.theta + dtheta + theta_jitter);
-                double theta_new = angleNormalize(odom.w + theta_jitter);
+                double theta_new = angleNormalize(odom.theta + theta_jitter);
 
                 pPred.x = x_new;
                 pPred.y = y_new;
@@ -264,36 +230,18 @@ class ParticleFilter
         std::vector<Particle> weightParticles(const LaserScan &scan, 
                                             const std::vector<Particle> &particles)
         {
-            // double sigma = metersToFeet(0.02); // A1M8 lidar usually has a noise of 2-3 cm
-            // int32_t numParticles = particles.size();
-            // int32_t numBeams = scan.ranges.size();
-            // std::vector<Particle> weightedParticles;
-            // std::vector<double> errs;
-            // for (const auto &p : particles) {
-            //     Particle pWeighted = p;
-            //     for(int32_t i = 0; i < numBeams; ++i) {
-            //         double angleOfScan = scan.angle_min + i * scan.angle_increment;
-            //         double rayDistance = simulateRay(p, angleOfScan);
-            //         double measuredDistance = metersToFeet(scan.ranges[i]);
-            //         pWeighted.weight *= gaussianWeight(rayDistance, sigma, measuredDistance);
-            //     }
-            //     weightedParticles.push_back(pWeighted);
-            // }
 
-            // for (auto &data : scan.ranges) {
-            //     double err = data;
-            //     err = 
-            // }
-
-            double sigma = metersToFeet(0.02); // A1M8 lidar usually has a noise of 2-3 cm
+            double sigma = metersToFeet(0.067); // A1M8 lidar usually has a noise of 2-3 cm
             int N = particles.size();
             std::vector<double> logw(N, 0.0);
+            std::vector<double> errs;
+            std::vector<double> abs_errs;
 
             for (int i = 0; i < N; i++) {
                 const auto& p = particles[i];
                 auto z_hat_data = lidar_scan(p);
-                std::vector<double> errs;
-                std::vector<double> abs_errs;
+                errs.clear();
+                abs_errs.clear();
 
                 for (int k = 0; k < numBeams; k++) {
                     double e = metersToFeet(scan.ranges[k]) - z_hat_data.ranges[k];
@@ -314,7 +262,7 @@ class ParticleFilter
                     }
                 }
                 if (!inFreeSpace(p.x, p.y)) {
-                    ll -= 5.0;
+                    ll -= 1e9; // Heavy penalty for particles outside free space
                 }
                 logw[i] = ll;
             }
@@ -363,32 +311,60 @@ class ParticleFilter
         * @param particles The vector of particles to resample
         * @return A vector of resampled particles
         */
-        std::vector<Particle> resampleParticles(const std::vector<Particle> &particles)
-        {
+       std::vector<Particle> resampleParticles(const std::vector<Particle> &particles)
+       {
+            int N = static_cast<int>(particles.size());
             std::vector<Particle> new_particles;
+            new_particles.reserve(N);
+
+            // 1. Create a random starting point (r) between 0 and 1/N
+            std::uniform_real_distribution<double> dist(0.0, 1.0 / N);
+            double r = dist(gen);
             
-            new_particles.reserve(particles.size());
-            std::vector<double> weights;
-            weights.reserve(particles.size());
-            for (const auto &p : particles) {
-                weights.push_back(p.weight);
-            }
+            // 2. The "Wheel" logic
+            double c = particles[0].weight; // Cumulative weight sum
+            int i = 0;
 
-            /*
-            Create a discrete distribution based on particle weights
-            This generates indices according to the weights, where 
-            particles with higher weights are more likely to be chosen
-            */
-            std::discrete_distribution<int> dist(
-                weights.begin(), weights.end()
-            );
-
-            for (size_t i = 0; i < particles.size(); ++i) {
-                new_particles.push_back(particles[dist(gen)]);
+            for (int m = 0; m < N; m++) {
+                // U is the current "pointer" on the wheel
+                double U = r + static_cast<double>(m) / N;
+                
+                // Move through the weights until we find the particle that spans U
+                while (U > c && i < N - 1) {
+                    i++;
+                    c += particles[i].weight;
+                }
+                new_particles.push_back(particles[i]);
             }
 
             return new_particles;
         }
+        // std::vector<Particle> resampleParticles(const std::vector<Particle> &particles)
+        // {
+        //     std::vector<Particle> new_particles;
+            
+        //     new_particles.reserve(particles.size());
+        //     std::vector<double> weights;
+        //     weights.reserve(particles.size());
+        //     for (const auto &p : particles) {
+        //         weights.push_back(p.weight);
+        //     }
+
+        //     /*
+        //     Create a discrete distribution based on particle weights
+        //     This generates indices according to the weights, where 
+        //     particles with higher weights are more likely to be chosen
+        //     */
+        //     std::discrete_distribution<int> dist(
+        //         weights.begin(), weights.end()
+        //     );
+
+        //     for (size_t i = 0; i < particles.size(); ++i) {
+        //         new_particles.push_back(particles[dist(gen)]);
+        //     }
+
+        //     return new_particles;
+        // }
 
         /**
         * Estimate the robot's pose based on the weighted particles
@@ -415,19 +391,6 @@ class ParticleFilter
             }
             double theta = std::atan2(sin, cos);
             return {x, y, theta};
-        }
-
-        /**
-        * Calculate yaw from a quaternion
-        * @param x The x component of the quaternion
-        * @param y The y component of the quaternion
-        * @param z The z component of the quaternion
-        * @param w The w component of the quaternion
-        * @return The yaw angle
-        */
-        double yawFromQuaternion(double x, double y, double z, double w) 
-        {
-            return std::atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z));
         }
 
     private:
@@ -485,39 +448,6 @@ class ParticleFilter
         }
 
         /**
-         * Simulate a ray cast from a particle at a given angle
-         * @param particle The particle from which the ray is cast
-         * @param angle The angle at which the ray is cast relative to the particle's orientation
-         * @return The distance to the nearest obstacle detected by the ray
-         */
-        double simulateRay(const Particle &particle, const double angle)
-        {
-            double rayStartX = particle.x;
-            double rayStartY = particle.y;
-            double rayEndX = rayStartX + cos(particle.theta + angle) * maxScanRange;
-            double rayEndY = rayStartY + sin(particle.theta + angle) * maxScanRange;
-            
-            std::vector<std::vector<double>> intersectionPoints;
-            for (const auto &wall : map_.walls) {
-                auto intersection = findIntersection(rayStartX, rayStartY, rayEndX, rayEndY,
-                                                    wall.x1, wall.y1, wall.x2, wall.y2);
-                if (!intersection.empty()) {
-                    intersectionPoints.push_back(intersection);
-                }
-            }
-            double rayDistance = std::numeric_limits<double>::infinity();
-            for (const auto &point : intersectionPoints) {
-                double xDist = point[0] - rayStartX;
-                double yDist = point[1] - rayStartY;
-                double distance = std::sqrt(pow(xDist, 2) + pow(yDist, 2));
-                if (distance < rayDistance) {
-                    rayDistance = distance;
-                }
-            }
-            return rayDistance;
-        }  
-
-        /**
          * Check if a point is within the free space of the map
          * @param x The x coordinate of the point
          * @param y The y coordinate of the point
@@ -557,13 +487,13 @@ class ParticleFilter
         }
 
         /**
-         * Normalize an angle to the range [-pi, pi]
+         * Normalize an angle to the range [0, 2*pi)
          * @param a The angle to normalize
          * @return The normalized angle
          */
         double angleNormalize(double a) {
-            while (a <= -M_PI) a += 2.0*M_PI;
-            while (a >  M_PI) a -= 2.0*M_PI;
+            while (a < 0) a += 2.0*M_PI;
+            while (a >=  2.0*M_PI) a -= 2.0*M_PI;
             return a;
         }
 };
