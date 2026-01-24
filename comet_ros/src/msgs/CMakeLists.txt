@@ -6,9 +6,7 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 
-# -------------------------------------------------------------
-# ROS message generation
-# -------------------------------------------------------------
+# Generate the interfaces
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/SensorMsg.msg"
   "msg/Velocity.msg"
@@ -16,13 +14,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   DEPENDENCIES builtin_interfaces std_msgs
 )
 
-# -------------------------------------------------------------
-# Install include directory and export it
-# -------------------------------------------------------------
-install(DIRECTORY include/
-  DESTINATION include
-)
-
-ament_export_include_directories(include)
+# Export the runtime dependency so nodes using these msgs can link properly
 ament_export_dependencies(rosidl_default_runtime)
+
 ament_package()

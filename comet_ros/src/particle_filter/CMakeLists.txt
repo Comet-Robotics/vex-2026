@@ -11,12 +11,12 @@ find_package(ament_cmake REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-find_package(msgs REQUIRED)
 
 add_executable(particle_filter src/particle_filter_node.cpp)
 
@@ -31,7 +31,10 @@ ament_target_dependencies(particle_filter
   tf2
   tf2_ros
   tf2_geometry_msgs
-  msgs
+)
+
+target_link_libraries(particle_filter
+  msgs::msgs__rosidl_typesupport_cpp
 )
 
 if(BUILD_TESTING)
