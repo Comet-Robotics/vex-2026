@@ -91,7 +91,7 @@ class SerialInterface(Node):
 
             brain_msg.left_vel = float(sum(left_velocities)) / len(left_velocities) if left_velocities else 0.0
             brain_msg.right_vel = float(sum(right_velocities)) / len(right_velocities) if right_velocities else 0.0
-            brain_msg.w = float(imu_heading)
+            brain_msg.theta = float(imu_heading)
 
             # rot/min * in/rot = in/min * 1 min/60 sec = in/sec * 1 foot/12 in = ft/sec
             brain_msg.left_vel = brain_msg.left_vel * 2 * 3.14159 * constants.WHEEL_RADIUS / (12.0 * 60.0)  # assuming wheel radius 3.25 / 2 inches
@@ -100,7 +100,7 @@ class SerialInterface(Node):
             brain_msg.left_vel = brain_msg.left_vel * constants.DRIVETRAIN_GEAR_RATIO
             brain_msg.right_vel = brain_msg.right_vel * constants.DRIVETRAIN_GEAR_RATIO
 
-            self.get_logger().info(f"Left Vel: {brain_msg.left_vel:.2f} ft/s, Right Vel: {brain_msg.right_vel:.2f} ft/s, Heading: {brain_msg.w:.2f} deg",)
+            self.get_logger().info(f"Left Vel: {brain_msg.left_vel:.2f} ft/s, Right Vel: {brain_msg.right_vel:.2f} ft/s, Heading: {brain_msg.theta:.2f} deg",)
             self.brain_publisher_.publish(brain_msg)
 
             # Controller inputs - TEMPORARY TESTING
@@ -133,7 +133,7 @@ class SerialInterface(Node):
         # Set velocities in twist
         odom_msg.twist.twist.linear.x = float(msg.vx)
         odom_msg.twist.twist.linear.y = float(msg.vy)
-        odom_msg.twist.twist.angular.z = float(msg.w)
+        odom_msg.pose.pose.orientation.z = float(msg.theta) 
         
         # Publish to odom topic for particle_filter
         self.odom_publisher_.publish(odom_msg)
