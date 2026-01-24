@@ -1,10 +1,8 @@
 #include "rclcpp/rclcpp.hpp"
-#include "nav_msgs/msg/odometry.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "particle_filter.hpp"
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include "msgs/msg/velocity.hpp"
+#include "geometry_msgs/msg/pose2_d.hpp"
+#include "geometry_msgs/msg/twist.hpp"
 
 class ParticleFilterNode : public rclcpp::Node
 {
@@ -14,61 +12,46 @@ class ParticleFilterNode : public rclcpp::Node
         {
             particles_ = pf.initializeParticles();
 
-            odomSubscriber = this->create_subscription<msgs::msg::Velocity>(
-                "wheel_odometry", 10, std::bind(&ParticleFilterNode::odomCallback, this, std::placeholders::_1));
+            robotTwistSubscriber= this->create_subscription<geometry_msgs::msg::Twist>(
+                "robot_twist", 10, std::bind(&ParticleFilterNode::odomCallback, this, std::placeholders::_1));
             scanSubscriber = this->create_subscription<sensor_msgs::msg::LaserScan>(
                 "/scan", 10, std::bind(&ParticleFilterNode::scanCallback, this, std::placeholders::_1));
-            publisher = this->create_publisher<nav_msgs::msg::Odometry>("particle_filter_estimate", 10);
+            pose_publisher = this->create_publisher<geometry_msgs::msg::Pose2D>("pf_pose_geometry", 10);
         }
     private:
-        rclcpp::Time lastOdomTime_;
-        bool firstOdomReceived_ = false;
-        ParticleFilter::Odometry latestOdom_;
+        rclcpp::Time lastTwistTime_;
+        bool firstTwistReceived_ = false;
+        ParticleFilter::Odometry latestTwist_;
 
         /**
         * Callback for wheel odometry messages
         * @param msg The received odometry message
         */
-        void odomCallback(const msgs::msg::Velocity::SharedPtr msg)
+        void odomCallback(const geometry_msgs::msg::Twist::SharedPtr msg)
         {
-            RCLCPP_INFO(this->get_logger(), "Received odom data");
+            RCLCPP_INFO(this->get_logger(), "Received odom data:");
 
-            rclcpp::Time currentTime = msg->header.stamp;
-
+            rclcpp::Time currentTime = this->now();
+            
             double dt = 0.05;
-            if (firstOdomReceived_) {
-                dt = (currentTime - lastOdomTime_).seconds(); // seconds as double
+            if (firstTwistReceived_) {
+                dt = (currentTime - lastTwistTime_).seconds(); // seconds as double
             } else {
-                firstOdomReceived_ = true;
+                firstTwistReceived_ = true;
             }
 
-            lastOdomTime_ = currentTime;
+            lastTwistTime_ = currentTime;
 
-            latestOdom_.vx = msg->vx;
-            latestOdom_.vy = msg->vy;
-            latestOdom_.theta = msg->theta;
+            latestTwist_.vx = msg->linear.x;
+            latestTwist_.vy = msg->linear.y;
+            latestTwist_.w = msg->angular.z;
 
             // update particles with actual dt
             if (particles_.empty()) {
                 particles_ = pf.initializeParticles();
             } else {
-                particles_ = pf.predictParticles(particles_, latestOdom_, dt);
+                particles_ = pf.predictParticles(particles_, latestTwist_, dt);
             }
-
-            // log data if u want
-            // double x = msg->pose.pose.position.x;
-            // double y = msg->pose.pose.position.y;
-            // double theta = pf.yawFromQuaternion(
-            //     msg->pose.pose.orientation.x,
-            //     msg->pose.pose.orientation.y,
-            //     msg->pose.pose.orientation.z,
-            //     msg->pose.pose.orientation.w);
-            // RCLCPP_INFO(this->get_logger(), "Received odom position: x='%f', y='%f', theta='%f'", x, y, theta);
-
-            // double dx = msg->twist.twist.linear.x;
-            // double dy = msg->twist.twist.linear.y;
-            // double w = msg->twist.twist.angular.z;
-            // RCLCPP_INFO(this->get_logger(), "Received odom velocities: dx='%f', dy='%f', w='%f'", dx, dy, w);
         }
 
         /**
@@ -89,20 +72,19 @@ class ParticleFilterNode : public rclcpp::Node
 
             std::vector<double> poseEstimate = pf.estimatePose(particles_);
 
-            nav_msgs::msg::Odometry odomMsg;
-            odomMsg.header.stamp = msg->header.stamp;
-            odomMsg.pose.pose.position.x = poseEstimate[0];
-            odomMsg.pose.pose.position.y = poseEstimate[1];
-            odomMsg.pose.pose.orientation.z = poseEstimate[2];  // USING STUPID QUATERNION REPRESENTATION AS NORMAL BETTER SUPERIOR THETA. L ODOM MSG
-            // odomMsg.pose.pose.orientation.w = cos(poseEstimate[2] / 2.0);
-            publisher->publish(odomMsg);
+            geometry_msgs::msg::Pose2D pose2D;
+            pose2D.x = poseEstimate[0];
+            pose2D.y = poseEstimate[1];
+            pose2D.theta = poseEstimate[2];
+            pose_publisher->publish(pose2D);
+
         }
-        
+
         ParticleFilter pf;
         std::vector<ParticleFilter::Particle> particles_;
-        rclcpp::Subscription<msgs::msg::Velocity>::SharedPtr odomSubscriber;
+        rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr robotTwistSubscriber;
         rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scanSubscriber;
-        rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr publisher;
+        rclcpp::Publisher<geometry_msgs::msg::Pose2D>::SharedPtr pose_publisher;
         rclcpp::TimerBase::SharedPtr timer_;
 };
 

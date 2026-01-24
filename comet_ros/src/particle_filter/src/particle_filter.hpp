@@ -42,7 +42,7 @@ class ParticleFilter
         struct Odometry {
             double vx;
             double vy;
-            double theta;
+            double w;
         };
 
         struct LaserScan {
@@ -199,18 +199,18 @@ class ParticleFilter
 
                 double vxb = odom.vx + vx_noise;
                 double vyb = odom.vy + vy_noise;
-                // double wb = odom.theta + gamma_noise;
+                double wb = odom.w + gamma_noise;
 
                 // transform body-frame delta to world-frame using current heading
                 // dx_body = vxb * dt ; dy_body = vyb * dt
                 double dx_world = std::cos(p.theta) * (vxb * dt) - std::sin(p.theta) * (vyb * dt);
                 double dy_world = std::sin(p.theta) * (vxb * dt) + std::cos(p.theta) * (vyb * dt);
-                // double dtheta = wb * dt;
+                double dtheta = wb * dt;
 
                 double x_new = p.x + dx_world + x_jitter;
                 double y_new = p.y + dy_world + y_jitter;
-                // double theta_new = angleNormalize(p.theta + dtheta + theta_jitter);
-                double theta_new = angleNormalize(odom.theta + theta_jitter);
+                double theta_new = angleNormalize(p.theta + dtheta + theta_jitter);
+                // double theta_new = angleNormalize(p.theta + odom.w * dt + theta_jitter);
 
                 pPred.x = x_new;
                 pPred.y = y_new;
