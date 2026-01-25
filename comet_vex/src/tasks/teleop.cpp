@@ -76,6 +76,9 @@ void opcontrol() {
         // serial input
         std::string input = read_serial_nonblocking(512);
         auto pose = parse_csv_ints(input);
+        if (pose.size() >= 3) {
+            drivebase->setPose(Pose2D(pose[0], pose[1], pose[2]));
+        }
 
         pros::delay(10);
     }

@@ -3,6 +3,7 @@
 #include "constants.h"
 #include "utils/Twist2D.h"
 #include "pros/motor_group.hpp"
+#include <Pose2D.h>
 
 using namespace constants::drivebase;
 class Drivebase
@@ -44,7 +45,53 @@ class Drivebase
             }
         }
 
-        // void goToPose(Pose pose)
+        void setPose(Pose2D pose) {
+            currentPose = pose;
+        }
+
+        void goToPose(Pose2D goal, uint32_t driveTimeout = 5000, uint32_t turnTimeout = 3000) {
+            double kPLinear = 0.5;
+            double kPAngular = 2.0;
+            
+            uint32_t startTime = pros::millis();
+
+            // drive to position
+            while (currentPose.distance(goal) > 1.0 && (pros::millis() - startTime) < driveTimeout) {
+                Pose2D error = goal - currentPose;
+
+                // project onto robot heading
+                double driveError = error.x * cos(currentPose.theta) + error.y * sin(currentPose.theta);
+
+                double angleError = atan2(error.y, error.x) - currentPose.theta;
+                while(angleError > M_PI) angleError -= 2*M_PI;
+                while(angleError < -M_PI) angleError += 2*M_PI;
+
+                double drive = kPLinear * driveError;
+                double turn  = kPAngular * angleError;
+
+                errorDrive(drive, turn);
+
+                pros::delay(10);
+            }
+
+            startTime = pros::millis();
+
+            // turn to final angle
+            while (fabs(currentPose.theta - goal.theta) > 0.1 && (pros::millis() - startTime) < turnTimeout) {
+                double angleError = goal.theta - currentPose.theta;
+                while(angleError > M_PI) angleError -= 2*M_PI;
+                while(angleError < -M_PI) angleError += 2*M_PI;
+
+                double turn  = kPAngular * angleError;
+
+                errorDrive(0, turn);
+
+                pros::delay(10);
+            }
+
+            // stop motors
+            errorDrive(0, 0);
+        }
 
     private:
         pros::MotorGroup LEFT_MOTORS{
@@ -56,6 +103,7 @@ class Drivebase
             CHASSIS_INTERNAL_GEARSET
         };
         Twist2D twist;
+        Pose2D currentPose;
         
         double previousHeading = IMU.get_heading();
         double previousTime = pros::millis();
