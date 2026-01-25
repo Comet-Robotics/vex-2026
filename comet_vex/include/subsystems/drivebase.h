@@ -37,6 +37,13 @@ class Drivebase
             return twist;
         }
 
+        void calibrateIMU() {
+            IMU.reset(true);
+            while (IMU.is_calibrating()) {
+                pros::delay(10);
+            }
+        }
+
         // void goToPose(Pose pose)
 
     private:

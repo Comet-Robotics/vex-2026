@@ -1,18 +1,7 @@
 #include "tasks/teleop.h"
-#include "pros/adi.hpp"
-#include "pros/imu.hpp"
-#include "pros/misc.h"
-#include "pros/misc.hpp"
-#include "pros/motors.hpp"
-#include "pros/rotation.hpp"
-#include "pros/rtos.hpp"
-#include "pros/serial.h"
-#include "pros/serial.hpp"
-#include <cassert>
-#include <cstdint>
-#include <fstream>
+#include "subsystems.h"
+#include "subsystems/drivebase.h"
 #include <sstream>
-
 
 extern "C" int32_t inp_buffer_read(uint32_t timeout);
 
@@ -53,10 +42,7 @@ std::vector<int> parse_csv_ints(const std::string& line) {
 std::vector<int> motorNums = {-7, 8, -9, 14, 17, -18, 19, -20};
 
 void opcontrol_initialize() {
-    imu.reset();
-    while (imu.is_calibrating()) {
-        pros::delay(10);
-    }
+    drivebase->calibrateIMU();
 }
 
 void opcontrol() {
@@ -71,17 +57,24 @@ void opcontrol() {
     last_input = pros::millis();
 
     while (true) {
-        // drivetrain update
+        drivebase->update();
         // other subsystems update
 
+        drivebase->errorDrive(
+            master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y),
+            master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)
+        );
+
         // get drivetrain twist and send to serial
+        Twist2D twist = drivebase->getTwist();
+        std::string line = std::to_string(twist.vx) + "," +
+                           std::to_string(twist.vy) + "," +
+                           std::to_string(twist.w);
 
         printf("%s\n", line.c_str());
 
-        // ----- Serial Input -----
-
+        // serial input
         std::string input = read_serial_nonblocking(512);
-
         auto pose = parse_csv_ints(input);
 
         pros::delay(10);
