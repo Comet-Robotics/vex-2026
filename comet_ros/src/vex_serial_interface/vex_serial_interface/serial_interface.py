@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
-import time
 import rclpy
 import serial # type: ignore
-import struct
 from rclpy.node import Node
 from msgs.msg import Brain, Velocity
 from nav_msgs.msg import Odometry
-from std_msgs.msg import String, Header
+from std_msgs.msg import String
 from geometry_msgs.msg import Pose2D
 from geometry_msgs.msg import Twist
 
