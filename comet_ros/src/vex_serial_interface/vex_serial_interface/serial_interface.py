@@ -3,9 +3,7 @@
 import rclpy
 import serial # type: ignore
 from rclpy.node import Node
-from msgs.msg import Brain, Velocity
 from nav_msgs.msg import Odometry
-from std_msgs.msg import String
 from geometry_msgs.msg import Pose2D
 from geometry_msgs.msg import Twist
 
@@ -22,7 +20,7 @@ class SerialInterface(Node):
 
         # Subscriptions
         self.pose_subscription_ = self.create_subscription(
-            Odometry,
+            Pose2D,
             'pf_pose_geometry',
             self.pose_to_serial,
             10
@@ -93,10 +91,10 @@ class SerialInterface(Node):
                     i += 1
 
     def pose_to_serial(self, msg: Pose2D):
-        serial_str = msg.x + "," + msg.y + "," + msg.theta
+        serial_str = str(msg.x) + "," + str(msg.y) + "," + str(msg.theta)
         self.send_to_serial(serial_str)
 
-    def send_to_serial(self, str: String):
+    def send_to_serial(self, str: str):
         '''
         Sends string to serial. Note that a "\\n" is automatically appended to the string.
 
