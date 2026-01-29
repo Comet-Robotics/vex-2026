@@ -3,7 +3,8 @@
 #include "constants.h"
 #include "utils/Twist2D.h"
 #include "pros/motor_group.hpp"
-#include <Pose2D.h>
+#include "utils/Pose2D.h"
+#include "pros/llemu.hpp"
 
 using namespace constants::drivebase;
 class Drivebase
@@ -30,8 +31,20 @@ class Drivebase
             RIGHT_MOTORS.move_voltage((drive - turn) * 12000);
         }
 
+        void normalDrive(float drive, float turn) {
+            // float max = abs(drive) + abs(turn);
+            // if (max > 1.0) {
+            //     drive /= max;
+            //     turn  /= max;
+            // }
+
+            LEFT_MOTORS.move_voltage((drive + turn) * 12000);
+            RIGHT_MOTORS.move_voltage((drive - turn) * 12000);
+        }
+
         void update() {
             calculateTwist();
+            updateLocalization();
         }
 
         Twist2D getTwist() {
@@ -51,13 +64,18 @@ class Drivebase
 
         void goToPose(Pose2D goal, uint32_t driveTimeout = 5000, uint32_t turnTimeout = 3000) {
             double kPLinear = 0.5;
-            double kPAngular = 2.0;
+            double kPAngular = 0.01;
             
             uint32_t startTime = pros::millis();
 
             // drive to position
             while (currentPose.distance(goal) > 1.0 && (pros::millis() - startTime) < driveTimeout) {
                 Pose2D error = goal - currentPose;
+                
+                pros::lcd::print(1, "error x: %f", error.x);
+                pros::lcd::print(2, "error y: %f", error.y);
+                pros::lcd::print(3, "error theta: %f", error.theta);
+                pros::lcd::print(4, "current theta: %f", currentPose.theta);
 
                 // project onto robot heading
                 double driveError = error.x * cos(currentPose.theta) + error.y * sin(currentPose.theta);
@@ -66,10 +84,12 @@ class Drivebase
                 while(angleError > M_PI) angleError -= 2*M_PI;
                 while(angleError < -M_PI) angleError += 2*M_PI;
 
-                double drive = kPLinear * driveError;
+                double drive = kPLinear * -driveError;
                 double turn  = kPAngular * angleError;
 
-                errorDrive(drive, turn);
+                normalDrive(drive, turn);
+
+                updateLocalization();
 
                 pros::delay(10);
             }
@@ -84,15 +104,67 @@ class Drivebase
 
                 double turn  = kPAngular * angleError;
 
-                errorDrive(0, turn);
+                normalDrive(0, turn);
+
+                updateLocalization();
 
                 pros::delay(10);
             }
 
             // stop motors
-            errorDrive(0, 0);
+            normalDrive(0, 0);
         }
 
+        void updateLocalization() {
+            // 1. Get current sensor values
+            double leftPos = LEFT_MOTORS.get_position();   // degrees
+            double rightPos = RIGHT_MOTORS.get_position(); // degrees
+            
+            // Use get_rotation() instead of get_heading() to get continuous values 
+            // (e.g., 365 degrees instead of 5 degrees). This prevents math errors 
+            // when crossing 0/360.
+            double currentRotation = IMU.get_rotation();
+
+            // 2. Handle Initialization
+            if (!locInitialized) {
+                prevLeftPos = leftPos;
+                prevRightPos = rightPos;
+                prevRotation = currentRotation; // You need to add this variable to your global/class state
+                locInitialized = true;
+                return;
+            }
+
+            // 3. Calculate Changes (Deltas)
+            double dLeft = ticksToDistance(leftPos - prevLeftPos);
+            double dRight = ticksToDistance(rightPos - prevRightPos);
+            
+            // Calculate raw linear distance
+            double ds = (dLeft + dRight) / 2.0;
+
+            // 4. Update Previous Values immediately
+            prevLeftPos = leftPos;
+            prevRightPos = rightPos;
+
+            // 5. Calculate Heading for the Arc
+            // We need the average heading during this specific movement step, 
+            // not the heading at the end of the step.
+            double prevThetaRad = prevRotation * (M_PI / 180.0);
+            double currThetaRad = currentRotation * (M_PI / 180.0);
+            double avgThetaRad = (prevThetaRad + currThetaRad) / 2.0;
+            
+            prevRotation = currentRotation;
+            
+            currentPose.x += ds * cos(avgThetaRad);
+            currentPose.y += ds * sin(avgThetaRad);
+
+            // Update global theta (normalized to 0-360 for display/checks if needed)
+            // But keep currentPose.theta as the absolute rotation for logic if you prefer
+            currentPose.theta = currentRotation; 
+        }
+
+        Pose2D getPose() {
+            return currentPose;
+        }
     private:
         pros::MotorGroup LEFT_MOTORS{
             LEFT_PORTS,
@@ -104,6 +176,18 @@ class Drivebase
         };
         Twist2D twist;
         Pose2D currentPose;
+
+        // temporary localization variables
+        double prevLeftPos = 0.0;
+        double prevRightPos = 0.0;
+        double prevRotation = 0.0;
+        double prevTime = 0.0;
+        bool locInitialized = false;
+
+        double ticksToDistance(double ticks) {
+            return ticks * 2 * M_PI * WHEEL_RADIUS * DRIVETRAIN_GEAR_RATIO / 360.0;
+        }
+
         
         double previousHeading = IMU.get_heading();
         double previousTime = pros::millis();
@@ -121,10 +205,11 @@ class Drivebase
             previousTime = pros::millis();
 
             double currentHeading = IMU.get_heading();
-            double headingVel = (currentHeading - previousHeading) / (dt / 1000);
+            double headingVel = (currentHeading - previousHeading) / (dt / 1000.0);
+            previousHeading = currentHeading;
 
-            double leftVel = rawLeftVel * 2 * 3.14159 * WHEEL_RADIUS * DRIVETRAIN_GEAR_RATIO / (12.0 * 60.0);
-            double rightVel = rawRightVel * 2 * 3.14159 * WHEEL_RADIUS * DRIVETRAIN_GEAR_RATIO / (12.0 * 60.0);
+            double leftVel = rawLeftVel * 2 * M_PI * WHEEL_RADIUS * DRIVETRAIN_GEAR_RATIO / (12.0 * 60.0);
+            double rightVel = rawRightVel * 2 * M_PI * WHEEL_RADIUS * DRIVETRAIN_GEAR_RATIO / (12.0 * 60.0);
 
             double vx = 0;
             double vy = leftVel + (rightVel - leftVel) / 2;
