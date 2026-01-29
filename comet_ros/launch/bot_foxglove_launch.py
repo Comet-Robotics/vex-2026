@@ -9,6 +9,9 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 def generate_launch_description():
     ld = LaunchDescription()
 
+    # rp_lidar_perms = ExecuteProcess(cmd=["chmod", "777", "/dev/rplidar"], shell=True, prefix="sudo")
+    # vex_brain_perms = ExecuteProcess(cmd=["chmod", "777", "/dev/vexbrain"], shell=True, prefix="sudo")
+
     pf_node = Node(
         package='particle_filter',
         executable='particle_filter'
@@ -24,14 +27,15 @@ def generate_launch_description():
         )
     )
     
-    foxglove_studio = ExecuteProcess(cmd=["foxglove-studio"])
+    # foxglove_studio = ExecuteProcess(cmd=["foxglove-studio"])
     foxglove_bridge = ExecuteProcess(cmd=["ros2", "launch", "foxglove_bridge", "foxglove_bridge_launch.xml"])
 
 
+    # ld.add_action(rp_lidar_perms)
+    # ld.add_action(vex_brain_perms)
     ld.add_action(pf_node)
     ld.add_action(lidar_launch)
     ld.add_action(vex_serial_interface)
-    ld.add_action(foxglove_studio)
     ld.add_action(foxglove_bridge)
 
     return ld

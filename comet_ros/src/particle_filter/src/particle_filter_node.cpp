@@ -75,7 +75,7 @@ class ParticleFilterNode : public rclcpp::Node
             geometry_msgs::msg::Pose2D pose2D;
             pose2D.x = poseEstimate[0];
             pose2D.y = poseEstimate[1];
-            pose2D.theta = poseEstimate[2];
+            pose2D.theta = poseEstimate[2] * (180.0 / M_PI); // convert to degrees
             pose_publisher->publish(pose2D);
 
         }

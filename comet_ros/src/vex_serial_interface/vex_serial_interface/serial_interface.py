@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
+from math import cos, sin
 import rclpy
 import serial # type: ignore
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D
 from geometry_msgs.msg import Twist
-
+from geometry_msgs.msg import Quaternion
+from visualization_msgs.msg import Marker
+from builtin_interfaces.msg import Duration
 
 class SerialInterface(Node):
 
@@ -16,6 +19,7 @@ class SerialInterface(Node):
 
         # Publishers
         self.twist_publisher_ = self.create_publisher(Twist, 'robot_twist', 10)
+        self.marker_publisher_ = self.create_publisher(Marker, "/debug/pose_marker", 10) # For debugging
 
         # Subscriptions
         self.pose_subscription_ = self.create_subscription(
@@ -56,15 +60,46 @@ class SerialInterface(Node):
                 self.get_logger().warn(f"Bad packet length: {len(parts)} → {line}")
                 return
             
-            values = [int(p) for p in parts]
+            values = [float(p) for p in parts]
 
-            # Get twist values from array and publish
-            twistMsg = Twist()
-            twistMsg.linear.x = values[0]
-            twistMsg.linear.y = values[1]
-            twistMsg.angular.z = values[2]
-            self.twist_publisher_.publish(twistMsg)
+            values[2] *= -(3.14159265 / 180.0)  # Convert degrees to radians
 
+            # # Get twist values from array and publish
+            # twistMsg = Twist()
+            # twistMsg.linear.x = values[0]
+            # twistMsg.linear.y = values[1]
+            # twistMsg.angular.z = values[2]
+            # self.twist_publisher_.publish(twistMsg)
+
+            # Temporary marker message
+            markerMsg = Marker()
+            markerMsg.header.frame_id = "map"
+            markerMsg.ns = "pose_arrow"
+            markerMsg.id = 0
+            markerMsg.type = Marker.ARROW
+            markerMsg.action = Marker.ADD
+            markerMsg.scale.x = 0.2
+            markerMsg.scale.y = 0.05
+            markerMsg.scale.z = 0.05
+            markerMsg.color.a = 1.0
+            markerMsg.color.r = 1.0
+            markerMsg.color.g = 0.0
+            markerMsg.color.b = 0.0
+            markerMsg.pose.position.x = values[0] / 12.0  # convert from inches to feet
+            markerMsg.pose.position.y = values[1] / 12.0  # convert from inches to feet
+            markerMsg.pose.position.z = 0.0
+            
+            q = Quaternion()
+            q.x = 0.0
+            q.y = 0.0
+            q.z = sin(values[2] / 2.0)
+            q.w = cos(values[2] / 2.0)
+            markerMsg.pose.orientation = q
+
+            markerMsg.lifetime = Duration(sec=0, nanosec=0)  # 0 means forever
+
+            self.marker_publisher_.publish(markerMsg)
+            
         except serial.SerialException as e:
             self.get_logger().error(f"Serial exception: {e}")
             self.connect_serial()  # if serial disconnects somehow, probably the weird tty1->tty2 switch

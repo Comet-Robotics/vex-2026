@@ -13,8 +13,8 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='Jesse Huffine',
-    maintainer_email='jessehuffine3735@gmail.com',
+    maintainer='Keval Shah',
+    maintainer_email='kevals2005@gmail.com',
     description='Handles serial between Jetson and VEX Brain',
     license='Apache-2.0',
     extras_require={
