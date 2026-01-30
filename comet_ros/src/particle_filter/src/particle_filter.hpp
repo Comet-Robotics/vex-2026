@@ -53,8 +53,8 @@ class ParticleFilter
         /**
         * Resample a laser scan to a new angular resolution
         * @param in The input laser scan
-        * @param new_min_angle The minimum angle of the resampled scan
-        * @param new_max_angle The maximum angle of the resampled scan
+        * @param new_min_angle The minimum angle of the resampled scan in degrees
+        * @param new_max_angle The maximum angle of the resampled scan in degrees
         * @param num_beams The number of beams in the resampled scan
         * @return The resampled laser scan
         */
@@ -65,13 +65,16 @@ class ParticleFilter
             int num_beams) 
         {
 
-            std::cout << "Resampling laser scan from "
+            std::cout << "Resampling laser scan: ("
                  << in.angle_min << " to " << in.angle_max
-                 << " with " << in.ranges.size() << " beams "
-                 << "to new scan from " << new_min_angle << " to " << new_max_angle
-                 << " with " << num_beams << " beams." << std::endl;
+                 << "), " << in.ranges.size() << " beams "
+                 << "→ (" << new_min_angle << " to " << new_max_angle
+                 << "), " << num_beams << " beams." << std::endl;
 
             sensor_msgs::msg::LaserScan out;
+            
+            new_min_angle *= (M_PI / 180.0); // Convert to radians for math
+            new_max_angle *= (M_PI / 180.0);
 
             // Copy basic metadata
             out.header = in.header;
@@ -97,14 +100,13 @@ class ParticleFilter
                 // Bounds check
                 if (idx >= 0 && idx < (int)in.ranges.size()) {
                     out.ranges[i] = in.ranges[idx];
-                    if (!in.intensities.empty())
+                    if (!in.intensities.empty()) {
                         out.intensities[i] = in.intensities[idx];
-                    else
-                        out.intensities[i] = 0.0f;
+                    } else {
+                        std::cerr << "Input scan has no intensities!" << std::endl;
+                    }
                 } else {
-                    // Out of original bounds — set max range or NaN
-                    out.ranges[i] = out.range_max;
-                    out.intensities[i] = 0.0f;
+                    std::cerr << "Index " << idx << " out of bounds for input scan size " << in.ranges.size() << std::endl;
                 }
             }
 
@@ -113,17 +115,22 @@ class ParticleFilter
 
         /**
         * Initialize particles randomly within the map boundaries
-        * @param heading Optional fixed heading for all particles; if -1.0, random headings are assigned [0, 360)
+        * @param x Optional initial x position
+        * @param y Optional initial y position
+        * @param heading Optional initial heading
         * @return A vector of initialized particles
         */
-        std::vector<Particle> initializeParticles(double heading = -1.0)
+        std::vector<Particle> initializeParticles(
+            std::optional<double> x = std::nullopt,
+            std::optional<double> y = std::nullopt,
+            std::optional<double> heading = std::nullopt)
         {
             std::vector<Particle> particles;
             for (int i = 0; i < numParticles; i++) {
                 Particle p;
-                p.x = static_cast<double>(rand()) / RAND_MAX * 12.0 - 6.0;
-                p.y = static_cast<double>(rand()) / RAND_MAX * 12.0 - 6.0;
-                p.theta = (heading == -1.0) ? static_cast<double>(rand()) / RAND_MAX * 2.0 * M_PI : heading;
+                p.x = x.value_or(((double)rand() / RAND_MAX) * 12.0 - 6.0);
+                p.y = y.value_or(((double)rand() / RAND_MAX) * 12.0 - 6.0);
+                p.theta = heading.value_or(((double)rand() / RAND_MAX) * 2.0 * M_PI);
                 p.weight = 1.0;
                 particles.push_back(p);
             }
@@ -236,6 +243,13 @@ class ParticleFilter
             std::vector<double> logw(N, 0.0);
             std::vector<double> errs;
             std::vector<double> abs_errs;
+
+            if (scan.ranges.size() != static_cast<size_t>(numBeams)) {
+                std::cerr << "Error: Scan size (" << scan.ranges.size()
+                          << ") does not match expected numBeams (" << numBeams << "). Aborting weighting." 
+                          << std::endl;
+                return particles;
+            }
 
             for (int i = 0; i < N; i++) {
                 const auto& p = particles[i];
@@ -391,6 +405,10 @@ class ParticleFilter
             }
             double theta = std::atan2(sin, cos);
             return {x, y, theta};
+        }
+
+        int getNumBeams() const {
+            return numBeams;
         }
 
     private:
