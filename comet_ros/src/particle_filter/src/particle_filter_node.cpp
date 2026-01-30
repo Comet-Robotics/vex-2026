@@ -30,17 +30,15 @@ class ParticleFilterNode : public rclcpp::Node
         void odomCallback(const geometry_msgs::msg::Twist::SharedPtr msg)
         {
             RCLCPP_INFO(this->get_logger(), "Received odom data:");
-
-            rclcpp::Time currentTime = this->now();
             
-            double dt = 0.05;
+            double dt = 0.05; // seconds
             if (firstTwistReceived_) {
-                dt = (currentTime - lastTwistTime_).seconds(); // seconds as double
+                dt = (this->now() - lastTwistTime_).seconds(); // seconds as double
             } else {
                 firstTwistReceived_ = true;
             }
 
-            lastTwistTime_ = currentTime;
+            lastTwistTime_ = this->now();
 
             latestTwist_.vx = msg->linear.x;
             latestTwist_.vy = msg->linear.y;
@@ -48,7 +46,7 @@ class ParticleFilterNode : public rclcpp::Node
 
             // update particles with actual dt
             if (particles_.empty()) {
-                particles_ = pf.initializeParticles();
+                particles_ = pf.initializeParticles(0.0, 0.0, 0.0);
             } else {
                 particles_ = pf.predictParticles(particles_, latestTwist_, dt);
             }
@@ -62,10 +60,12 @@ class ParticleFilterNode : public rclcpp::Node
         {
             RCLCPP_INFO(this->get_logger(), "Received scan data");
 
+            sensor_msgs::msg::LaserScan resampledScan = pf.resampleLaserScan(*msg, 0.0, 360.0, pf.getNumBeams());
+
             ParticleFilter::LaserScan pfScan;
-            pfScan.ranges = msg->ranges;
-            pfScan.angle_min = msg->angle_min;
-            pfScan.angle_increment = msg->angle_increment;
+            pfScan.ranges = resampledScan.ranges;
+            pfScan.angle_min = resampledScan.angle_min;
+            pfScan.angle_increment = resampledScan.angle_increment;
 
             particles_ = pf.weightParticles(pfScan, particles_);
             particles_ = pf.resampleParticles(particles_);

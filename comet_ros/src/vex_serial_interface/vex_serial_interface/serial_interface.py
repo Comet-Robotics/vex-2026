@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-
-from math import cos, sin
+import math
 import rclpy
 import serial # type: ignore
 from rclpy.node import Node
@@ -9,6 +8,7 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Quaternion
 from visualization_msgs.msg import Marker
 from builtin_interfaces.msg import Duration
+from msgs import Robot
 
 class SerialInterface(Node):
 
@@ -18,7 +18,7 @@ class SerialInterface(Node):
         print("Starting Serial Interface Node")
 
         # Publishers
-        self.twist_publisher_ = self.create_publisher(Twist, 'robot_twist', 10)
+        self.robot_publisher_ = self.create_publisher(Robot, 'robot', 10)
         self.marker_publisher_ = self.create_publisher(Marker, "/debug/pose_marker", 10) # For debugging
 
         # Subscriptions
@@ -56,20 +56,29 @@ class SerialInterface(Node):
             self.get_logger().warn(f"Got data: {line}")
 
             parts = line.split(',')
-            if len(parts) != 3: # FIND SOME WAY TO MAKE THIS DYNAMIC
+            if len(parts) != 6: # FIND SOME WAY TO MAKE THIS DYNAMIC
                 self.get_logger().warn(f"Bad packet length: {len(parts)} → {line}")
                 return
             
             values = [float(p) for p in parts]
 
-            values[2] *= -(3.14159265 / 180.0)  # Convert degrees to radians
+            values[2] *= -(math.pi / 180.0)  # Convert degrees to radians
 
-            # # Get twist values from array and publish
-            # twistMsg = Twist()
-            # twistMsg.linear.x = values[0]
-            # twistMsg.linear.y = values[1]
-            # twistMsg.angular.z = values[2]
-            # self.twist_publisher_.publish(twistMsg)
+            # Get twist values from array and publish
+            twistMsg = Twist()
+            twistMsg.linear.x = values[0]
+            twistMsg.linear.y = values[1]
+            twistMsg.angular.z = values[2]
+
+            startingPose = Pose2D()
+            startingPose.x = values[3]
+            startingPose.y = values[4]
+            startingPose.theta = values[5] * -(math.pi / 180.0)  # Convert degrees to radians
+
+            robotMsg = Robot()
+            robotMsg.startingPose = startingPose
+            robotMsg.twist = twistMsg
+            self.robot_publisher_.publish(robotMsg)
 
             # Temporary marker message
             markerMsg = Marker()
@@ -92,8 +101,8 @@ class SerialInterface(Node):
             q = Quaternion()
             q.x = 0.0
             q.y = 0.0
-            q.z = sin(values[2] / 2.0)
-            q.w = cos(values[2] / 2.0)
+            q.z = math.sin(values[2] / 2.0)
+            q.w = math.cos(values[2] / 2.0)
             markerMsg.pose.orientation = q
 
             markerMsg.lifetime = Duration(sec=0, nanosec=0)  # 0 means forever
