@@ -9,7 +9,7 @@ struct Pose2D {
 
     Pose2D() : x(0), y(0), theta(0) {}
     
-    Pose2D(double x, double y, double theta = 0)
+    Pose2D(double x, double y, double theta)
         : x(x), y(y), theta(theta) {}
 
     double distance(const Pose2D& other) const {

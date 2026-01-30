@@ -5,12 +5,21 @@
 #include "pros/motor_group.hpp"
 #include "utils/Pose2D.h"
 #include "pros/llemu.hpp"
+#include "utils/Math.h"
+#include "utils/PID.h"
 
 using namespace constants::drivebase;
 class Drivebase
 {
     public:
-        Drivebase() = default;
+        Drivebase() {
+            setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+        }
+
+        void setBrakeMode(pros::motor_brake_mode_e_t mode) {
+            LEFT_MOTORS.set_brake_mode(mode);
+            RIGHT_MOTORS.set_brake_mode(mode);
+        }
         
         void errorDrive(float drive, float turn) {
             drive /= 127.0;
@@ -32,11 +41,11 @@ class Drivebase
         }
 
         void normalDrive(float drive, float turn) {
-            // float max = abs(drive) + abs(turn);
-            // if (max > 1.0) {
-            //     drive /= max;
-            //     turn  /= max;
-            // }
+            float max = fabs(drive) + fabs(turn);
+            if (max > 1.0) {
+                drive /= max;
+                turn  /= max;
+            }
 
             LEFT_MOTORS.move_voltage((drive + turn) * 12000);
             RIGHT_MOTORS.move_voltage((drive - turn) * 12000);
@@ -63,52 +72,77 @@ class Drivebase
         }
 
         void goToPose(Pose2D goal, uint32_t driveTimeout = 5000, uint32_t turnTimeout = 3000) {
-            double kPLinear = 0.5;
-            double kPAngular = 0.01;
+            PID linear(0.02, 0.0001, 0.0005);
+            PID angular(0.014, 0.001, 0.0003);
             
             uint32_t startTime = pros::millis();
 
+            int count = 0;
+
+            // turn to face goal
+            while (fabs(atan2(goal.x - currentPose.x, goal.y - currentPose.y) * 180.0 / M_PI - currentPose.theta) > 0.3 && (pros::millis() - startTime) < turnTimeout) {
+                double angleError = atan2(goal.x - currentPose.x, goal.y - currentPose.y) * 180.0 / M_PI - currentPose.theta;
+                normalizeAngleDeg(angleError);
+
+                double turn = angular.update(0, -angleError);
+                normalDrive(0, turn);
+
+                updateLocalization();
+
+                pros::delay(50);
+            }
+
+            normalDrive(0, 0);
+
+            angular.reset();
+
             // drive to position
-            while (currentPose.distance(goal) > 1.0 && (pros::millis() - startTime) < driveTimeout) {
+            while (currentPose.distance(goal) > 0.5 && (pros::millis() - startTime) < driveTimeout) {
+                count++;
                 Pose2D error = goal - currentPose;
                 
-                pros::lcd::print(1, "error x: %f", error.x);
-                pros::lcd::print(2, "error y: %f", error.y);
-                pros::lcd::print(3, "error theta: %f", error.theta);
-                pros::lcd::print(4, "current theta: %f", currentPose.theta);
+                pros::lcd::print(1, "error x: %f", error.x); // 0.5
+                pros::lcd::print(2, "error y: %f", error.y); // 24
+                pros::lcd::print(3, "error theta: %f", error.theta); // 0.2
+                pros::lcd::print(4, "current theta: %f", currentPose.theta); // 0.2
+                pros::lcd::print(5, "count: %d", count); // 0.2
 
                 // project onto robot heading
-                double driveError = error.x * cos(currentPose.theta) + error.y * sin(currentPose.theta);
+                double driveError = error.x * sin(degToRad(currentPose.theta)) + error.y * cos(degToRad(currentPose.theta));
 
-                double angleError = atan2(error.y, error.x) - currentPose.theta;
-                while(angleError > M_PI) angleError -= 2*M_PI;
-                while(angleError < -M_PI) angleError += 2*M_PI;
+                double angleError = radToDeg(atan2(error.x, error.y)) - currentPose.theta;
+                normalizeAngleDeg(angleError);
 
-                double drive = kPLinear * -driveError;
-                double turn  = kPAngular * angleError;
+                double drive = linear.update(0, -driveError);
+                double turn  = angular.update(0, -angleError);
 
                 normalDrive(drive, turn);
 
                 updateLocalization();
 
-                pros::delay(10);
+                pros::delay(50);
             }
+
+            normalDrive(0, 0);
+
+            pros::delay(500);
 
             startTime = pros::millis();
 
-            // turn to final angle
-            while (fabs(currentPose.theta - goal.theta) > 0.1 && (pros::millis() - startTime) < turnTimeout) {
-                double angleError = goal.theta - currentPose.theta;
-                while(angleError > M_PI) angleError -= 2*M_PI;
-                while(angleError < -M_PI) angleError += 2*M_PI;
+            angular.reset();
 
-                double turn  = kPAngular * angleError;
+            // turn to final angle
+            while (fabs(currentPose.theta - goal.theta) > 0.3 && (pros::millis() - startTime) < turnTimeout) {
+                double angleError = goal.theta - currentPose.theta;
+                normalizeAngleDeg(angleError);
+
+                double turn = angular.update(0, -angleError);
 
                 normalDrive(0, turn);
 
                 updateLocalization();
 
-                pros::delay(10);
+                pros::delay(50);
             }
 
             // stop motors
@@ -154,8 +188,8 @@ class Drivebase
             
             prevRotation = currentRotation;
             
-            currentPose.x += ds * cos(avgThetaRad);
-            currentPose.y += ds * sin(avgThetaRad);
+            currentPose.x += ds * sin(avgThetaRad);
+            currentPose.y += ds * cos(avgThetaRad);
 
             // Update global theta (normalized to 0-360 for display/checks if needed)
             // But keep currentPose.theta as the absolute rotation for logic if you prefer
@@ -174,6 +208,7 @@ class Drivebase
             RIGHT_PORTS,
             CHASSIS_INTERNAL_GEARSET
         };
+
         Twist2D twist;
         Pose2D currentPose;
 
