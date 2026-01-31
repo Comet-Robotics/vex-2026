@@ -8,7 +8,7 @@
 class ParticleFilter
 {
     public:
-        ParticleFilter() : numParticles(100), maxScanRange(metersToFeet(6.0)), numBeams(20), particleDropFraction(0.3) {}
+        ParticleFilter() : numParticles(100), maxScanRange(metersToFeet(6.0)), numBeams(20), particleDropFraction(0.7) {}
                                                         // 6 meters max range
         struct Point {
             double x, y;
@@ -22,32 +22,55 @@ class ParticleFilter
             std::vector<LineSegment> walls;
 
             Map() {
-                // center is at (0,0), size is 12ft x 12ft
+                // center is at (0,0)
+                
+                // real map (12ft x 12ft)
+                // walls = {
+                //     {-6.0, -6.0, 6.0, -6.0},   // bottom wall
+                //     {6.0, -6.0, 6.0, 6.0},     // right wall
+                //     {6.0, 6.0, -6.0, 6.0},     // top wall
+                //     {-6.0, 6.0, -6.0, -6.0}    // left wall
+                // };
+
+                // smaller map for testing (6ft x 6ft)
                 walls = {
-                    {-6.0, -6.0, 6.0, -6.0},   // bottom wall
-                    {6.0, -6.0, 6.0, 6.0},     // right wall
-                    {6.0, 6.0, -6.0, 6.0},     // top wall
-                    {-6.0, 6.0, -6.0, -6.0}    // left wall
+                    {-3.0, -3.0, 3.0, -3.0},   // bottom wall
+                    {3.0, -3.0, 3.0, 3.0},     // right wall
+                    {3.0, 3.0, -3.0, 3.0},     // top wall
+                    {-3.0, 3.0, -3.0, -3.0}    // left wall
                 };
             }
         };
 
+        /**
+         * @struct Particle
+         * @brief Particle structure representing a single particle in the filter
+         */
         struct Particle {
-            double x;
-            double y;
-            double theta;
-            double weight;
+            double x;      ///< The x coordinate of the particle in feet
+            double y;      ///< The y coordinate of the particle in feet
+            double theta;  ///< The orientation of the particle in radians
+            double weight; ///< The weight of the particle
         };
 
+        /**
+         * @struct Odometry
+         * @brief Odometry structure representing robot motion data
+         */
         struct Odometry {
-            double vx;
-            double vy;
-            double w;
+            double vx;      ///< Linear velocity in the x direction (feet per second)
+            double vy;      ///< Linear velocity in the y direction (feet per second)
+            double w;       ///< Angular velocity (radians per second)
         };
 
+        /**
+         * @struct LaserScan
+         * @brief LaserScan structure representing a LIDAR scan
+         */
         struct LaserScan {
-            std::vector<float> ranges;
-            double angle_min, angle_increment;
+            std::vector<float> ranges;  ///< Distance measurements from the LIDAR in feet
+            double angle_min;           ///< Minimum angle of the scan in radians
+            double angle_increment;     ///< Angle increment between measurements in radians
         };
 
         /**
@@ -57,13 +80,15 @@ class ParticleFilter
         * @param new_max_angle The maximum angle of the resampled scan in degrees
         * @param num_beams The number of beams in the resampled scan
         * @return The resampled laser scan
+        * @note x axis is in the direction of the motor, and y axis is angled 90 degrees counter-clockwise from the motor
+        * @note 0 degrees is in the direction of the x axis, or the motor, and angles increase clockwise
         */
         sensor_msgs::msg::LaserScan resampleLaserScan(
             const sensor_msgs::msg::LaserScan &in,
             float new_min_angle,
             float new_max_angle,
-            int num_beams) 
-        {
+            int num_beams
+        ) {
 
             std::cout << "Resampling laser scan: ("
                  << in.angle_min << " to " << in.angle_max
@@ -85,6 +110,9 @@ class ParticleFilter
             out.angle_min = new_min_angle;
             out.angle_max = new_max_angle;
             out.angle_increment = (new_max_angle - new_min_angle) / (num_beams - 1);
+
+            minAngle = new_min_angle;
+            angleIncrement = out.angle_increment;
 
             out.ranges.resize(num_beams);
             out.intensities.resize(num_beams);
@@ -109,7 +137,6 @@ class ParticleFilter
                     std::cerr << "Index " << idx << " out of bounds for input scan size " << in.ranges.size() << std::endl;
                 }
             }
-
             return out;
         }
 
@@ -120,34 +147,91 @@ class ParticleFilter
         * @param heading Optional initial heading
         * @return A vector of initialized particles
         */
+        // std::vector<Particle> initializeParticles(
+        //     std::optional<double> x = std::nullopt,
+        //     std::optional<double> y = std::nullopt,
+        //     std::optional<double> heading = std::nullopt)
+        // {
+        //     std::vector<Particle> particles;
+        //     for (int i = 0; i < numParticles; i++) {
+        //         Particle p;
+        //         p.x = x.value_or(((double)rand() / RAND_MAX) * 12.0 - 6.0);
+        //         p.y = y.value_or(((double)rand() / RAND_MAX) * 12.0 - 6.0);
+        //         p.theta = heading.value_or(((double)rand() / RAND_MAX) * 2.0 * M_PI);
+        //         p.weight = 1.0;
+        //         particles.push_back(p);
+        //     }
+        //     return particles;
+        // }
+
+
+
+        // needs testing
+        /**
+        * Initialize particles randomly within the map boundaries
+        * @param x Optional initial x position
+        * @param y Optional initial y position
+        * @param heading Optional initial heading
+        * @return A vector of initialized particles
+        */
         std::vector<Particle> initializeParticles(
             std::optional<double> x = std::nullopt,
             std::optional<double> y = std::nullopt,
-            std::optional<double> heading = std::nullopt)
-        {
+            std::optional<double> heading = std::nullopt
+        ) {
+            constexpr double MAP_HALF = 6.0;          // map bounds [-6, 6] ft
+            constexpr double BOX_HALF = 0.5;          // 1 ft box → ±0.5
+            constexpr double ANG_SPREAD = M_PI / 12;  // ±15°
+
+
+            // returns 0-1
+            auto urand = []() {
+                return (double)rand() / RAND_MAX;
+            };
+
+            const bool hasXY = x && y;
+
             std::vector<Particle> particles;
+            particles.reserve(numParticles);
+
             for (int i = 0; i < numParticles; i++) {
                 Particle p;
-                p.x = x.value_or(((double)rand() / RAND_MAX) * 12.0 - 6.0);
-                p.y = y.value_or(((double)rand() / RAND_MAX) * 12.0 - 6.0);
-                p.theta = heading.value_or(((double)rand() / RAND_MAX) * 2.0 * M_PI);
-                p.weight = 1.0;
+
+                if (hasXY) {
+                    // Uniform 1 ft box around provided pose
+                    p.x = *x + (urand() * 2.0 - 1.0) * BOX_HALF;
+                    p.y = *y + (urand() * 2.0 - 1.0) * BOX_HALF;
+                } else {
+                    // Uniform over entire map
+                    p.x = (urand() * 2.0 - 1.0) * MAP_HALF;
+                    p.y = (urand() * 2.0 - 1.0) * MAP_HALF;
+                }
+
+                if (heading) {
+                    p.theta = *heading + (urand() * 2.0 - 1.0) * ANG_SPREAD;
+                } else {
+                    p.theta = urand() * 2.0 * M_PI;
+                }
+
+                p.weight = 1.0 / numParticles;
                 particles.push_back(p);
             }
+
             return particles;
         }
+
 
         /**
         * Simulate a LIDAR scan from a given particle
         * @param p The particle from which the LIDAR scan is simulated
         * @param noise The measurement noise to be added
         * @return A LaserScan struct containing the simulated scan data
+        * @note x axis is in the direction of the motor, and y axis is angled 90 degrees counter-clockwise from the motor
+        * @note 0 degrees is in the direction of the x axis, or the motor, and angles increase clockwise
         */
         LaserScan lidar_scan(Particle p) {
             LaserScan scan;
             Point ray_start{p.x, p.y};
-            double minAngle = 0.0;
-            double angleIncrement = (2.0 * M_PI) / numBeams;
             scan.angle_min = minAngle;
             scan.angle_increment = angleIncrement;
 
@@ -179,54 +263,47 @@ class ParticleFilter
         * Predict particle states based on odometry data
         * @param particles The vector of particles to predict
         * @param odom The odometry data
-        * @param dt The time interval
-        * @param sigmaV The standard deviation of the linear velocity noise
-        * @param sigmaW The standard deviation of the angular velocity noise
+        * @param dt The time delta for prediction
+        * @param xy_sigma The standard deviation for position noise
+        * @param theta_sigma The standard deviation for orientation noise
+        * @param vxy_sigma The standard deviation for linear velocity noise
+        * @param gamma_sigma The standard deviation for angular velocity noise
         * @return A vector of predicted particles
         */
-        std::vector<Particle> predictParticles(const std::vector<Particle> &particles, 
-                                                const Odometry &odom,
-                                                const double dt,
-                                                const double xy_sigma = 0.01,
-                                                const double theta_sigma = 0.01,
-                                                const double vxy_sigma = 0.05,
-                                                const double gamma_sigma = 0.02)
-        {
+        std::vector<Particle> predictParticles(
+            const std::vector<Particle> &particles,
+            const Odometry &odom,
+            const double dt,
+            const double xy_sigma = 0.03,
+            const double theta_sigma = 0.01
+        ) {
             std::vector<Particle> predictedParticles;
             predictedParticles.reserve(particles.size());
+
             for (const auto &p : particles) {
                 Particle pPred = p;
 
-                double vx_noise = gaussianDistribution(0, vxy_sigma);
-                double vy_noise = gaussianDistribution(0, vxy_sigma);
-                double gamma_noise = gaussianDistribution(0, gamma_sigma);
-                double x_jitter = gaussianDistribution(0, xy_sigma);
-                double y_jitter = gaussianDistribution(0, xy_sigma);
-                double theta_jitter = gaussianDistribution(0, theta_sigma);
+                // Noise
+                double noiseX = gaussianDistribution(0.0, xy_sigma);
+                double noiseY = gaussianDistribution(0.0, xy_sigma);
+                double noiseTheta = gaussianDistribution(0.0, theta_sigma);
 
-                double vxb = odom.vx + vx_noise;
-                double vyb = odom.vy + vy_noise;
-                double wb = odom.w + gamma_noise;
+                double cosT = std::cos(p.theta);
+                double sinT = std::sin(p.theta);
 
-                // transform body-frame delta to world-frame using current heading
-                // dx_body = vxb * dt ; dy_body = vyb * dt
-                double dx_world = std::cos(p.theta) * (vxb * dt) - std::sin(p.theta) * (vyb * dt);
-                double dy_world = std::sin(p.theta) * (vxb * dt) + std::cos(p.theta) * (vyb * dt);
-                double dtheta = wb * dt;
+                double dx = (odom.vx * cosT - odom.vy * sinT) * dt;
+                double dy = (odom.vx * sinT + odom.vy * cosT) * dt;
 
-                double x_new = p.x + dx_world + x_jitter;
-                double y_new = p.y + dy_world + y_jitter;
-                double theta_new = angleNormalize(p.theta + dtheta + theta_jitter);
-                // double theta_new = angleNormalize(p.theta + odom.w * dt + theta_jitter);
-
-                pPred.x = x_new;
-                pPred.y = y_new;
-                pPred.theta = theta_new;
+                pPred.x = p.x + dx + noiseX;
+                pPred.y = p.y + dy + noiseY;
+                pPred.theta = angleNormalize(p.theta + odom.w * dt + noiseTheta);
 
                 predictedParticles.push_back(pPred);
             }
+
             return predictedParticles;
         }
+
 
         /**
         * Weight particles based on laser scan measurements
@@ -234,9 +311,10 @@ class ParticleFilter
         * @param particles The vector of particles to weight
         * @return A vector of weighted particles
         */
-        std::vector<Particle> weightParticles(const LaserScan &scan, 
-                                            const std::vector<Particle> &particles)
-        {
+        std::vector<Particle> weightParticles(
+            const LaserScan &scan, 
+            const std::vector<Particle> &particles
+        ) {
 
             double sigma = metersToFeet(0.067); // A1M8 lidar usually has a noise of 2-3 cm
             int N = particles.size();
@@ -258,7 +336,7 @@ class ParticleFilter
                 abs_errs.clear();
 
                 for (int k = 0; k < numBeams; k++) {
-                    double e = metersToFeet(scan.ranges[k]) - z_hat_data.ranges[k];
+                    double e = scan.ranges[k] - z_hat_data.ranges[k];
                     errs.push_back(e);
                     abs_errs.push_back(std::abs(e));
                 }
@@ -327,58 +405,42 @@ class ParticleFilter
         */
        std::vector<Particle> resampleParticles(const std::vector<Particle> &particles)
        {
-            int N = static_cast<int>(particles.size());
-            std::vector<Particle> new_particles;
-            new_particles.reserve(N);
-
-            // 1. Create a random starting point (r) between 0 and 1/N
-            std::uniform_real_distribution<double> dist(0.0, 1.0 / N);
-            double r = dist(gen);
-            
-            // 2. The "Wheel" logic
-            double c = particles[0].weight; // Cumulative weight sum
-            int i = 0;
-
-            for (int m = 0; m < N; m++) {
-                // U is the current "pointer" on the wheel
-                double U = r + static_cast<double>(m) / N;
-                
-                // Move through the weights until we find the particle that spans U
-                while (U > c && i < N - 1) {
-                    i++;
-                    c += particles[i].weight;
-                }
-                new_particles.push_back(particles[i]);
+            // Only resample if low effective sample size
+            double sumSquaredWeights = 0.0;
+            for (const auto &p : particles) {
+                sumSquaredWeights += p.weight * p.weight;
             }
+            double effectiveSampleSize = 1 / sumSquaredWeights;
+            if (effectiveSampleSize < 0.5 * particles.size()) {
+                int N = static_cast<int>(particles.size());
+                std::vector<Particle> new_particles;
+                new_particles.reserve(N);
 
-            return new_particles;
-        }
-        // std::vector<Particle> resampleParticles(const std::vector<Particle> &particles)
-        // {
-        //     std::vector<Particle> new_particles;
+                // 1. Create a random starting point (r) between 0 and 1/N
+                std::uniform_real_distribution<double> dist(0.0, 1.0 / N);
+                double r = dist(gen);
+                
+                // 2. The "Wheel" logic
+                double c = particles[0].weight; // Cumulative weight sum
+                int i = 0;
+
+                for (int m = 0; m < N; m++) {
+                    // U is the current "pointer" on the wheel
+                    double U = r + static_cast<double>(m) / N;
+                    
+                    // Move through the weights until we find the particle that spans U
+                    while (U > c && i < N - 1) {
+                        i++;
+                        c += particles[i].weight;
+                    }
+                    new_particles.push_back(particles[i]);
+                }
+
+                return new_particles;
+            }
             
-        //     new_particles.reserve(particles.size());
-        //     std::vector<double> weights;
-        //     weights.reserve(particles.size());
-        //     for (const auto &p : particles) {
-        //         weights.push_back(p.weight);
-        //     }
-
-        //     /*
-        //     Create a discrete distribution based on particle weights
-        //     This generates indices according to the weights, where 
-        //     particles with higher weights are more likely to be chosen
-        //     */
-        //     std::discrete_distribution<int> dist(
-        //         weights.begin(), weights.end()
-        //     );
-
-        //     for (size_t i = 0; i < particles.size(); ++i) {
-        //         new_particles.push_back(particles[dist(gen)]);
-        //     }
-
-        //     return new_particles;
-        // }
+            return particles;
+        }
 
         /**
         * Estimate the robot's pose based on the weighted particles
@@ -392,12 +454,16 @@ class ParticleFilter
                 weight_sum += p.weight;
             }
 
+            if (std::fabs(weight_sum - 1.0) > 1e-6) {
+                std::cerr << "Warning: Total particle weight is not 1.0. It is " << weight_sum << "." << std::endl;
+            }
+
             double x = 0.0;
             double y = 0.0;
             double sin = 0.0; 
             double cos = 0.0;
             for (const auto &p : particles) {
-                double w = p.weight / weight_sum;
+                double w = p.weight;
                 x += p.x * w;
                 y += p.y * w;
                 sin += std::sin(p.theta) * w;
@@ -407,8 +473,22 @@ class ParticleFilter
             return {x, y, theta};
         }
 
+        /**
+         * Get the number of beams used in the LIDAR scan simulation
+         * @return The number of beams
+         */
         int getNumBeams() const {
             return numBeams;
+        }
+
+        /**
+         * Convert meters to feet
+         * @param meters The value in meters
+         * @return The value converted to feet
+         */
+        double metersToFeet(double meters)
+        {
+            return meters * 3.28084;
         }
 
     private:
@@ -417,6 +497,9 @@ class ParticleFilter
         const int32_t numBeams;
         const double particleDropFraction = 0.7; // Fraction of particles to drop
         const Map map_;
+        
+        double minAngle = 0.0;
+        double angleIncrement = (2.0 * M_PI) / numBeams;
 
         std::mt19937 gen{std::random_device{}()};
 
@@ -443,21 +526,28 @@ class ParticleFilter
         * @param wallY2 The y coordinate of the second wall endpoint
         * @return A vector containing the intersection point coordinates if an intersection exists, otherwise an empty vector
         */
-        std::vector<double> findIntersection(double startX, double startY, double endX, double endY,
-                                            double wallX1, double wallY1, double wallX2, double wallY2)
-        {
+        std::vector<double> findIntersection(
+            double startX, 
+            double startY, 
+            double endX, 
+            double endY,
+            double wallX1, 
+            double wallY1, 
+            double wallX2,
+            double wallY2
+        ) {
             double dxRay = endX - startX;
             double dyRay = endY - startY;
             double dxWall = wallX2 - wallX1;
             double dyWall = wallY2 - wallY1;
 
             double denominator = dxRay * dyWall - dyRay * dxWall;
-            if (denominator == 0) {
+            if (std::fabs(denominator) < 1e-9) {
                 return {}; // Parallel lines
             }
             double t = ((startX - wallX1) * dyWall - (startY - wallY1) * dxWall) / denominator;
             double u = -((startX - wallX1) * dyRay - (startY - wallY1) * dxRay) / denominator;
-            if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+            if (t >= 0.0 && t <= 1.0 && u >= 0.0 && u <= 1.0) {
                 double intersectionX = startX + t * dxRay;
                 double intersectionY = startY + t * dyRay;
                 return {intersectionX, intersectionY};
@@ -473,16 +563,6 @@ class ParticleFilter
          */
         bool inFreeSpace(double x, double y) {
             return (x >= -6.0 && x <= 6.0 && y >= -6.0 && y <= 6.0);
-        }
-
-        /**
-         * Convert meters to feet
-         * @param meters The value in meters
-         * @return The value converted to feet
-         */
-        double metersToFeet(double meters)
-        {
-            return meters * 3.28084;
         }
 
         /**
