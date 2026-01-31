@@ -118,20 +118,20 @@ def draw_lidar(x, y, lidar_data):
             pygame.draw.line(screen, (255, 200, 0), (rsx, rsy), (hx, hy), 1)
             pygame.draw.circle(screen, (0, 255, 255), (hx, hy), 2)
 
-def intersect_ray_segment(p0, p1, r0, r1):
+def intersect_segment_segment(p0, p1, r0, r1):
     x1, y1 = p0
     x2, y2 = p1
     x3, y3 = r0
     x4, y4 = r1
 
     denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
-    if abs(denom) < 1e-6:
+    if abs(denom) < 1e-9:
         return None
 
     t = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom
     u = -((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom
 
-    if 0 <= t <= 1 and u >= 0:
+    if 0 <= t <= 1 and 0 <= u <= 1:
         ix = x1 + t * (x2 - x1)
         iy = y1 + t * (y2 - y1)
         return (ix, iy)
@@ -163,20 +163,20 @@ def lidar_scan(rx, ry, robot_theta, obstacle_edges=fake_edges):
         for edge in obstacle_edges:
             p0 = edge[:2]
             p1 = edge[2:]
-            pt = intersect_ray_segment(p0, p1, (rx, ry), end)
+            pt = intersect_segment_segment(p0, p1, (rx, ry), end)
             if pt is not None:
                     d = math.hypot(pt[0] - rx, pt[1] - ry)
                     if d < min_dist:
                         min_dist = d
                         hit_point = pt
         # add measurement noise
-        noise = np.random.normal(0.0, MEAS_NOISE_LIDAR)
-        min_dist = max(0.0, min(LIDAR_MAX_RANGE, min_dist + noise))
+        # noise = np.random.normal(0.0, MEAS_NOISE_LIDAR)
+        # min_dist = max(0.0, min(LIDAR_MAX_RANGE, min_dist + noise))
         
         distances.append((angle, min_dist, hit_point[0] if hit_point else None, hit_point[1] if hit_point else None))
     return distances
 
-def predict_particles(particles, control_input, robot_theta, xy_noise=0.03, theta_noise=0.0075):
+def predict_particles(particles, control_input, xy_noise=0.03, theta_noise=0.0075):
     speed, angular_speed, dt = control_input
 
     # xy_noise = xy_noise + xy_noise * abs(speed)
@@ -412,7 +412,7 @@ while running:
     distances = np.array([[dist] for _, dist, _, _ in lidar_data], dtype=np.float32)
 
     # Particle filter steps
-    particles = predict_particles(particles, (speed, angular_speed, dt), robot_theta)
+    particles = predict_particles(particles, (speed, angular_speed, dt))
     # print("Prediction step time:", time.time() - previous_time)
     # previous_time = time.time()
 
