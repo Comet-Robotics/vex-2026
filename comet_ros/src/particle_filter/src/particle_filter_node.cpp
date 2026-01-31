@@ -63,7 +63,7 @@ class ParticleFilterNode : public rclcpp::Node
             sensor_msgs::msg::LaserScan resampledScan = pf.resampleLaserScan(*msg, 0.0, 360.0, pf.getNumBeams());
 
             ParticleFilter::LaserScan pfScan;
-            pfScan.ranges = resampledScan.ranges;
+            pfScan.ranges = metersToFeet(resampledScan.ranges);
             pfScan.angle_min = resampledScan.angle_min;
             pfScan.angle_increment = resampledScan.angle_increment;
 

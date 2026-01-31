@@ -32,22 +32,36 @@ class ParticleFilter
             }
         };
 
+        /**
+         * @struct Particle
+         * @brief Particle structure representing a single particle in the filter
+         */
         struct Particle {
-            double x;
-            double y;
-            double theta;
-            double weight;
+            double x;      ///< The x coordinate of the particle in feet
+            double y;      ///< The y coordinate of the particle in feet
+            double theta;  ///< The orientation of the particle in radians
+            double weight; ///< The weight of the particle
         };
 
+
+        /**
+         * @struct Odometry
+         * @brief Odometry structure representing robot motion data
+         */
         struct Odometry {
-            double vx;
-            double vy;
-            double w;
+            double vx;      ///< Linear velocity in the x direction (feet per second)
+            double vy;      ///< Linear velocity in the y direction (feet per second)
+            double w;       ///< Angular velocity (radians per second)
         };
 
+        /**
+         * @struct LaserScan
+         * @brief LaserScan structure representing a LIDAR scan
+         */
         struct LaserScan {
-            std::vector<float> ranges;
-            double angle_min, angle_increment;
+            std::vector<float> ranges;  ///< Distance measurements from the LIDAR in feet
+            double angle_min;           ///< Minimum angle of the scan in radians
+            double angle_increment;     ///< Angle increment between measurements in radians
         };
 
         /**
@@ -109,7 +123,6 @@ class ParticleFilter
                     std::cerr << "Index " << idx << " out of bounds for input scan size " << in.ranges.size() << std::endl;
                 }
             }
-
             return out;
         }
 
@@ -258,7 +271,7 @@ class ParticleFilter
                 abs_errs.clear();
 
                 for (int k = 0; k < numBeams; k++) {
-                    double e = metersToFeet(scan.ranges[k]) - z_hat_data.ranges[k];
+                    double e = scan.ranges[k] - z_hat_data.ranges[k];
                     errs.push_back(e);
                     abs_errs.push_back(std::abs(e));
                 }
@@ -452,12 +465,12 @@ class ParticleFilter
             double dyWall = wallY2 - wallY1;
 
             double denominator = dxRay * dyWall - dyRay * dxWall;
-            if (denominator == 0) {
+            if (std::fabs(denominator) < 1e-9) {
                 return {}; // Parallel lines
             }
             double t = ((startX - wallX1) * dyWall - (startY - wallY1) * dxWall) / denominator;
             double u = -((startX - wallX1) * dyRay - (startY - wallY1) * dxRay) / denominator;
-            if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+            if (t >= 0.0 && t <= 1.0 && u >= 0.0 && u <= 1.0) {
                 double intersectionX = startX + t * dxRay;
                 double intersectionY = startY + t * dyRay;
                 return {intersectionX, intersectionY};
