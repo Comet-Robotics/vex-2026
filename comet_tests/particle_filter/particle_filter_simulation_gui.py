@@ -3,6 +3,7 @@ import math
 import numpy as np
 import time
 import matplotlib.path as mpath
+import random
 
 pygame.init()
 
@@ -184,6 +185,10 @@ def predict_particles(particles, control_input, robot_theta, xy_noise=0.03, thet
     new_particles = np.zeros_like(particles)
     noise_xy = np.random.normal(0, xy_noise, size=(len(particles), 2))
     noise_theta = np.random.normal(0, theta_noise, size=len(particles))
+
+    noise_xy += noise_xy * abs(speed)
+    noise_theta += noise_theta * abs(angular_speed)
+
     new_particles[:, 0] = particles[:, 0] + np.cos(particles[:, 2]) * speed * dt + noise_xy[:, 0]
     new_particles[:, 1] = particles[:, 1] + np.sin(particles[:, 2]) * speed * dt + noise_xy[:, 1]
     new_particles[:, 2] = particles[:, 2] + angular_speed * dt + noise_theta
@@ -218,7 +223,7 @@ def correct_particles(particles, lidar_distances):
 
         ll = -0.5 * np.sum((err ** 2) / sigma2)
         if not in_free_space(px, py):
-            ll -= 5.0
+            ll -= 1e9
         logw[i] = ll
 
     m = np.max(logw)
@@ -269,9 +274,38 @@ def low_variance_resample(particles, weights, theta):
     return new_particles
 
 def resample_particles(particles, weights):
-    indices = np.random.choice(len(particles), size=len(particles), p=weights)
-    new_particles = particles[indices]
-    return new_particles
+    # # only resample if low effective sample size
+    # neff = 1.0 / np.sum(weights ** 2)
+    # if neff < 0.5 * len(particles):
+    #     print("Resampling particles, Neff =", neff)
+    #     indices = np.random.choice(len(particles), size=len(particles), p=weights)
+    #     new_particles = particles[indices]
+    #     return new_particles
+    # return particles
+    # Compute effective sample size
+    neff = 1.0 / np.sum(weights ** 2)
+    N = len(particles)
+    if neff < 0.5 * N:
+        new_particles = []
+
+        # 1. Random starting point r in [0, 1/N)
+        r = random.uniform(0.0, 1.0 / N)
+
+        # 2. Low-variance wheel resampling
+        c = weights[0]
+        i = 0
+        for m in range(N):
+            U = r + m / N
+            while U > c and i < N - 1:
+                i += 1
+                c += weights[i]
+            new_particles.append(particles[i])
+
+        new_particles = np.array(new_particles)
+        return new_particles
+
+    return particles
+
     # return low_variance_resample(particles, weights, robot_theta)
 
     # newParticles = particles.copy()
@@ -401,6 +435,13 @@ while running:
     draw_lidar(robot_x, robot_y, lidar_data)
     draw_particles(particles)
     pygame.display.set_caption(f"Driveable Robot Simulation — {clock.get_fps()} FPS")
+    # print text on display showing error between estimated pose and true pose
+    error_x = (estimated_pose[0] - robot_x) * 12  # convert to inches
+    error_y = (estimated_pose[1] - robot_y) * 12  # convert to inches
+    error_theta = estimated_pose[2] - robot_theta
+    font = pygame.font.SysFont(None, 24)
+    error_text = font.render(f"Error: x {error_x:.2f} in, y {error_y:.2f} in, θ {math.degrees(error_theta):.2f}°", True, WHITE)
+    screen.blit(error_text, (10, 10))
     # print("FPS:", 1 / (time.time() - start_time))
     pygame.display.flip()
 
