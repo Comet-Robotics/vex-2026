@@ -359,6 +359,7 @@ particles = np.column_stack((
 running = True
 iteration = 1
 weights = None
+errors = np.zeros((0, 2), dtype=np.float32)
 while running:
     start_time = time.time()
     dt = clock.tick_busy_loop(60) / 1000.0
@@ -445,6 +446,28 @@ while running:
     # print("FPS:", 1 / (time.time() - start_time))
     pygame.display.flip()
 
+    # Collect error statistics
+    errors = np.vstack([errors, [math.hypot(error_x, error_y), error_theta]])
+
     iteration += 1
+
+# Print final error statistics
+mean_error = np.mean(errors, axis=0)
+std_error = np.std(errors, axis=0)
+print(f"Final Error Statistics over {iteration} iterations:")
+print(f"Mean Error: {mean_error[0]:.2f} in, th {math.degrees(mean_error[1]):.2f} deg")
+print(f"Std Dev Error: {std_error[0]:.2f} in, th {math.degrees(std_error[1]):.2f} deg")
+
+percentile_95 = np.percentile(np.abs(errors), 95, axis=0)
+print(f"95th Percentile Error: {percentile_95[0]:.2f} in, th {math.degrees(percentile_95[1]):.2f} deg")
+
+percentile_99 = np.percentile(np.abs(errors), 99, axis=0)
+print(f"99th Percentile Error: {percentile_99[0]:.2f} in, th {math.degrees(percentile_99[1]):.2f} deg")
+
+percentile_5 = np.percentile(np.abs(errors), 5, axis=0)
+print(f"5th Percentile Error: {percentile_5[0]:.2f} in, th {math.degrees(percentile_5[1]):.2f} deg")
+
+percentile_1 = np.percentile(np.abs(errors), 1, axis=0)
+print(f"1st Percentile Error: {percentile_1[0]:.2f} in, th {math.degrees(percentile_1[1]):.2f} deg")
 
 pygame.quit()
