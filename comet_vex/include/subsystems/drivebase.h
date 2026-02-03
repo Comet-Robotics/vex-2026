@@ -71,7 +71,7 @@ class Drivebase
             currentPose = pose;
         }
 
-        void goToPose(Pose2D goal, uint32_t driveTimeout = 5000, uint32_t turnTimeout = 3000) {
+        void goToPoseBasic(Pose2D goal, uint32_t driveTimeout = 5000, uint32_t turnTimeout = 3000) {
             PID linear(0.02, 0.0001, 0.0005);
             PID angular(0.014, 0.001, 0.0003);
             
@@ -149,6 +149,52 @@ class Drivebase
             normalDrive(0, 0);
         }
 
+        void goToPoseRamsete(Pose2D goal) {
+            while (currentPose.distance(goal) > 1.0 || fabs(currentPose.theta - goal.theta) > 1.0) {
+                double errorX = goal.x - currentPose.x;
+                double errorY = goal.y - currentPose.y;
+                double errorTheta = degToRad(goal.theta - currentPose.theta);
+
+                double errorXRobot = errorX * cos(degToRad(currentPose.theta)) + errorY * sin(degToRad(currentPose.theta));
+                double errorYRobot = -errorX * sin(degToRad(currentPose.theta)) + errorY * cos(degToRad(currentPose.theta));
+
+                // calculate gain value
+                const double b = 1.5;
+                const double zeta = 0.7;
+                const double k_v = 1.0;
+                const double k_theta = 1.5;
+                double v_d = k_v * errorXRobot;
+                double w_d = k_theta * errorTheta;
+
+                double k = 2.0 * zeta * sqrt(w_d * w_d + b * v_d * v_d);
+
+                double sinc;
+                if (fabs(errorTheta) < 1e-6) {
+                    sinc = 1.0;
+                }
+                else {
+                    sinc = sin(errorTheta) / errorTheta;
+                }
+
+                double v = v_d * cos(errorTheta) + k * errorXRobot; // target linear velocity (in/s)
+                double w = w_d + k * errorTheta + (b * v_d * sinc * errorYRobot); // target angular velocity (rad/s)
+
+                // convert to -1 to 1 range
+                const double MAX_VELOCITY = WHEEL_RADIUS * 2 * M_PI * DRIVETRAIN_GEAR_RATIO * 600 / 60.0; // in/s
+                const double MAX_ANGULAR_VELOCITY = 2 * MAX_VELOCITY / TRACK_WIDTH; // rad/s
+                v = v / MAX_VELOCITY; // normalize to -1 to 1
+                w = w / MAX_ANGULAR_VELOCITY; // normalize to -1 to 1
+
+
+                normalDrive(v, w);
+
+                updateLocalization();
+
+                pros::delay(20);
+            }
+            normalDrive(0, 0);
+        }
+
         void updateLocalization() {
             // 1. Get current sensor values
             double leftPos = LEFT_MOTORS.get_position();   // degrees
@@ -193,7 +239,7 @@ class Drivebase
 
             // Update global theta (normalized to 0-360 for display/checks if needed)
             // But keep currentPose.theta as the absolute rotation for logic if you prefer
-            currentPose.theta = currentRotation; 
+            currentPose.theta = currentRotation;
         }
 
         Pose2D getPose() {

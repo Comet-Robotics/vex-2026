@@ -15,6 +15,7 @@ namespace constants
         inline constexpr auto CHASSIS_INTERNAL_GEARSET = pros::v5::MotorGears::blue;
         inline constexpr auto WHEEL_RADIUS = 3.25 / 2;
         inline constexpr auto DRIVETRAIN_GEAR_RATIO = 1;
+        inline constexpr auto TRACK_WIDTH = 13.5;
 
         inline constexpr int8_t IMU_PORT = 1;
         inline pros::Imu IMU(IMU_PORT);

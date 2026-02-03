@@ -14,6 +14,6 @@ void autonomous_initialize() {
 
 void autonomous() {
     pros::lcd::print(0, "before gotopose");
-    drivebase->goToPose(Pose2D(12, 24, 0));
+    drivebase->goToPoseBasic(Pose2D(12, 24, 0));
     pros::lcd::print(0, "after gotopose");
 }
