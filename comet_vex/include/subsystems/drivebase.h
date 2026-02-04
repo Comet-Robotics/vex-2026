@@ -153,7 +153,7 @@ class Drivebase
             while (currentPose.distance(goal) > 1.0 || fabs(currentPose.theta - goal.theta) > 1.0) {
                 double errorX = goal.x - currentPose.x;
                 double errorY = goal.y - currentPose.y;
-                double errorTheta = degToRad(goal.theta - currentPose.theta);
+                double errorTheta = normalizeAngle(degToRad(goal.theta - currentPose.theta));
 
                 double errorXRobot = errorX * cos(degToRad(currentPose.theta)) + errorY * sin(degToRad(currentPose.theta));
                 double errorYRobot = -errorX * sin(degToRad(currentPose.theta)) + errorY * cos(degToRad(currentPose.theta));
@@ -163,6 +163,8 @@ class Drivebase
                 const double zeta = 0.7;
                 const double k_v = 1.0;
                 const double k_theta = 1.5;
+
+                // TODO: replace with trajectory tracking values
                 double v_d = k_v * errorXRobot;
                 double w_d = k_theta * errorTheta;
 
@@ -180,10 +182,10 @@ class Drivebase
                 double w = w_d + k * errorTheta + (b * v_d * sinc * errorYRobot); // target angular velocity (rad/s)
 
                 // convert to -1 to 1 range
-                const double MAX_VELOCITY = WHEEL_RADIUS * 2 * M_PI * DRIVETRAIN_GEAR_RATIO * 600 / 60.0; // in/s
-                const double MAX_ANGULAR_VELOCITY = 2 * MAX_VELOCITY / TRACK_WIDTH; // rad/s
-                v = v / MAX_VELOCITY; // normalize to -1 to 1
-                w = w / MAX_ANGULAR_VELOCITY; // normalize to -1 to 1
+                const double MAX_V = WHEEL_RADIUS * 2 * M_PI * DRIVETRAIN_GEAR_RATIO * 600 / 60.0; // in/s
+                const double MAX_W = 2 * MAX_V / TRACK_WIDTH; // rad/s
+                v = v / MAX_V; // normalize to -1 to 1
+                w = w / MAX_W; // normalize to -1 to 1
 
 
                 normalDrive(v, w);
@@ -193,6 +195,132 @@ class Drivebase
                 pros::delay(20);
             }
             normalDrive(0, 0);
+        }
+
+        void goToPoseUnicycle(Pose2D goal) {
+            const double k_rho = 2.5;
+            const double k_alpha = 4.0;
+            const double k_beta = -1.5;
+
+            const double MAX_V = WHEEL_RADIUS * 2 * M_PI * DRIVETRAIN_GEAR_RATIO * 600 / 60.0;
+            const double MAX_W = 2 * MAX_V / TRACK_WIDTH;
+
+            while (true) {
+                double theta = degToRad(currentPose.theta);
+                double goalTheta = degToRad(goal.theta);
+
+                double dx = goal.x - currentPose.x;
+                double dy = goal.y - currentPose.y;
+
+                double rho = hypot(dx, dy);
+                double alpha = normalizeAngle(atan2(dy, dx) - theta);
+                double beta = normalizeAngle(goalTheta - theta - alpha);
+
+                if (rho < 1.0 && fabs(beta) < degToRad(2)) break;
+
+                double v = k_rho * rho;
+                double w = k_alpha * alpha + k_beta * beta;
+
+                v /= MAX_V;
+                w /= MAX_W;
+
+                normalDrive(v, w);
+                updateLocalization();
+                pros::delay(20);
+            }
+
+            normalDrive(0,0);
+        }
+
+        double measureMaxV(uint32_t testTimeMs = 1500, bool print = true) {
+            double maxV = 0;
+
+            Pose2D prev = currentPose;
+
+            uint32_t start = prevTime;
+            uint32_t prevTime = pros::millis();
+            normalDrive(1.0, 0.0);
+
+            while (pros::millis() - start < testTimeMs) {
+                pros::delay(10); // at top to allow updateLocalization to have some time
+
+                updateLocalization();
+
+                uint32_t now = pros::millis();
+                double dt = (now - prevTime) / 1000.0;
+
+                double dx = currentPose.x - prev.x;
+                double dy = currentPose.y - prev.y;
+
+                double v = hypot(dx, dy) / dt;
+
+                if (v > maxV) {
+                    maxV = v;
+                }
+
+                prev = currentPose;
+                prevTime = now;
+            }
+
+            normalDrive(0, 0);
+
+            if (print) {
+                pros::lcd::print(0, "Measured Max V: %f in/s", maxV);
+            }
+
+            return maxV;
+        }
+
+        double measureMaxW(uint32_t testTimeMs = 1500, bool print = true) {
+            double maxW = 0;
+
+            double prevTheta = currentPose.theta;
+
+            uint32_t start = prevTime;
+            uint32_t prevTime = pros::millis();
+            double prevRot = IMU.get_rotation();
+            normalDrive(0.0, 1.0);
+
+            while (pros::millis() - start < testTimeMs) {
+                pros::delay(10); // at top to allow updateLocalization to have some time
+
+                double currentRot = IMU.get_rotation();
+
+                uint32_t now = pros::millis();
+                double dt = (now - prevTime) / 1000.0;
+
+                double dTheta = normalizeAngle(degToRad(currentRot - prevRot));
+
+                double w = fabs(dTheta) / dt;
+
+                if (w > maxW) {
+                    maxW = w;
+                }
+
+                prevTheta = currentPose.theta;
+                prevTime = now;
+                prevRot = currentRot;
+            }
+
+            normalDrive(0, 0);
+
+            if (print) {
+                pros::lcd::print(0, "Measured Max W: %f rad/s", maxW);
+            }
+
+            return maxW;
+        }
+
+        void calculateMaxSpeeds(uint32_t testTimeMs = 1500) {
+            pros::lcd::print(0, "Calculating max speeds...");
+            pros::lcd::print(1, "Calculating max V...");
+            double maxV = measureMaxV(testTimeMs, print=false);
+            pros::delay(1000);
+            pros::lcd::print(2, "Calculating max W...");
+            double maxW = measureMaxW(testTimeMs, print=false);
+
+            pros::lcd::print(3, "Max V: %f in/s", maxV);
+            pros::lcd::print(4, "Max W: %f rad/s", maxW);
         }
 
         void updateLocalization() {
