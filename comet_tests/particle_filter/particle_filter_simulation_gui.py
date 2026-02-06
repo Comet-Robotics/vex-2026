@@ -351,10 +351,17 @@ angular_speed = 0.0
 # ))
 
 particles = np.column_stack((
-    np.random.uniform(START_POSE[0]-1, START_POSE[0]+1, NUM_PARTICLES),
-    np.random.uniform(START_POSE[1]-1, START_POSE[1]+1, NUM_PARTICLES),
+    np.random.uniform(-6, 6, NUM_PARTICLES),
+    np.random.uniform(-6, 6, NUM_PARTICLES),
     np.random.uniform(START_POSE[2]-0.1, START_POSE[2]+0.1, NUM_PARTICLES)
 ))
+
+
+# particles = np.column_stack((
+#     np.random.uniform(START_POSE[0]-1, START_POSE[0]+1, NUM_PARTICLES),
+#     np.random.uniform(START_POSE[1]-1, START_POSE[1]+1, NUM_PARTICLES),
+#     np.random.uniform(START_POSE[2]-0.1, START_POSE[2]+0.1, NUM_PARTICLES)
+# ))
 
 running = True
 iteration = 1

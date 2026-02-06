@@ -17,6 +17,8 @@ class ParticleFilterNode : public rclcpp::Node
             scanSubscriber = this->create_subscription<sensor_msgs::msg::LaserScan>(
                 "/scan", 10, std::bind(&ParticleFilterNode::scanCallback, this, std::placeholders::_1));
             pose_publisher = this->create_publisher<geometry_msgs::msg::Pose2D>("pf_pose_geometry", 10);
+            resampled_scan_publisher = this->create_publisher<sensor_msgs::msg::LaserScan>("pf_resampled_scan", 10);
+            simulated_scan_publisher = this->create_publisher<sensor_msgs::msg::LaserScan>("pf_simulated_scan", 10);
         }
     private:
         rclcpp::Time lastTwistTime_;
@@ -62,12 +64,32 @@ class ParticleFilterNode : public rclcpp::Node
 
             sensor_msgs::msg::LaserScan resampledScan = pf.resampleLaserScan(*msg, 0.0, 360.0, pf.getNumBeams());
 
+            resampled_scan_publisher->publish(resampledScan);
+
+            // Simulate laser scan and publish to visualize in Foxglove
+            ParticleFilter::LaserScan simulatedScan = pf.lidar_scan(ParticleFilter::Particle{0.0, 0.0, 0.0, 0.0});
+            // convert to ROS LaserScan message
+            sensor_msgs::msg::LaserScan simulatedScanMsg;
+            simulatedScanMsg.header.stamp = this->now();
+            simulatedScanMsg.header.frame_id = "laser_frame";
+            simulatedScanMsg.angle_min = resampledScan.angle_min;
+            simulatedScanMsg.angle_max = resampledScan.angle_max + resampledScan.angle_increment * resampledScan.ranges.size(); // ensure we cover the full 360 degrees
+            simulatedScanMsg.angle_increment = resampledScan.angle_increment;
+            simulatedScanMsg.time_increment = msg->time_increment;
+            simulatedScanMsg.scan_time = msg->scan_time;
+            simulatedScanMsg.range_min = msg->range_min;
+            simulatedScanMsg.range_max = msg->range_max;
+            for (const auto &range : simulatedScan.ranges) {
+                simulatedScanMsg.ranges.push_back(range);
+            }
+            simulated_scan_publisher->publish(simulatedScanMsg);
+
             ParticleFilter::LaserScan pfScan;
             for (const auto &range : resampledScan.ranges) {
                 pfScan.ranges.push_back(pf.metersToFeet(range));
             }
             pfScan.angle_min = resampledScan.angle_min;
-            pfScan.angle_increment = resampledScan.angle_increment;
+            pfScan.angle_increment = resampledScan.angle_increment;            
 
             particles_ = pf.weightParticles(pfScan, particles_);
             particles_ = pf.resampleParticles(particles_);
@@ -87,6 +109,8 @@ class ParticleFilterNode : public rclcpp::Node
         rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr robotTwistSubscriber;
         rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scanSubscriber;
         rclcpp::Publisher<geometry_msgs::msg::Pose2D>::SharedPtr pose_publisher;
+        rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr resampled_scan_publisher;
+        rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr simulated_scan_publisher;
         rclcpp::TimerBase::SharedPtr timer_;
 };
 

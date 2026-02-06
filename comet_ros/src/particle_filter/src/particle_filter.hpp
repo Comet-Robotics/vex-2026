@@ -73,6 +73,8 @@ class ParticleFilter
             double angle_increment;     ///< Angle increment between measurements in radians
         };
 
+
+        // this caused the resampled point to follow a point that was 2 points behind it, below is fix
         /**
         * Resample a laser scan to a new angular resolution
         * @param in The input laser scan
@@ -81,60 +83,150 @@ class ParticleFilter
         * @param num_beams The number of beams in the resampled scan
         * @return The resampled laser scan
         * @note x axis is in the direction of the motor, and y axis is angled 90 degrees counter-clockwise from the motor
-        * @note 0 degrees is in the direction of the x axis, or the motor, and angles increase clockwise
+        * @note 0 degrees is in the direction of the x axis, or the motor, and angles increase counter-clockwise
         */
+        // sensor_msgs::msg::LaserScan resampleLaserScan(
+        //     const sensor_msgs::msg::LaserScan &in,
+        //     float new_min_angle,
+        //     float new_max_angle,
+        //     int num_beams
+        // ) {
+
+        //     std::cout << "Resampling laser scan: ("
+        //          << in.angle_min << " to " << in.angle_max
+        //          << "), " << in.ranges.size() << " beams "
+        //          << "→ (" << new_min_angle << " to " << new_max_angle
+        //          << "), " << num_beams << " beams." << std::endl;
+
+        //     sensor_msgs::msg::LaserScan out;
+            
+        //     new_min_angle *= (M_PI / 180.0); // Convert to radians for math
+        //     new_max_angle *= (M_PI / 180.0);
+
+        //     // Copy basic metadata
+        //     out.header = in.header;
+        //     out.range_min = in.range_min;
+        //     out.range_max = in.range_max;
+
+        //     // Define output scan properties
+        //     out.angle_min = new_min_angle;
+        //     out.angle_max = new_max_angle;
+        //     out.angle_increment = (new_max_angle - new_min_angle) / (num_beams - 1);
+
+        //     minAngle = new_min_angle;
+        //     angleIncrement = out.angle_increment;
+
+        //     out.ranges.resize(num_beams);
+        //     out.intensities.resize(num_beams);
+
+        //     // For each output beam, compute the corresponding input index
+        //     for (int i = 0; i < num_beams; i++) {
+        //         float outAngle = new_min_angle + i * out.angle_increment;
+        //         // float idx_in_f = fmod((outAngle - in.angle_min) / in.angle_increment, in.ranges.size());
+
+
+        //         // 1. Calculate how far through the input range the current output angle is (0.0 to 1.0)
+        //         float unit_ratio = (outAngle - in.angle_min) / (in.angle_max - in.angle_min);
+        //         // 2. Map that ratio to the input array indices (0 to size-1)
+        //         float idx_in_f = unit_ratio * (in.ranges.size() - 1);
+        //         // idx_in_f = ratio * (in_size - 1) + 0.5f;
+
+        //         // Bounds check
+        //         if (idx_in_f >= 0 && idx_in_f < (int)in.ranges.size()) {
+        //             // linear interpolation for smoother resampling
+        //             int i0 = std::floor(idx_in_f);
+        //             int i1 = i0 + 1;
+        //             if (i1 >= (int)in.ranges.size()) {
+        //                 i1 = 0;
+        //             }
+        //             float t = idx_in_f - i0;
+
+        //             float r0 = in.ranges[i0];
+        //             float r1 = in.ranges[i1];
+
+        //             float r_out = (1 - t) * r0 + t * r1;
+
+        //             out.ranges[i] = r_out;
+
+        //             if (!in.intensities.empty()) {
+        //                 out.intensities[i] = in.intensities[i0];
+        //             } else {
+        //                 std::cerr << "Input scan has no intensities!" << std::endl;
+        //             }
+        //         } else {
+        //             std::cerr << "Index " << idx_in_f << " out of bounds for input scan size " << in.ranges.size() << std::endl;
+        //         }
+        //     }
+
+        //     // for (size_t i = 0; i < in.ranges.size(); i++) {
+        //     //     std::cout << "Input beam " << i << ": angle " << (in.angle_min + i * in.angle_increment) 
+        //     //               << ", range " << in.ranges[i] 
+        //     //               << ", intensity " << (in.intensities.empty() ? 0.0f : in.intensities[i]) 
+        //     //               << std::endl;
+        //     // }
+        //     return out;
+        // }
         sensor_msgs::msg::LaserScan resampleLaserScan(
             const sensor_msgs::msg::LaserScan &in,
-            float new_min_angle,
-            float new_max_angle,
+            float new_min_angle_deg,
+            float new_max_angle_deg,
             int num_beams
         ) {
-
-            std::cout << "Resampling laser scan: ("
-                 << in.angle_min << " to " << in.angle_max
-                 << "), " << in.ranges.size() << " beams "
-                 << "→ (" << new_min_angle << " to " << new_max_angle
-                 << "), " << num_beams << " beams." << std::endl;
-
             sensor_msgs::msg::LaserScan out;
             
-            new_min_angle *= (M_PI / 180.0); // Convert to radians for math
-            new_max_angle *= (M_PI / 180.0);
-
-            // Copy basic metadata
+            // setup metadata
             out.header = in.header;
             out.range_min = in.range_min;
             out.range_max = in.range_max;
+            out.angle_min = new_min_angle_deg * (M_PI / 180.0);
+            out.angle_max = new_max_angle_deg * (M_PI / 180.0);
 
-            // Define output scan properties
-            out.angle_min = new_min_angle;
-            out.angle_max = new_max_angle;
-            out.angle_increment = (new_max_angle - new_min_angle) / (num_beams - 1);
+            // calculate output increment (n-1 for inclusive endpoints)
+            if (num_beams > 1) {
+                out.angle_increment = (out.angle_max - out.angle_min) / (num_beams - 1);
+            } else {
+                out.angle_increment = 0;
+            }
 
-            minAngle = new_min_angle;
-            angleIncrement = out.angle_increment;
+            // initialize output ranges and intensities
+            out.ranges.assign(num_beams, std::numeric_limits<float>::quiet_NaN());
+            out.intensities.resize(num_beams, 0.0f);
 
-            out.ranges.resize(num_beams);
-            out.intensities.resize(num_beams);
+            // cache input properties for efficiency
+            float in_span = in.angle_max - in.angle_min;
+            int in_size = static_cast<int>(in.ranges.size());
 
-            // For each output beam, compute the corresponding input index
             for (int i = 0; i < num_beams; i++) {
-                float angle = new_min_angle + i * out.angle_increment;
+                float outAngle = out.angle_min + i * out.angle_increment;
 
-                // Convert angle -> original index
-                float idx_f = (angle - in.angle_min) / in.angle_increment;
-                int idx = static_cast<int>(std::round(idx_f));
+                // find where angle sits relative to input [0, 1]
+                float ratio = (outAngle - in.angle_min) / in_span;
+                
+                // map ratio to input index space [0, size-1]
+                float idx_in_f = fmod(ratio * (in_size - 1) + 0.5f, in_size); // Adding 0.5 for better rounding to nearest index
 
-                // Bounds check
-                if (idx >= 0 && idx < (int)in.ranges.size()) {
-                    out.ranges[i] = in.ranges[idx];
-                    if (!in.intensities.empty()) {
-                        out.intensities[i] = in.intensities[idx];
-                    } else {
-                        std::cerr << "Input scan has no intensities!" << std::endl;
+                // bounds check with a small epsilon for float jitter
+                if (idx_in_f >= 0.0f && idx_in_f <= (in_size - 1.0001f)) {
+                    int i0 = std::floor(idx_in_f);
+                    int i1 = i0 + 1;
+                    float t = idx_in_f - i0;
+
+                    // linear Interpolation for smoother resampling
+                    float r0 = in.ranges[i0];
+                    float r1 = in.ranges[i1];
+
+                    if (std::isfinite(r0) && std::isfinite(r1)) {
+                        out.ranges[i] = (1.0f - t) * r0 + t * r1;
+                        
+                        if (!in.intensities.empty()) {
+                            out.intensities[i] = (1.0f - t) * in.intensities[i0] + t * in.intensities[i1];
+                        } else {
+                            std::cerr << "Input scan has no intensities!" << std::endl;
+                        }
                     }
                 } else {
-                    std::cerr << "Index " << idx << " out of bounds for input scan size " << in.ranges.size() << std::endl;
+                    std::cerr << "Index " << idx_in_f << " out of bounds for input scan size " << in.ranges.size() << std::endl;
+                    continue;
                 }
             }
             return out;
@@ -236,12 +328,12 @@ class ParticleFilter
             scan.angle_increment = angleIncrement;
 
             for (int i = 0; i < numBeams; i++) {
-                double angle = p.theta + minAngle + i * angleIncrement;
+                double angle = angleNormalize(p.theta + minAngle + i * angleIncrement);
                 double min_dist = maxScanRange;
                 Point ray_end{
                     p.x + std::cos(angle) * maxScanRange,
                     p.y + std::sin(angle) * maxScanRange
-                };
+                 };
 
                 for (const auto &wall : map_.walls) {
                     auto intersection = findIntersection(ray_start.x, ray_start.y, ray_end.x, ray_end.y,
@@ -274,7 +366,8 @@ class ParticleFilter
             const std::vector<Particle> &particles,
             const Odometry &odom,
             const double dt,
-            const double xy_sigma = 0.03,
+            const double x_sigma = 0.03,
+            const double y_sigma = 0.02,
             const double theta_sigma = 0.01
         ) {
             std::vector<Particle> predictedParticles;
@@ -284,19 +377,27 @@ class ParticleFilter
                 Particle pPred = p;
 
                 // Noise
-                double noiseX = gaussianDistribution(0.0, xy_sigma);
-                double noiseY = gaussianDistribution(0.0, xy_sigma);
+                double noiseX = gaussianDistribution(0.0, x_sigma);
+                double noiseY = gaussianDistribution(0.0, y_sigma);
                 double noiseTheta = gaussianDistribution(0.0, theta_sigma);
 
-                double cosT = std::cos(p.theta);
-                double sinT = std::sin(p.theta);
+                double noisyOdomVx = odom.vx + noiseX;
+                double noisyOdomVy = odom.vy + noiseY;
+                double noisyOdomW = odom.w + noiseTheta;
 
-                double dx = (odom.vx * cosT - odom.vy * sinT) * dt;
-                double dy = (odom.vx * sinT + odom.vy * cosT) * dt;
+                // Use a simple motion model with better integration for more accurate curves
+                double theta_mid = p.theta + 0.5 * odom.w * dt; // Midpoint for better integration
 
-                pPred.x = p.x + dx + noiseX;
-                pPred.y = p.y + dy + noiseY;
-                pPred.theta = angleNormalize(p.theta + odom.w * dt + noiseTheta);
+                double cosT = std::cos(theta_mid);
+                double sinT = std::sin(theta_mid);
+
+                double dx = (noisyOdomVx * cosT - noisyOdomVy * sinT) * dt;
+                double dy = (noisyOdomVx * sinT + noisyOdomVy * cosT) * dt;
+                double dtheta = noisyOdomW * dt;
+
+                pPred.x = p.x + dx;
+                pPred.y = p.y + dy;
+                pPred.theta = angleNormalize(p.theta + dtheta);
 
                 predictedParticles.push_back(pPred);
             }
@@ -454,9 +555,9 @@ class ParticleFilter
                 weight_sum += p.weight;
             }
 
-            if (std::fabs(weight_sum - 1.0) > 1e-6) {
-                std::cerr << "Warning: Total particle weight is not 1.0. It is " << weight_sum << "." << std::endl;
-            }
+            // if (std::fabs(weight_sum - 1.0) > 1e-6) {
+            //     std::cerr << "Warning: Total particle weight is not 1.0. It is " << weight_sum << "." << std::endl;
+            // }
 
             double x = 0.0;
             double y = 0.0;
@@ -499,7 +600,7 @@ class ParticleFilter
         const Map map_;
         
         double minAngle = 0.0;
-        double angleIncrement = (2.0 * M_PI) / numBeams;
+        double angleIncrement = (2.0 * M_PI) / (numBeams - 1); // Default to full 360° coverage
 
         std::mt19937 gen{std::random_device{}()};
 
