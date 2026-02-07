@@ -65,6 +65,16 @@ class Drivebase
             while (IMU.is_calibrating()) {
                 pros::delay(10);
             }
+
+            // --- measure gyro bias ---
+            imuBias = 0.0;
+            const int samples = 200;
+
+            for (int i = 0; i < samples; i++) {
+                imuBias += IMU.get_gyro_rate().z;  // deg/s
+                pros::delay(5);
+            }
+            imuBias /= samples;
         }
 
         void setPose(Pose2D pose) {
@@ -324,50 +334,59 @@ class Drivebase
         }
 
         void updateLocalization() {
-            // 1. Get current sensor values
-            double leftPos = LEFT_MOTORS.get_position();   // degrees
-            double rightPos = RIGHT_MOTORS.get_position(); // degrees
-            
-            // Use get_rotation() instead of get_heading() to get continuous values 
-            // (e.g., 365 degrees instead of 5 degrees). This prevents math errors 
-            // when crossing 0/360.
-            double currentRotation = IMU.get_rotation();
+            // --- Read sensors ---
+            double leftPos  = LEFT_MOTORS.get_position();   // degrees
+            double rightPos = RIGHT_MOTORS.get_position();  // degrees
 
-            // 2. Handle Initialization
+            uint32_t now = pros::millis();
+
+            // --- First-run initialization ---
             if (!locInitialized) {
                 prevLeftPos = leftPos;
                 prevRightPos = rightPos;
-                prevRotation = currentRotation; // You need to add this variable to your global/class state
+                prevRotation = IMU.get_rotation();
+                prevTime = now;
                 locInitialized = true;
                 return;
             }
 
-            // 3. Calculate Changes (Deltas)
-            double dLeft = ticksToDistance(leftPos - prevLeftPos);
-            double dRight = ticksToDistance(rightPos - prevRightPos);
-            
-            // Calculate raw linear distance
-            double ds = (dLeft + dRight) / 2.0;
+            // --- Time delta ---
+            double dt = (now - prevTime) / 1000.0;
+            prevTime = now;
 
-            // 4. Update Previous Values immediately
+            if (dt <= 0) return;
+
+            // --- Encoder deltas ---
+            double dLeft  = ticksToDistance(leftPos  - prevLeftPos);
+            double dRight = ticksToDistance(rightPos - prevRightPos);
             prevLeftPos = leftPos;
             prevRightPos = rightPos;
 
-            // 5. Calculate Heading for the Arc
-            // We need the average heading during this specific movement step, 
-            // not the heading at the end of the step.
-            double prevThetaRad = prevRotation * (M_PI / 180.0);
-            double currThetaRad = currentRotation * (M_PI / 180.0);
-            double avgThetaRad = (prevThetaRad + currThetaRad) / 2.0;
-            
-            prevRotation = currentRotation;
-            
-            currentPose.x += ds * sin(avgThetaRad);
-            currentPose.y += ds * cos(avgThetaRad);
+            double ds = (dLeft + dRight) / 2.0;
 
-            // Update global theta (normalized to 0-360 for display/checks if needed)
-            // But keep currentPose.theta as the absolute rotation for logic if you prefer
-            currentPose.theta = currentRotation;
+            // --- IMU heading with bias correction ---
+            double rawRotation = IMU.get_rotation(); // degrees
+            double currentRotation = rawRotation - imuBias * dt;
+
+            double prevThetaRad = degToRad(prevRotation);
+            double currThetaRad = degToRad(currentRotation);
+            double dTheta = normalizeAngle(currThetaRad - prevThetaRad);
+
+            // --- Arc-based integration ---
+            if (fabs(dTheta) < 1e-6) {
+                // Straight motion
+                currentPose.x += ds * sin(prevThetaRad);
+                currentPose.y += ds * cos(prevThetaRad);
+            } else {
+                // Turning motion
+                double r = ds / dTheta;
+                currentPose.x += r * (sin(currThetaRad) - sin(prevThetaRad));
+                currentPose.y += r * (cos(prevThetaRad) - cos(currThetaRad));
+            }
+
+            // --- Update pose ---
+            currentPose.theta = normalizeAngle(currThetaRad);  // STORE RADIANS
+            prevRotation = currentRotation;
         }
 
         Pose2D getPose() {
@@ -392,6 +411,9 @@ class Drivebase
         double prevRotation = 0.0;
         double prevTime = 0.0;
         bool locInitialized = false;
+
+        // IMU drift correction
+        double imuBias = 0.0;
 
         double ticksToDistance(double ticks) {
             return ticks * 2 * M_PI * WHEEL_RADIUS * DRIVETRAIN_GEAR_RATIO / 360.0;
