@@ -17,7 +17,7 @@ namespace constants
         inline constexpr auto DRIVETRAIN_GEAR_RATIO = 1;
         inline constexpr auto TRACK_WIDTH = 13.5;
 
-        inline constexpr int8_t IMU_PORT = 1;
+        inline constexpr int8_t IMU_PORT = 10;
         inline pros::Imu IMU(IMU_PORT);
     }
 }

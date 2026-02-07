@@ -418,7 +418,7 @@ class Drivebase
             if (deltaHeading > 180)  deltaHeading -= 360;
             if (deltaHeading < -180) deltaHeading += 360;
 
-            double headingVel = deltaHeading * M_PI / 180.0 / (dt / 1000.0);
+            double headingVel = deltaHeading / (dt / 1000.0);
             previousHeading = currentHeading;
 
             double leftVel = rawLeftVel * 2 * M_PI * WHEEL_RADIUS * DRIVETRAIN_GEAR_RATIO / (12.0 * 60.0);
