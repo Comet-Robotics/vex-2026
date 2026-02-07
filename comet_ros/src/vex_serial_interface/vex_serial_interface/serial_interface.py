@@ -56,7 +56,7 @@ class SerialInterface(Node):
             self.get_logger().warn(f"Got data: {line}")
 
             parts = line.split(',')
-            if len(parts) != 6: # FIND SOME WAY TO MAKE THIS DYNAMIC
+            if len(parts) != 6: # TODO: FIND SOME WAY TO MAKE THIS DYNAMIC
                 self.get_logger().warn(f"Bad packet length: {len(parts)} → {line}")
                 return
             
@@ -64,7 +64,7 @@ class SerialInterface(Node):
 
             values[2] *= -(math.pi / 180.0)  # Convert degrees to radians
 
-            # Get twist values from array and publish
+            # Get values from array and publish
             twistMsg = Twist()
             twistMsg.linear.x = values[0]
             twistMsg.linear.y = values[1]
@@ -74,40 +74,41 @@ class SerialInterface(Node):
             startingPose.x = values[3]
             startingPose.y = values[4]
             startingPose.theta = values[5] * -(math.pi / 180.0)  # Convert degrees to radians
+            # TODO: determine if negative sign is necessary for theta
 
             robotMsg = Robot()
             robotMsg.startingPose = startingPose
             robotMsg.twist = twistMsg
             self.robot_publisher_.publish(robotMsg)
 
-            # Temporary marker message
-            markerMsg = Marker()
-            markerMsg.header.frame_id = "map"
-            markerMsg.ns = "pose_arrow"
-            markerMsg.id = 0
-            markerMsg.type = Marker.ARROW
-            markerMsg.action = Marker.ADD
-            markerMsg.scale.x = 0.2
-            markerMsg.scale.y = 0.05
-            markerMsg.scale.z = 0.05
-            markerMsg.color.a = 1.0
-            markerMsg.color.r = 1.0
-            markerMsg.color.g = 0.0
-            markerMsg.color.b = 0.0
-            markerMsg.pose.position.x = values[0] / 12.0  # convert from inches to feet
-            markerMsg.pose.position.y = values[1] / 12.0  # convert from inches to feet
-            markerMsg.pose.position.z = 0.0
+            # # Temporary marker message
+            # markerMsg = Marker()
+            # markerMsg.header.frame_id = "map"
+            # markerMsg.ns = "pose_arrow"
+            # markerMsg.id = 0
+            # markerMsg.type = Marker.ARROW
+            # markerMsg.action = Marker.ADD
+            # markerMsg.scale.x = 0.2
+            # markerMsg.scale.y = 0.05
+            # markerMsg.scale.z = 0.05
+            # markerMsg.color.a = 1.0
+            # markerMsg.color.r = 1.0
+            # markerMsg.color.g = 0.0
+            # markerMsg.color.b = 0.0
+            # markerMsg.pose.position.x = values[0] / 12.0  # convert from inches to feet
+            # markerMsg.pose.position.y = values[1] / 12.0  # convert from inches to feet
+            # markerMsg.pose.position.z = 0.0
             
-            q = Quaternion()
-            q.x = 0.0
-            q.y = 0.0
-            q.z = math.sin(values[2] / 2.0)
-            q.w = math.cos(values[2] / 2.0)
-            markerMsg.pose.orientation = q
+            # q = Quaternion()
+            # q.x = 0.0
+            # q.y = 0.0
+            # q.z = math.sin(values[2] / 2.0)
+            # q.w = math.cos(values[2] / 2.0)
+            # markerMsg.pose.orientation = q
 
-            markerMsg.lifetime = Duration(sec=0, nanosec=0)  # 0 means forever
+            # markerMsg.lifetime = Duration(sec=0, nanosec=0)  # 0 means forever
 
-            self.marker_publisher_.publish(markerMsg)
+            # self.marker_publisher_.publish(markerMsg)
             
         except serial.SerialException as e:
             self.get_logger().error(f"Serial exception: {e}")

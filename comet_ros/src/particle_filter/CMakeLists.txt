@@ -14,6 +14,7 @@ find_package(rclcpp REQUIRED)
 find_package(msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 add_executable(particle_filter src/particle_filter_node.cpp)
 
@@ -23,8 +24,10 @@ install(TARGETS particle_filter
 
 ament_target_dependencies(particle_filter
   rclcpp
+  msgs
   sensor_msgs
   geometry_msgs
+  visualization_msgs
 )
 
 target_link_libraries(particle_filter

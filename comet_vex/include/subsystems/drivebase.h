@@ -314,10 +314,10 @@ class Drivebase
         void calculateMaxSpeeds(uint32_t testTimeMs = 1500) {
             pros::lcd::print(0, "Calculating max speeds...");
             pros::lcd::print(1, "Calculating max V...");
-            double maxV = measureMaxV(testTimeMs, print=false);
+            double maxV = measureMaxV(testTimeMs, false);
             pros::delay(1000);
             pros::lcd::print(2, "Calculating max W...");
-            double maxW = measureMaxW(testTimeMs, print=false);
+            double maxW = measureMaxW(testTimeMs, false);
 
             pros::lcd::print(3, "Max V: %f in/s", maxV);
             pros::lcd::print(4, "Max W: %f rad/s", maxW);
@@ -414,14 +414,18 @@ class Drivebase
             previousTime = pros::millis();
 
             double currentHeading = IMU.get_heading();
-            double headingVel = (currentHeading - previousHeading) / (dt / 1000.0);
+            double deltaHeading = currentHeading - previousHeading;
+            if (deltaHeading > 180)  deltaHeading -= 360;
+            if (deltaHeading < -180) deltaHeading += 360;
+
+            double headingVel = deltaHeading * M_PI / 180.0 / (dt / 1000.0);
             previousHeading = currentHeading;
 
             double leftVel = rawLeftVel * 2 * M_PI * WHEEL_RADIUS * DRIVETRAIN_GEAR_RATIO / (12.0 * 60.0);
             double rightVel = rawRightVel * 2 * M_PI * WHEEL_RADIUS * DRIVETRAIN_GEAR_RATIO / (12.0 * 60.0);
 
-            double vx = 0;
-            double vy = leftVel + (rightVel - leftVel) / 2;
+            double vx = leftVel + (rightVel - leftVel) / 2;
+            double vy = 0.0; // no lateral velocity in a differential drive
             double w = headingVel;
 
             twist = {vx, vy, w};

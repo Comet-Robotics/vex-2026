@@ -1,9 +1,10 @@
 #pragma once
 #include <cmath>
 
-inline void normalizeAngle(double& angle) {
+inline double normalizeAngle(double angle) {
     while (angle > M_PI) angle -= 2.0 * M_PI;
     while (angle <= -M_PI) angle += 2.0 * M_PI;
+    return angle;
 }
 
 inline void normalizeAngleDeg(double& angle) {

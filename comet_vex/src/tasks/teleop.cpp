@@ -56,6 +56,8 @@ void opcontrol() {
 
     last_input = pros::millis();
 
+    auto startingPose = Pose2D(0, 0, 0);
+
     while (true) {
         drivebase->update();
         // other subsystems update
@@ -65,16 +67,20 @@ void opcontrol() {
             master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)
         );
 
-        // // get drivetrain twist and send to serial
-        // Twist2D twist = drivebase->getTwist();
-        // std::string line = std::to_string(twist.vx) + "," +
-        //                    std::to_string(twist.vy) + "," +
-        //                    std::to_string(twist.w);
+        // get drivetrain twist and send to serial
+        Twist2D twist = drivebase->getTwist();
+        std::string line = std::to_string(twist.vx) + "," +
+                           std::to_string(twist.vy) + "," +
+                           std::to_string(twist.w) + "," + 
+                            std::to_string(startingPose.x) + "," +
+                            std::to_string(startingPose.y) + "," +
+                            std::to_string(startingPose.theta);
+        
 
-        // printf("%s\n", line.c_str());
+        printf("%s\n", line.c_str());
 
-        Pose2D currentPose = drivebase->getPose();
-        printf("%f,%f,%f\n", currentPose.x, currentPose.y, currentPose.theta);
+        // Pose2D currentPose = drivebase->getPose();
+        // printf("%f,%f,%f\n", currentPose.x, currentPose.y, currentPose.theta);
 
         // serial input
         std::string input = read_serial_nonblocking(512);
