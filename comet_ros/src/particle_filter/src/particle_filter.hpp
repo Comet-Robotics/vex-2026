@@ -422,7 +422,7 @@ class ParticleFilter
             const std::vector<Particle> &particles
         ) {
 
-            double sigma = metersToFeet(0.067); // A1M8 lidar usually has a noise of 2-3 cm
+            double sigma = metersToFeet(0.067); // TODO: determine noise for LiDAR
             int N = particles.size();
             std::vector<double> logw(N, 0.0);
             std::vector<double> errs;
@@ -447,10 +447,13 @@ class ParticleFilter
                     abs_errs.push_back(std::abs(e));
                 }
 
-                std::vector<double> sorted_abs_errs = abs_errs;
-                std::sort(sorted_abs_errs.begin(), sorted_abs_errs.end());
                 int threshold_index = static_cast<int>(numBeams * (1 - particleDropFraction));
-                double threshold = sorted_abs_errs[threshold_index];
+                std::nth_element(
+                    abs_errs.begin(),
+                    abs_errs.begin() + threshold_index,
+                    abs_errs.end()
+                );
+                double threshold = abs_errs[threshold_index];
 
                 // Compute log weight
                 double ll = 0.0;
