@@ -8,7 +8,12 @@
 class ParticleFilter
 {
     public:
-        ParticleFilter() : numParticles(100), maxScanRange(metersToFeet(6.0)), numBeams(20), particleDropFraction(0.7) {}
+        ParticleFilter() : numParticles(100), maxScanRange(metersToFeet(6.0)), numBeams(20), particleDropFraction(0.7) {
+            static_assert(particleDropFraction >= 0.0 && particleDropFraction < 1.0, "particleDropFraction must be in [0.0, 1.0)");
+            static_assert(numParticles > 0, "numParticles must be greater than 0");
+            static_assert(maxScanRange > 0, "maxScanRange must be greater than 0");
+            static_assert(numBeams > 0, "numBeams must be greater than 0");
+        }
                                                         // 6 meters max range
         struct Point {
             double x, y;
