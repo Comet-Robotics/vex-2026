@@ -336,10 +336,11 @@ class ParticleFilter
                  };
 
                 for (const auto &wall : map_.walls) {
+                    double ix, iy;
                     auto intersection = findIntersection(ray_start.x, ray_start.y, ray_end.x, ray_end.y,
-                                                        wall.x1, wall.y1, wall.x2, wall.y2);
-                    if (!intersection.empty()) {
-                        double d = std::hypot(intersection[0] - p.x, intersection[1] - p.y);
+                                                        wall.x1, wall.y1, wall.x2, wall.y2, ix, iy);
+                    if (intersection) {
+                        double d = std::hypot(ix - p.x, iy - p.y);
                         if (d < min_dist) {
                             min_dist = d;
                         }
@@ -373,13 +374,17 @@ class ParticleFilter
             std::vector<Particle> predictedParticles;
             predictedParticles.reserve(particles.size());
 
+            x_sigma_dist = std::normal_distribution<double>(0.0, x_sigma);
+            y_sigma_dist = std::normal_distribution<double>(0.0, y_sigma);
+            theta_sigma_dist = std::normal_distribution<double>(0.0, theta_sigma);
+
             for (const auto &p : particles) {
                 Particle pPred = p;
 
                 // Noise
-                double noiseX = gaussianDistribution(0.0, x_sigma);
-                double noiseY = gaussianDistribution(0.0, y_sigma);
-                double noiseTheta = gaussianDistribution(0.0, theta_sigma);
+                double noiseX = x_sigma_dist(gen);
+                double noiseY = y_sigma_dist(gen);
+                double noiseTheta = theta_sigma_dist(gen);
 
                 double noisyOdomVx = odom.vx + noiseX;
                 double noisyOdomVy = odom.vy + noiseY;
@@ -605,17 +610,6 @@ class ParticleFilter
         std::mt19937 gen{std::random_device{}()};
 
         /**
-         * Generate a random number based on a Gaussian distribution
-         * @param mu The mean of the distribution
-         * @param sigma The standard deviation of the distribution
-         * @return A random number following the Gaussian distribution
-         */
-        double gaussianDistribution(double mu, double sigma) {
-            std::normal_distribution<double> dist(mu, sigma);
-            return dist(gen);
-        }
-
-        /**
         * Find the intersection point between a ray and a wall segment
         * @param startX The x coordinate of the ray start point
         * @param startY The y coordinate of the ray start point
@@ -627,7 +621,7 @@ class ParticleFilter
         * @param wallY2 The y coordinate of the second wall endpoint
         * @return A vector containing the intersection point coordinates if an intersection exists, otherwise an empty vector
         */
-        std::vector<double> findIntersection(
+        bool findIntersection(
             double startX, 
             double startY, 
             double endX, 
@@ -635,7 +629,9 @@ class ParticleFilter
             double wallX1, 
             double wallY1, 
             double wallX2,
-            double wallY2
+            double wallY2,
+            double &intersectionX,
+            double &intersectionY
         ) {
             double dxRay = endX - startX;
             double dyRay = endY - startY;
@@ -644,16 +640,16 @@ class ParticleFilter
 
             double denominator = dxRay * dyWall - dyRay * dxWall;
             if (std::fabs(denominator) < 1e-9) {
-                return {}; // Parallel lines
+                return false; // parallel lines
             }
             double t = ((startX - wallX1) * dyWall - (startY - wallY1) * dxWall) / denominator;
             double u = -((startX - wallX1) * dyRay - (startY - wallY1) * dxRay) / denominator;
             if (t >= 0.0 && t <= 1.0 && u >= 0.0 && u <= 1.0) {
-                double intersectionX = startX + t * dxRay;
-                double intersectionY = startY + t * dyRay;
-                return {intersectionX, intersectionY};
+                intersectionX = startX + t * dxRay;
+                intersectionY = startY + t * dyRay;
+                return true;
             }
-            return {}; // No intersection within the segments
+            return false; // no intersection within the segments
         }
 
         /**
