@@ -176,7 +176,7 @@ class ParticleFilter
             const sensor_msgs::msg::LaserScan &in,
             float new_min_angle_deg,
             float new_max_angle_deg,
-            int num_beams
+            int num_beams = numBeams
         ) {
             sensor_msgs::msg::LaserScan out;
             
@@ -235,6 +235,20 @@ class ParticleFilter
                     continue;
                 }
             }
+
+            minAngle = out.angle_min;
+            angleIncrement = out.angle_increment;
+
+            // Precompute beam direction sines and cosines for efficiency in likelihood calculations
+            beamCos.resize(numBeams);
+            beamSin.resize(numBeams);
+
+            for (int i = 0; i < numBeams; ++i) {
+                double a = minAngle + i * angleIncrement;
+                beamCos[i] = std::cos(a);
+                beamSin[i] = std::sin(a);
+            }
+
             return out;
         }
 
@@ -333,12 +347,16 @@ class ParticleFilter
             scan.angle_min = minAngle;
             scan.angle_increment = angleIncrement;
 
+            scan.ranges.resize(numBeams);
+
+            double ctheta = std::cos(p.theta);
+            double stheta = std::sin(p.theta);
+
             for (int i = 0; i < numBeams; i++) {
-                double angle = angleNormalize(p.theta + minAngle + i * angleIncrement);
                 double min_dist = maxScanRange;
                 Point ray_end{
-                    p.x + std::cos(angle) * maxScanRange,
-                    p.y + std::sin(angle) * maxScanRange
+                    p.x + (ctheta * beamCos[i] - stheta * beamSin[i]) * maxScanRange,
+                    p.y + (stheta * beamCos[i] + ctheta * beamSin[i]) * maxScanRange
                  };
 
                 for (const auto &wall : map_.walls) {
@@ -346,14 +364,16 @@ class ParticleFilter
                     auto intersection = findIntersection(ray_start.x, ray_start.y, ray_end.x, ray_end.y,
                                                         wall.x1, wall.y1, wall.x2, wall.y2, ix, iy);
                     if (intersection) {
-                        double d = std::hypot(ix - p.x, iy - p.y);
+                        double dx = ix - ray_start.x;
+                        double dy = iy - ray_start.y;
+                        double d = dx * dx + dy * dy;
                         if (d < min_dist) {
                             min_dist = d;
                         }
                     }
                 }
 
-                scan.ranges.push_back(static_cast<float>(min_dist));
+                scan.ranges[i] = static_cast<float>(min_dist);
             }
             return scan;
         }
@@ -636,6 +656,7 @@ class ParticleFilter
         
         double minAngle = 0.0;
         double angleIncrement = (2.0 * M_PI) / (numBeams - 1); // Default to full 360° coverage
+        std::vector<double> beamCos, beamSin;
 
         std::mt19937 gen{std::random_device{}()};
 

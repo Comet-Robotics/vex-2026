@@ -80,7 +80,7 @@ class ParticleFilterNode : public rclcpp::Node
 
             RCLCPP_INFO(this->get_logger(), "Received scan data");
 
-            sensor_msgs::msg::LaserScan resampledScan = pf.resampleLaserScan(*msg, 0.0, 360.0, pf.getNumBeams());
+            sensor_msgs::msg::LaserScan resampledScan = pf.resampleLaserScan(*msg, 0.0, 360.0);
 
             resampled_scan_publisher->publish(resampledScan);
 
