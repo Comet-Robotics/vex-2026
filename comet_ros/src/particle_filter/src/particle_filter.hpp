@@ -4,6 +4,7 @@
 #include <random>
 #include <cmath>
 #include <algorithm>
+#include <thread>
 
 class ParticleFilter
 {
@@ -428,10 +429,14 @@ class ParticleFilter
         ) {
 
             double sigma = metersToFeet(0.067); // TODO: determine noise for LiDAR
+            double invSigmaSq = 1.0 / (sigma * sigma);
             int N = particles.size();
+
             std::vector<double> logw(N, 0.0);
             std::vector<double> errs;
             std::vector<double> abs_errs;
+
+            const int threshold_index = static_cast<int>(numBeams * (1 - particleDropFraction));
 
             if (scan.ranges.size() != static_cast<size_t>(numBeams)) {
                 std::cerr << "Error: Scan size (" << scan.ranges.size()
@@ -440,40 +445,57 @@ class ParticleFilter
                 return particles;
             }
 
-            for (int i = 0; i < N; i++) {
-                const auto& p = particles[i];
-                auto z_hat_data = lidar_scan(p);
-                errs.clear();
-                abs_errs.clear();
+            // THREADING CODE
+            const unsigned numThreads = std::max(1u, std::thread::hardware_concurrency());
+            const int chunk = (N + numThreads - 1) / numThreads; // ceil division
+            std::vector<std::thread> threads;
+            
+            // worker
+            auto worker = [&](int start, int end) {
+                std::vector<double> abs_errs(numBeams);
 
-                for (int k = 0; k < numBeams; k++) {
-                    double e = scan.ranges[k] - z_hat_data.ranges[k];
-                    errs.push_back(e);
-                    abs_errs.push_back(std::abs(e));
-                }
+                for (int i = start; i < end && i < N; i++) {
+                    const auto& p = particles[i];
+                    auto z_hat_data = lidar_scan(p);
 
-                int threshold_index = static_cast<int>(numBeams * (1 - particleDropFraction));
-                std::nth_element(
-                    abs_errs.begin(),
-                    abs_errs.begin() + threshold_index,
-                    abs_errs.end()
-                );
-                double threshold = abs_errs[threshold_index];
-
-                // Compute log weight
-                double ll = 0.0;
-                for (size_t k = 0; k < errs.size(); ++k) {
-                    if (abs_errs[k] < threshold) {
-                        ll += -0.5 * (errs[k] * errs[k]) / (sigma * sigma);
+                    for (int k = 0; k < numBeams; k++) {
+                        double e = scan.ranges[k] - z_hat_data.ranges[k];
+                        abs_errs.push_back(std::abs(e));
                     }
+
+                    std::nth_element(
+                        abs_errs.begin(),
+                        abs_errs.begin() + threshold_index,
+                        abs_errs.end()
+                    );
+                    double threshold = abs_errs[threshold_index];
+
+                    // Compute log weight
+                    double ll = 0.0;
+                    for (size_t k = 0; k < numBeams; k++) {
+                        if (abs_errs[k] <= threshold) {
+                            double e = abs_errs[k];
+                            ll += -0.5 * e * e * invSigmaSq; // Gaussian likelihood
+                        }
+                    }
+                    if (!inFreeSpace(p.x, p.y)) {
+                        ll -= 1e9; // Heavy penalty for particles outside free space
+                    }
+                    logw[i] = ll;
                 }
-                if (!inFreeSpace(p.x, p.y)) {
-                    ll -= 1e9; // Heavy penalty for particles outside free space
-                }
-                logw[i] = ll;
+            };
+
+            for (unsigned t = 0; t < numThreads; t++) {
+                int start = t * chunk;
+                int end = start + chunk;
+                threads.emplace_back(worker, start, end);
             }
 
-            // Reweight particles using log weights
+            for (auto& thread : threads) {
+                thread.join();
+            }
+
+            // normalize log weights
             double m = *std::max_element(logw.begin(), logw.end());
             std::vector<Particle> weightedParticles(N);
 
