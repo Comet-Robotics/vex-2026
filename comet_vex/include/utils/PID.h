@@ -2,9 +2,19 @@
 
 #include <algorithm>
 
+/**
+ * @class PID
+ * @brief A simple PID controller implementation with anti-windup and optional derivative filtering
+ */
 class PID {
 public:
-    // Construct with gains and optional nominal dt (seconds)
+    /**
+     * Constructor to initialize PID gains, time step, and internal state
+      * @param kp Proportional gain
+      * @param ki Integral gain
+      * @param kd Derivative gain
+      * @param dt Time step for the controller (seconds)
+     */
     PID(double kp = 0.0, double ki = 0.0, double kd = 0.0, double dt = 0.01)
         : kp_(kp), ki_(ki), kd_(kd), dt_(dt),
           integrator_(0.0), prev_meas_(0.0), prev_deriv_(0.0),
@@ -12,8 +22,13 @@ public:
           int_min_(-1e9), int_max_(1e9),
           tau_(0.0) {}
 
-    // Compute controller output given setpoint and measurement.
-    // If dt_override <= 0, uses the nominal dt provided at construction.
+    /**
+     * Calculate the PID output based on the setpoint and current measurement
+      * @param setpoint The desired target value
+      * @param measurement The current measured value
+      * @param dt_override Optional time step override (if negative, uses internal dt)
+      * @return The PID controller output, clamped to output limits
+     */
     double update(double setpoint, double measurement, double dt_override = -1.0) {
         double dt = (dt_override > 0.0) ? dt_override : dt_;
         if (dt <= 0.0) return 0.0;
@@ -46,7 +61,10 @@ public:
         return output;
     }
 
-    // Reset integrator and derivative state
+    /**
+     * Reset the PID controller's internal state (integrator and previous measurement/derivative)
+      * @param integrator Optional initial value for the integrator (default is 0.0)
+     */
     void reset(double integrator = 0.0) {
         integrator_ = integrator;
         prev_meas_ = 0.0;
