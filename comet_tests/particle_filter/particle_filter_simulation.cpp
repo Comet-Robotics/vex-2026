@@ -16,8 +16,8 @@ constexpr double ROBOT_MAX_ANGULAR_SPEED = 3.14159;
 constexpr double LIDAR_MAX_RANGE = 15.0;
 constexpr int NUM_LIDAR_BEAMS = 20;
 constexpr double MEAS_NOISE_LIDAR = 0.1;
-constexpr int NUM_PARTICLES = 500;
-constexpr double PARTICLE_DROP_FRACTION = 0.75;
+constexpr int NUM_PARTICLES = 1000;
+constexpr double PARTICLE_DROP_FRACTION = 0.5;
 
 // Simulation settings
 constexpr int SIMULATION_STEPS = 600; // 10 seconds of simulation
@@ -163,7 +163,7 @@ std::vector<double> correct_particles(const std::vector<Pose>& particles, const 
             }
         }
         if (!in_free_space(p.x, p.y)) {
-            ll -= 5.0;
+            ll -= 1e9;
         }
         logw[i] = ll;
     }
@@ -183,15 +183,81 @@ std::vector<double> correct_particles(const std::vector<Pose>& particles, const 
     return weights;
 }
 
-std::vector<Pose> resample_particles(const std::vector<Pose>& particles, const std::vector<double>& weights) {
-    std::vector<Pose> new_particles;
-    new_particles.reserve(NUM_PARTICLES);
-    std::discrete_distribution<int> dist(weights.begin(), weights.end());
-    for (int i = 0; i < NUM_PARTICLES; ++i) {
-        new_particles.push_back(particles[dist(rng)]);
+std::vector<Pose> resample_particles(const std::vector<Pose>& particles,
+                                     const std::vector<double>& weights)
+{
+    const int N = particles.size();
+    std::vector<Pose> new_particles = particles; // copy like python
+
+    // ---------- compute Neff ----------
+    double sum_sq = 0.0;
+    for (double w : weights)
+        sum_sq += w * w;
+
+    double neff = 1.0 / sum_sq;
+
+    // ---------- low variance resampling ----------
+    if (neff < 0.5 * N)
+    {
+        new_particles.clear();
+        new_particles.reserve(N);
+
+        std::uniform_real_distribution<double> uni(0.0, 1.0 / N);
+        double r = uni(rng);
+
+        double c = weights[0];
+        int i = 0;
+
+        for (int m = 0; m < N; ++m)
+        {
+            double U = r + static_cast<double>(m) / N;
+
+            while (U > c && i < N - 1)
+            {
+                ++i;
+                c += weights[i];
+            }
+
+            new_particles.push_back(particles[i]);
+        }
     }
+
+    // ---------- particle injection ----------
+    constexpr double PARTICLE_INJECT_FRACTION = 0.10;
+    int num_inject = static_cast<int>(PARTICLE_INJECT_FRACTION * N);
+
+    if (num_inject > 0)
+    {
+        // indices sorted by weight (ascending → worst first)
+        std::vector<int> indices(N);
+        std::iota(indices.begin(), indices.end(), 0);
+
+        std::sort(indices.begin(), indices.end(),
+                  [&](int a, int b) { return weights[a] < weights[b]; });
+
+        std::uniform_real_distribution<double> pos_dist(-6.0, 6.0);
+
+        for (int k = 0; k < num_inject; ++k)
+        {
+            int idx = indices[k];
+
+            double new_px, new_py;
+
+            do {
+                new_px = pos_dist(rng);
+                new_py = pos_dist(rng);
+            } while (!in_free_space(new_px, new_py));
+
+            // keep orientation like python
+            double theta = new_particles[idx].theta;
+
+            new_particles[idx] = Pose{new_px, new_py, theta};
+        }
+    }
+
     return new_particles;
 }
+
 
 Pose estimate_position(const std::vector<Pose>& particles, const std::vector<double>& weights) {
     double x = 0.0, y = 0.0, theta_sum = 0.0;
@@ -295,12 +361,12 @@ int main() {
         double speed = 0.0, angular_speed = 0.0;
         double opp_speed = 0.0, opp_angular_speed = 0.0;
         
-        if (i < 100) { speed = ROBOT_MAX_SPEED; }
-        else if (i < 150) { angular_speed = ROBOT_MAX_ANGULAR_SPEED; }
-        else if (i < 250) { speed = ROBOT_MAX_SPEED; }
+        if (i < 100) { speed = ROBOT_MAX_SPEED / 4; }
+        else if (i < 150) { angular_speed = ROBOT_MAX_ANGULAR_SPEED / 4; }
+        else if (i < 250) { speed = ROBOT_MAX_SPEED / 4; }
         else if (i < 300) { speed = 0; }
-        else if (i < 400) { speed = -ROBOT_MAX_SPEED; }
-        else { angular_speed = -ROBOT_MAX_ANGULAR_SPEED; }
+        else if (i < 400) { speed = -ROBOT_MAX_SPEED / 4; }
+        else { angular_speed = -ROBOT_MAX_ANGULAR_SPEED / 4; }
         
         if (i % 200 < 50) opp_speed = ROBOT_MAX_SPEED;
         else if (i % 200 == 50) opp_angular_speed = ROBOT_MAX_ANGULAR_SPEED / (DT * 50);

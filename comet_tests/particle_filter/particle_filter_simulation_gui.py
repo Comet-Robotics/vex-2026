@@ -27,8 +27,8 @@ LIDAR_MAX_RANGE = 15.0  # feet
 NUM_LIDAR_BEAMS = 20
 MEAS_NOISE_LIDAR = 0.1  # feet
 START_POSE = (-4.0, -4.0, 0.0)  # x, y, theta
-NUM_PARTICLES = 250
-PARTICLE_DROP_FRACTION = 0.75
+NUM_PARTICLES = 1000
+PARTICLE_DROP_FRACTION = 0.5
 
 # Pygame setup
 flags = pygame.DOUBLEBUF
@@ -170,8 +170,8 @@ def lidar_scan(rx, ry, robot_theta, obstacle_edges=fake_edges):
                         min_dist = d
                         hit_point = pt
         # add measurement noise
-        # noise = np.random.normal(0.0, MEAS_NOISE_LIDAR)
-        # min_dist = max(0.0, min(LIDAR_MAX_RANGE, min_dist + noise))
+        noise = np.random.normal(0.0, MEAS_NOISE_LIDAR)
+        min_dist = max(0.0, min(LIDAR_MAX_RANGE, min_dist + noise))
         
         distances.append((angle, min_dist, hit_point[0] if hit_point else None, hit_point[1] if hit_point else None))
     return distances
@@ -237,52 +237,9 @@ def correct_particles(particles, lidar_distances):
     # print("Highest weight particle LIDAR scan:", lidar_scan(particles[np.argmax(w), 0], particles[np.argmax(w), 1], particles[np.argmax(w), 2]))
     return w
 
-def low_variance_resample(particles, weights, theta):
-    JITTER_STD = 0.02
-    INJECTION_FRACTION = 0.05
-
-    N = len(weights)
-    positions = (np.arange(N) + np.random.rand()) / N
-    cumulative = np.cumsum(weights)
-    idx = np.zeros(N, dtype=int)
-    i, j = 0, 0
-    while i < N:
-        if positions[i] < cumulative[j]:
-            idx[i] = j
-            i += 1
-        else:
-            j += 1
-    new_particles = particles[idx].copy()
-
-    # jitter small gaussian to allow exploration (rejuvenation)
-    new_particles[:, 0:2] += np.random.normal(0, JITTER_STD, size=(N, 2))
-    new_particles[:, 2] += np.random.normal(0, JITTER_STD * 2.0, size=N)
-
-    # particle injection: replace a small fraction with random samples over free space
-    inject_count = int(np.floor(INJECTION_FRACTION * N))
-    if inject_count > 0:
-        # sample uniformly in map bounds but ensure free space
-        injected = 0
-        attempts = 0
-        while injected < inject_count and attempts < inject_count * 20:
-            rx = np.random.uniform(-5, 5)
-            ry = np.random.uniform(-5, 5)
-            if in_free_space(rx, ry):
-                new_particles[injected] = [rx, ry, theta + np.random.normal(0, JITTER_STD * 2.0)]
-                injected += 1
-            attempts += 1
-    return new_particles
-
 def resample_particles(particles, weights):
-    # # only resample if low effective sample size
-    # neff = 1.0 / np.sum(weights ** 2)
-    # if neff < 0.5 * len(particles):
-    #     print("Resampling particles, Neff =", neff)
-    #     indices = np.random.choice(len(particles), size=len(particles), p=weights)
-    #     new_particles = particles[indices]
-    #     return new_particles
-    # return particles
-    # Compute effective sample size
+    new_particles = particles.copy()
+
     neff = 1.0 / np.sum(weights ** 2)
     N = len(particles)
     if neff < 0.5 * N:
@@ -302,33 +259,22 @@ def resample_particles(particles, weights):
             new_particles.append(particles[i])
 
         new_particles = np.array(new_particles)
-        return new_particles
 
-    return particles
+    # particle injection: replace worst particles with random particles to maintain diversity
+    PARTICLE_INJECT_FRACTION = 0.10
+    num_inject = int(PARTICLE_INJECT_FRACTION * N)
+    if num_inject > 0:
+        worst_indices = np.argsort(weights)[:num_inject]
+        for idx in worst_indices:
+            while True:
+                new_px = random.uniform(-6, 6)
+                new_py = random.uniform(-6, 6)
+                if in_free_space(new_px, new_py):
+                    break
+            new_pth = new_particles[idx, 2]  # keep the orientation of the worst particle
+            new_particles[idx] = [new_px, new_py, new_pth]
 
-    # return low_variance_resample(particles, weights, robot_theta)
-
-    # newParticles = particles.copy()
-
-    # j = 0
-    # cumulative_weight = 0.0
-    # average_weight = np.average(weights)
-    # rand_weight = np.random.uniform(0, average_weight)
-    # xSum, ySum = 0.0, 0.0
-    # for i in range(NUM_PARTICLES):
-    #     targetWeight = i * average_weight + rand_weight
-    #     while cumulative_weight < targetWeight:
-    #         if j > NUM_PARTICLES - 1:
-    #             break
-    #         cumulative_weight += weights[j]
-    #         j += 1
-
-    #     newParticles[i] = particles[j-1]
-        
-    #     xSum += particles[i, 0]
-    #     ySum += particles[i, 1]
-
-    # return newParticles
+    return new_particles
 
 def estimate_position(particles, weights):
     # Weighted mean for x,y, and circular mean for theta
