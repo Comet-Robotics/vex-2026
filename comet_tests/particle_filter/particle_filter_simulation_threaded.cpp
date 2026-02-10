@@ -8,15 +8,16 @@
 #include <limits>
 #include <iomanip>
 #include <optional>
+#include <thread>
 
 // --- Constants ---
 constexpr double ROBOT_RADIUS = 0.75;
 constexpr double ROBOT_MAX_SPEED = 5.0;
 constexpr double ROBOT_MAX_ANGULAR_SPEED = 3.14159;
 constexpr double LIDAR_MAX_RANGE = 15.0;
-constexpr int NUM_LIDAR_BEAMS = 20;
+constexpr int NUM_LIDAR_BEAMS = 30;
 constexpr double MEAS_NOISE_LIDAR = 0.1;
-constexpr int NUM_PARTICLES = 1000;
+constexpr int NUM_PARTICLES = 10000;
 constexpr double PARTICLE_DROP_FRACTION = 0.5;
 
 // Simulation settings
@@ -137,35 +138,50 @@ std::vector<double> correct_particles(const std::vector<Pose>& particles, const 
     int N = particles.size();
     std::vector<double> logw(N, 0.0);
 
-    for (int i = 0; i < N; ++i) {
-        const auto& p = particles[i];
-        auto z_hat_data = lidar_scan(p.x, p.y, p.theta, fake_edges);
-        std::vector<double> errs;
-        std::vector<double> abs_errs;
-        errs.reserve(NUM_LIDAR_BEAMS);
-        abs_errs.reserve(NUM_LIDAR_BEAMS);
+    const unsigned numThreads = std::max(1u, std::thread::hardware_concurrency());
+    const int chunk = (N + numThreads - 1) / numThreads;
+    std::vector<std::thread> threads;
 
-        for (int k = 0; k < NUM_LIDAR_BEAMS; ++k) {
-            double e = z_meas[k] - z_hat_data[k].dist;
-            errs.push_back(e);
-            abs_errs.push_back(std::abs(e));
-        }
+    auto worker = [&](int start, int end) {
+        for (int i = start; i < end && i < N; ++i) {
+            const auto& p = particles[i];
+            auto z_hat_data = lidar_scan(p.x, p.y, p.theta, fake_edges);
+            std::vector<double> abs_errs;
+            abs_errs.reserve(NUM_LIDAR_BEAMS);
 
-        std::vector<double> sorted_abs_errs = abs_errs;
-        std::sort(sorted_abs_errs.begin(), sorted_abs_errs.end());
-        int threshold_index = static_cast<int>(NUM_LIDAR_BEAMS * (1.0 - PARTICLE_DROP_FRACTION));
-        double threshold = sorted_abs_errs[threshold_index];
-
-        double ll = 0.0;
-        for (size_t k = 0; k < errs.size(); ++k) {
-            if (abs_errs[k] < threshold) {
-                ll += -0.5 * (errs[k] * errs[k]) / sigma2;
+            for (int k = 0; k < NUM_LIDAR_BEAMS; ++k) {
+                double e = z_meas[k] - z_hat_data[k].dist;
+                abs_errs.push_back(std::abs(e));
             }
+
+            std::nth_element(
+                abs_errs.begin(),
+                abs_errs.begin() + static_cast<int>(NUM_LIDAR_BEAMS * (1.0 - PARTICLE_DROP_FRACTION)),
+                abs_errs.end()
+            );
+            double threshold = abs_errs[static_cast<int>(NUM_LIDAR_BEAMS * (1.0 - PARTICLE_DROP_FRACTION))];
+
+            double ll = 0.0;
+            for (int k = 0; k < NUM_LIDAR_BEAMS; ++k) {
+                if (abs_errs[k] < threshold) {
+                    ll += -0.5 * (abs_errs[k] * abs_errs[k]) / sigma2;
+                }
+            }
+            if (!in_free_space(p.x, p.y)) {
+                ll -= 1e9;
+            }
+            logw[i] = ll;
         }
-        if (!in_free_space(p.x, p.y)) {
-            ll -= 1e9;
-        }
-        logw[i] = ll;
+    };
+
+    for (unsigned t = 0; t < numThreads; ++t) {
+        int start = t * chunk;
+        int end = start + chunk;
+        threads.emplace_back(worker, start, end);
+    }
+
+    for (auto& thread : threads) {
+        thread.join();
     }
 
     double m = *std::max_element(logw.begin(), logw.end());
