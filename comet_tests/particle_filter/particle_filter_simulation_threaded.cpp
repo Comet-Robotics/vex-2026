@@ -17,7 +17,7 @@ constexpr double ROBOT_MAX_ANGULAR_SPEED = 3.14159;
 constexpr double LIDAR_MAX_RANGE = 15.0;
 constexpr int NUM_LIDAR_BEAMS = 30;
 constexpr double MEAS_NOISE_LIDAR = 0.1;
-constexpr int NUM_PARTICLES = 10000;
+constexpr int NUM_PARTICLES = 5000;
 constexpr double PARTICLE_DROP_FRACTION = 0.5;
 
 // Simulation settings
@@ -239,7 +239,7 @@ std::vector<Pose> resample_particles(const std::vector<Pose>& particles,
     }
 
     // ---------- particle injection ----------
-    constexpr double PARTICLE_INJECT_FRACTION = 0.10;
+    constexpr double PARTICLE_INJECT_FRACTION = 0.03;
     int num_inject = static_cast<int>(PARTICLE_INJECT_FRACTION * N);
 
     if (num_inject > 0)

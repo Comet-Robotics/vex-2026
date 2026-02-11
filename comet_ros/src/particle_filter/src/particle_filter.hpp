@@ -9,8 +9,9 @@
 class ParticleFilter
 {
     public:
-        ParticleFilter() : numParticles(100), maxScanRange(metersToFeet(6.0)), numBeams(20), particleDropFraction(0.7) {
+        ParticleFilter() : numParticles(100), maxScanRange(metersToFeet(6.0)), numBeams(20), particleDropFraction(0.7), particleInjectionFraction(0.03) {
             static_assert(particleDropFraction >= 0.0 && particleDropFraction < 1.0, "particleDropFraction must be in [0.0, 1.0)");
+            static_assert(particleInjectionFraction >= 0.0 && particleInjectionFraction < 1.0, "particleInjectionFraction must be in [0.0, 1.0)");
             static_assert(numParticles > 0, "numParticles must be greater than 0");
             static_assert(maxScanRange > 0, "maxScanRange must be greater than 0");
             static_assert(numBeams > 0, "numBeams must be greater than 0");
@@ -567,9 +568,12 @@ class ParticleFilter
                 sumSquaredWeights += p.weight * p.weight;
             }
             double effectiveSampleSize = 1 / sumSquaredWeights;
-            if (effectiveSampleSize < 0.5 * particles.size()) {
-                int N = static_cast<int>(particles.size());
-                std::vector<Particle> new_particles;
+
+            int N = static_cast<int>(particles.size());
+
+            std::vector<Particle> new_particles;
+
+            if (effectiveSampleSize < 0.5 * N) {
                 new_particles.reserve(N);
 
                 // 1. Create a random starting point (r) between 0 and 1/N
@@ -592,10 +596,40 @@ class ParticleFilter
                     new_particles.push_back(particles[i]);
                 }
 
-                return new_particles;
+                // reset weights to uniform after resampling
+                for (auto &p : new_particles) {
+                    p.weight = 1.0 / N;
+                }
+            } else {
+                new_particles = particles; // No resampling, just copy
+            }
+
+            // particle injection
+            int numToInject = static_cast<int>(N * particleInjectionFraction);
+
+            if (numToInject > 0) {
+                // inject new random particles to maintain diversity
+                std::vector<int> indices(N);
+                std::iota(indices.begin(), indices.end(), 0);
+                std::shuffle(indices.begin(), indices.end(), gen);
+
+                std::uniform_real_distribution<double> pos_dist(-6.0, 6.0);
+                std::uniform_real_distribution<double> angle_dist(0.0, 2.0 * M_PI);
+
+                for (int i = 0; i < numToInject; i++) {
+                    int idx = indices[i];
+                    int attempts = 0;
+                    do {
+                        new_particles[idx].x = pos_dist(gen);
+                        new_particles[idx].y = pos_dist(gen);
+                        attempts++;
+                    } while (!inFreeSpace(new_particles[idx].x, new_particles[idx].y) && attempts < 10);
+
+                    new_particles[idx].theta = angle_dist(gen);
+                }
             }
             
-            return particles;
+            return new_particles;
         }
 
         /**
@@ -651,7 +685,7 @@ class ParticleFilter
         const int32_t numParticles;
         const double maxScanRange;
         const int32_t numBeams;
-        const double particleDropFraction = 0.7; // Fraction of particles to drop
+        const double particleDropFraction; // Fraction of particles to drop
         const Map map_;
         
         double minAngle = 0.0;
