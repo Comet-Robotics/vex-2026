@@ -274,38 +274,74 @@ class Drivebase
          */
         void goToPoseUnicycle(Pose2D goal) {
             const double k_rho = 2.5;
-            const double k_alpha = 4.0;
+            const double k_alpha = 6.0;
+            const double kp_theta = 18.0;
             const double k_beta = -1.5;
 
             const double MAX_V = WHEEL_RADIUS * 2 * M_PI * DRIVETRAIN_GEAR_RATIO * 600 / 60.0;
             const double MAX_W = 2 * MAX_V / TRACK_WIDTH;
 
+            double goalTheta = degToRad(goal.theta);
+
+            bool atPosition = false;
+
             while (true) {
-                double theta = degToRad(currentPose.theta);
-                double goalTheta = degToRad(goal.theta);
+                updateLocalization();
+
+                double theta = currentPose.theta;
 
                 double dx = goal.x - currentPose.x;
                 double dy = goal.y - currentPose.y;
 
                 double rho = hypot(dx, dy);
-                double alpha = normalizeAngle(atan2(dy, dx) - theta);
-                double beta = normalizeAngle(goalTheta - theta - alpha);
 
-                if (rho < 1.0 && fabs(beta) < degToRad(2)) break;
+                double headingToGoal = atan2(dy, dx);
+                double alpha = normalizeAngle(headingToGoal - theta);
+                double beta  = normalizeAngle(goalTheta - theta - alpha);
 
-                double v = k_rho * rho;
-                double w = k_alpha * alpha + k_beta * beta;
+                double v, w;
 
-                v /= MAX_V;
-                w /= MAX_W;
+                // ---- two-stage control (CRITICAL) ----
+                if (!atPosition && rho < 3.0) {
+                    atPosition = true;
 
-                arcade(v, w);
-                updateLocalization();
+                }
+                if (atPosition) {
+                    v = 0;
+                    double headingError = normalizeAngle(goalTheta - theta);
+                    w = kp_theta * headingError;
+
+                    if (fabs(headingError) < degToRad(2)) {
+                        break;
+                    }
+                }
+                else {
+                    // allow reversing for stability
+                    if (fabs(alpha) > M_PI/2) {
+                        alpha = normalizeAngle(alpha + M_PI);
+                        rho = -rho;
+                    }
+
+                    v = k_rho * rho;
+                    w = k_alpha * alpha + k_beta * beta;
+                }
+
+                // clamp physically
+                v = std::clamp(v, -MAX_V, MAX_V);
+                w = std::clamp(w, -MAX_W, MAX_W);
+
+                arcade(v / MAX_V, w / MAX_W);
+
+                if (rho < 3.0 && fabs(normalizeAngle(goalTheta - theta)) < degToRad(2)) {
+                    break;
+                }
+
                 pros::delay(20);
             }
 
             arcade(0,0);
         }
+
 
         /**
          * Measure the maximum linear velocity (V) of the robot by driving at full power and tracking the distance traveled over time
@@ -476,6 +512,10 @@ class Drivebase
             // --- Update pose ---
             currentPose.theta = normalizeAngle(currThetaRad);  // STORE RADIANS
             prevRotation = currentRotation;
+
+            pros::lcd::print(4, "Pose x: %f", currentPose.x);
+            pros::lcd::print(5, "Pose y: %f", currentPose.y);
+            pros::lcd::print(6, "Pose theta: %f", radToDeg(currentPose.theta));
         }
 
         /**

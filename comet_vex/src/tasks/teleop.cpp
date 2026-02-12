@@ -45,9 +45,6 @@ std::vector<int> parse_csv_ints(const std::string &line)
     return out;
 }
 
-// 0-3: left, 4-7: right
-std::vector<int> motorNums = {-7, 8, -9, 14, 17, -18, 19, -20};
-
 void opcontrol_initialize()
 {
     drivebase->calibrateIMU();
@@ -57,13 +54,6 @@ void opcontrol_initialize()
 void opcontrol()
 {
     pros::Controller master(pros::E_CONTROLLER_MASTER);
-
-    std::vector<pros::Motor> motors;
-    motors.reserve(motorNums.size());
-    for (int port : motorNums)
-    {
-        motors.emplace_back(port);
-    }
 
     last_input = pros::millis();
 

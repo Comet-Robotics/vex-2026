@@ -9,8 +9,8 @@ namespace constants
 {
     namespace drivebase
     {
-        inline std::vector<int8_t> LEFT_PORTS = {-2, -3, 4, -5};
-        inline std::vector<int8_t> RIGHT_PORTS = {6, -7, 8, 9};
+        inline std::vector<int8_t> LEFT_PORTS = {-2, 4, -5};
+        inline std::vector<int8_t> RIGHT_PORTS = {6, -7, 9};
 
         inline constexpr auto CHASSIS_INTERNAL_GEARSET = pros::v5::MotorGears::blue;
         inline constexpr auto WHEEL_RADIUS = 3.25 / 2;
