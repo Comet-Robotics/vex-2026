@@ -1,23 +1,106 @@
 #pragma once
 
-#include <array>
-#include <vector>
+#include "lemlib/chassis/trackingWheel.hpp"
 #include "pros/abstract_motor.hpp"
-#include "pros/imu.hpp"
+#include "pros/rotation.hpp"
+#include <array>
+#include <cstdint>
+#include "lemlib/chassis/chassis.hpp"
 
 namespace constants
 {
+    // using namespace pros;
+
     namespace drivebase
     {
-        inline std::vector<int8_t> LEFT_PORTS = {-2, 4, -5};
-        inline std::vector<int8_t> RIGHT_PORTS = {6, -7, 9};
+        inline constexpr bool USE_TANK = false;
+        // front, back, top front, top back
+        inline constexpr std::array<int8_t, 4> LEFT_PORTS = {
+            0,
+            0,
+            0,
+            0    
+        };
+
+        // front, back, top front, top back
+        inline constexpr std::array<int8_t, 4> RIGHT_PORTS = {
+            0,
+            0,
+            0,
+            0
+        };
+
+        inline constexpr double DRIVETRAIN_WIDTH = 11.25; //tune this
+        inline constexpr int8_t IMU_PORT = 0;
 
         inline constexpr auto CHASSIS_INTERNAL_GEARSET = pros::v5::MotorGears::blue;
-        inline constexpr auto WHEEL_RADIUS = 3.25 / 2;
-        inline constexpr auto DRIVETRAIN_GEAR_RATIO = 1;
-        inline constexpr auto TRACK_WIDTH = 13.5;
 
-        inline constexpr int8_t IMU_PORT = 10;
+        // lateral PID controller
+        inline const lemlib::ControllerSettings LATERAL_CONTROLLER(
+            9,   // proportional gain (kP)
+            0,   // integral gain (kI)
+            70,   // derivative gain (kD)
+            0,   // anti windup
+            1,   // small error range, in inches
+            100, // small error range timeout, in milliseconds
+            3,   // large error range, in inches
+            500, // large error range timeout, in milliseconds
+            0   // maximum acceleration (slew)
+        );
+
+        // angular PID controller
+        inline const lemlib::ControllerSettings ANGULAR_CONTROLLER(
+            7, // proportional gain (kP)
+            0,// integral gain (kI)
+            55,// derivative gain (kD)
+            0, // anti windup
+            1, // small error range, in degrees
+            100, // small error range timeout, in milliseconds
+            3, // large error range, in degrees
+            500, // large error range timeout, in milliseconds
+            0// maximum acceleration (slew)
+        );
+
+        inline pros::MotorGroup LEFT_MOTORS({LEFT_PORTS[0],
+                                             LEFT_PORTS[1],
+                                             LEFT_PORTS[2],
+                                             LEFT_PORTS[3]},
+                                            CHASSIS_INTERNAL_GEARSET);
+
+        inline pros::MotorGroup RIGHT_MOTORS({RIGHT_PORTS[0],
+                                              RIGHT_PORTS[1],
+                                              RIGHT_PORTS[2],
+                                              RIGHT_PORTS[3]},
+                                             CHASSIS_INTERNAL_GEARSET);
+
         inline pros::Imu IMU(IMU_PORT);
+
+        // drivetrain settings
+        inline lemlib::Drivetrain DRIVETRAIN(
+            &LEFT_MOTORS,               // left motor group
+            &RIGHT_MOTORS,              // right motor group
+            DRIVETRAIN_WIDTH,           // 10 inch track width
+            lemlib::Omniwheel::NEW_325, // using new 3.25" omnis
+            360,                        // drivetrain rpm is 360
+            2                           // horizontal drift is 2 (for now)
+        );
+
+        inline pros::Rotation VERTICAL_ROTATION(-13);
+    
+        inline lemlib::TrackingWheel VERTICAL_TRACKING (
+            &VERTICAL_ROTATION, // rotation sensor
+            lemlib::Omniwheel::NEW_2, // wheel diameter
+            0 // distance from center of rotation
+        );
+
+        inline lemlib::OdomSensors SENSORS(
+            &VERTICAL_TRACKING, // vertical tracking wheel 1
+            nullptr,
+            nullptr, // horizontal tracking wheel 1
+            nullptr,
+            &IMU     // inertial sensor
+        );
+
+        inline constexpr int DEFAULT_TIMEOUT = 5000;
     }
 }

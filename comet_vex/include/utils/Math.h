@@ -54,3 +54,23 @@ inline double radToDeg(double radians)
 {
     return radians * 180.0 / M_PI;
 }
+
+/**
+ * Convert from COMET's coordinate system (0 degrees facing right, positive angles counterclockwise) to lemlib's coordinate system (0 degrees facing up, positive angles clockwise)
+ * @param cometAngle The angle in COMET's coordinate system (in degrees)
+ * @return The corresponding angle in lemlib's coordinate system (in degrees)
+ */
+inline double cometToLemlibAngle(double cometAngle)
+{
+    return normalizeAngleDeg(90.0 - cometAngle);
+}
+
+/**
+ * Convert from lemlib's coordinate system (0 degrees facing up, positive angles clockwise) to COMET's coordinate system (0 degrees facing right, positive angles counterclockwise)
+ * @param lemlibAngle The angle in lemlib's coordinate system (in degrees)
+ * @return The corresponding angle in COMET's coordinate system (in degrees)
+ */
+inline double lemlibToCometAngle(double lemlibAngle)
+{
+    return normalizeAngleDeg(90.0 - lemlibAngle);
+}
