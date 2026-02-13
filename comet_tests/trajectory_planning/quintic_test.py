@@ -51,13 +51,10 @@ def poly_dd(c, s):
 class QuinticSegment:
     def __init__(self, p0, theta0, p1, theta1):
         dist = np.linalg.norm(p1 - p0)
-        scale = dist * 0.7
+        scale = dist
 
         v0 = np.array([math.cos(theta0), math.sin(theta0)]) * scale
         v1 = np.array([math.cos(theta1), math.sin(theta1)]) * scale
-
-        a0 = np.zeros(2)
-        a1 = np.zeros(2)
 
         self.cx = quintic_coeffs(p0[0], v0[0], 0, p1[0], v1[0], 0)
         self.cy = quintic_coeffs(p0[1], v0[1], 0, p1[1], v1[1], 0)
