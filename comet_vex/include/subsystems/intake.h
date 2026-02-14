@@ -5,6 +5,12 @@
 
 using namespace constants::intake;
 
+enum class IntakeMode {
+    OFF,
+    FORWARD,
+    REVERSE,
+};
+
 class Intake : public pros::MotorGroup
 {
     public:
@@ -29,5 +35,44 @@ class Intake : public pros::MotorGroup
                 this->reverse();
             }
         }
+
+        void setIntakeMode(IntakeMode mode) {
+            this->intakeMode.store(mode);
+        }
+
+        void intakeTask() {
+            while (true) {
+                switch (this->intakeMode.load()) {
+                    case IntakeMode::OFF:
+                        this->stop();
+                        break;
+                    case IntakeMode::FORWARD:
+                        if (isJammed()) {
+                            runDeJam();
+                        } else {
+                            this->forward();
+                        }
+                        break;
+                    case IntakeMode::REVERSE:
+                        this->reverse();
+                        break;
+                }
+                pros::delay(10);
+            }
+        }
+
+        bool isJammed() {
+            return this->get_current_draw() > JAM_CURRENT_THRESHOLD &&
+                     this->get_voltage() > JAM_VOLTAGE_THRESHOLD;
+        }
+
+        void runDeJam() {
+            this->reverse();
+            pros::delay(100);
+            this->forward();
+            pros::delay(100);
+        }
+    private:
+        std::atomic<IntakeMode> intakeMode{IntakeMode::OFF};
 };
 

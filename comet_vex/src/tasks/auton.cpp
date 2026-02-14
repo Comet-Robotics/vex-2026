@@ -12,10 +12,14 @@ void autonomous_initialize() {
     pros::lcd::print(0, "after calibrate imu");
 
     drivebase->setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+
+    new pros::Task([=]() { intake->intakeTask(); });
+
 }
 
 void autonomous() {
-    
+    // angularTest();
+    // lateralTest();
 }
 
 void angularTest() {
@@ -39,11 +43,11 @@ void autonomousSkills73NotARobot() {
     
     // obtain loader blocks
     // TODO: deploy loader intake
-    intake->forward();
+    intake->setIntakeMode(IntakeMode::FORWARD);
     drivebase->turnThenMoveToPoint(-62, 48, DEFAULT_TIMEOUT, {}, {}, false);
     pros::delay(1000);
     drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    intake->stop();    
+    intake->setIntakeMode(IntakeMode::OFF);
     
     // score into long goal
     drivebase->turnThenMoveToPoint(-31, 48, DEFAULT_TIMEOUT, {}, {}, false);
@@ -53,11 +57,11 @@ void autonomousSkills73NotARobot() {
     drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
     
     // obtain blocks from side
-    intake->forward();
+    intake->setIntakeMode(IntakeMode::FORWARD);
     drivebase->turnThenMoveToPoint(-48, 65, DEFAULT_TIMEOUT, {}, {}, false);
     pros::delay(500);
     drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    intake->stop();
+    intake->setIntakeMode(IntakeMode::OFF);
     
     // score into long goal again
     drivebase->turnThenMoveToPoint(-31, 48, DEFAULT_TIMEOUT, {}, {}, false);
@@ -77,11 +81,11 @@ void autonomousSkills73Robot() {
     // get blocks from loader
     drivebase->moveToPoseComet(-48, -48, -90, DEFAULT_TIMEOUT, {}, false);
     // TODO: deploy loader intake
-    intake->forward();
+    intake->setIntakeMode(IntakeMode::FORWARD);
     drivebase->turnThenMoveToPoint(-63, -48, DEFAULT_TIMEOUT, {}, {}, false);
     pros::delay(1000);
     drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    intake->stop(); 
+    intake->setIntakeMode(IntakeMode::OFF); 
     
     // score in long goal
     drivebase->turnThenMoveToPoint(-31, -48, DEFAULT_TIMEOUT, {}, {}, false);
@@ -91,11 +95,11 @@ void autonomousSkills73Robot() {
     drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
 
     // get blocks from side
-    intake->forward(); 
+    intake->setIntakeMode(IntakeMode::FORWARD); 
     drivebase->turnThenMoveToPoint(-48, -65, DEFAULT_TIMEOUT, {}, {}, false);
     pros::delay(500);
     drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    intake->stop();
+    intake->setIntakeMode(IntakeMode::OFF);
 
     // score in long goal again
     drivebase->turnThenMoveToPoint(-31, -48, DEFAULT_TIMEOUT, {}, {}, false);

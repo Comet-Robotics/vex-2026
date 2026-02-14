@@ -107,6 +107,9 @@ namespace constants
     namespace intake {
         inline constexpr int MAX_INTAKE_SPEED = 12000;
         inline constexpr std::array<int8_t, 2> INTAKE_PORTS = {0, 0};
+
+        inline constexpr int JAM_CURRENT_THRESHOLD = 1000; // in mA, tune this
+        inline constexpr int JAM_VOLTAGE_THRESHOLD = 500; // in mV, tune this
     }
 
     namespace outtake {
