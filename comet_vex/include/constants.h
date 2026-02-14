@@ -103,4 +103,14 @@ namespace constants
 
         inline constexpr int DEFAULT_TIMEOUT = 5000;
     }
+
+    namespace intake {
+        inline constexpr int MAX_INTAKE_SPEED = 12000;
+        inline constexpr std::array<int8_t, 2> INTAKE_PORTS = {0, 0};
+    }
+
+    namespace outtake {
+        inline constexpr int MAX_OUTTAKE_SPEED = 12000;
+        inline constexpr std::array<int8_t, 2> OUTTAKE_PORTS = {0, 0};
+    }
 }
