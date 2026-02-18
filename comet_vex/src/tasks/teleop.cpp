@@ -15,6 +15,8 @@ void opcontrol()
 {
     pros::Controller master(pros::E_CONTROLLER_MASTER);
 
+    intake->setIntakeMode(IntakeMode::UNFOLD);
+
     while (true)
     {
         // drivebase
@@ -40,6 +42,10 @@ void opcontrol()
         else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) // outtake height adjust
         {
             // TODO: implement outtake height adjust
+        }
+        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) // fallback to unfold intake
+        {
+            intake->setIntakeMode(IntakeMode::UNFOLD);
         }
         else // stop
         {

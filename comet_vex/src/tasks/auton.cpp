@@ -34,6 +34,7 @@ void lateralTest() {
 
 void autonomousSkills73NotARobot() {
     drivebase->setPoseComet(-46, 0, 90);
+    intake->setIntakeMode(IntakeMode::UNFOLD);
 
     // remove blocks from park zone
     // TODO: deploy arm then wait a bit

@@ -9,6 +9,8 @@ enum class IntakeMode {
     OFF,
     FORWARD,
     REVERSE,
+    UNFOLD,
+    LOADER
 };
 
 class Intake : public pros::MotorGroup
@@ -55,6 +57,13 @@ class Intake : public pros::MotorGroup
                         break;
                     case IntakeMode::REVERSE:
                         this->reverse();
+                        break;
+                    case IntakeMode::UNFOLD:
+                        this->reverse();
+                        pros::delay(200);
+                        this->stop();
+                        break;
+                    case IntakeMode::LOADER:
                         break;
                 }
                 pros::delay(10);
