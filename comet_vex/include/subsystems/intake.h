@@ -81,6 +81,7 @@ class Intake : public pros::MotorGroup
             this->forward();
             pros::delay(100);
         }
+
     private:
         std::atomic<IntakeMode> intakeMode{IntakeMode::OFF};
 };

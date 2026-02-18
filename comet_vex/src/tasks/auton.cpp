@@ -43,15 +43,17 @@ void autonomousSkills73NotARobot() {
     drivebase->moveToPoseComet(-48, 48, 90, DEFAULT_TIMEOUT, {}, false);
     
     // obtain loader blocks
-    // TODO: deploy loader intake
+    loader->activate();
     intake->setIntakeMode(IntakeMode::FORWARD);
     drivebase->turnThenMoveToPoint(-62, 48, DEFAULT_TIMEOUT, {}, {}, false);
     pros::delay(1000);
+    loader->deactivate();
     drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
     intake->setIntakeMode(IntakeMode::OFF);
     
     // score into long goal
     drivebase->turnThenMoveToPoint(-31, 48, DEFAULT_TIMEOUT, {}, {}, false);
+    intake->setIntakeMode(IntakeMode::FORWARD);
     outtake->forward();
     pros::delay(5000);
     outtake->stop();
@@ -66,6 +68,7 @@ void autonomousSkills73NotARobot() {
     
     // score into long goal again
     drivebase->turnThenMoveToPoint(-31, 48, DEFAULT_TIMEOUT, {}, {}, false);
+    intake->setIntakeMode(IntakeMode::FORWARD);
     outtake->forward();
     pros::delay(2000);
     outtake->stop();
@@ -81,15 +84,17 @@ void autonomousSkills73Robot() {
 
     // get blocks from loader
     drivebase->moveToPoseComet(-48, -48, -90, DEFAULT_TIMEOUT, {}, false);
-    // TODO: deploy loader intake
+    loader->activate();
     intake->setIntakeMode(IntakeMode::FORWARD);
     drivebase->turnThenMoveToPoint(-63, -48, DEFAULT_TIMEOUT, {}, {}, false);
     pros::delay(1000);
+    loader->deactivate();
     drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
     intake->setIntakeMode(IntakeMode::OFF); 
     
     // score in long goal
     drivebase->turnThenMoveToPoint(-31, -48, DEFAULT_TIMEOUT, {}, {}, false);
+    intake->setIntakeMode(IntakeMode::FORWARD);
     outtake->forward();
     pros::delay(5000);
     outtake->stop();
@@ -104,6 +109,7 @@ void autonomousSkills73Robot() {
 
     // score in long goal again
     drivebase->turnThenMoveToPoint(-31, -48, DEFAULT_TIMEOUT, {}, {}, false);
+    intake->setIntakeMode(IntakeMode::FORWARD);
     outtake->forward(); 
     pros::delay(2000);
     outtake->stop();

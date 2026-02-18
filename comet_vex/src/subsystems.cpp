@@ -6,4 +6,5 @@ void subsystems_initialize() {
 
     intake = new Intake();
     outtake = new Outtake();
+    loader = new Loader();
 }

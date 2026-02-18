@@ -39,10 +39,6 @@ void opcontrol()
             intake->setIntakeMode(IntakeMode::FORWARD);
             outtake->forward();
         }
-        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) // outtake height adjust
-        {
-            // TODO: implement outtake height adjust
-        }
         else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) // fallback to unfold intake
         {
             intake->setIntakeMode(IntakeMode::UNFOLD);
@@ -51,6 +47,20 @@ void opcontrol()
         {
             intake->setIntakeMode(IntakeMode::OFF);
             outtake->stop();
+        }
+
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+            // TODO: outtake height adjust
+        }
+
+        // toggle loader
+        // if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+        //     loader->toggle();
+        // }
+
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+            loader->activate();
+            intake->setIntakeMode(IntakeMode::FORWARD);
         }
 
         pros::delay(10);

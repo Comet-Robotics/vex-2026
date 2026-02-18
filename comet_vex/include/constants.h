@@ -116,4 +116,8 @@ namespace constants
         inline constexpr int MAX_OUTTAKE_SPEED = 12000;
         inline constexpr std::array<int8_t, 2> OUTTAKE_PORTS = {0, 0};
     }
+
+    namespace loader {
+        inline constexpr char LOADER_PORT = 'Z';
+    }
 }
