@@ -95,14 +95,16 @@ public:
                 this->stop();
                 break;
             case IntakeMode::FORWARD:
-                if (isJammed())
-                {
-                    runDeJam();
-                }
-                else
-                {
-                    this->forward();
-                }
+                // if (isJammed())
+                // {
+                //     runDeJam();
+                // }
+                // else
+                // {
+                //     this->forward();
+                // }
+
+                this->forward();
                 break;
             case IntakeMode::REVERSE:
                 this->reverse();

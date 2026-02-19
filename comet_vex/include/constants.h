@@ -16,22 +16,20 @@ namespace constants
         inline constexpr bool USE_TANK = false;
         // front, back, top front, top back
         inline constexpr std::array<int8_t, 4> LEFT_PORTS = {
-            0,
-            0,
-            0,
-            0    
-        };
+            -2,
+            -3,
+            4,
+            -5};
 
         // front, back, top front, top back
         inline constexpr std::array<int8_t, 4> RIGHT_PORTS = {
-            0,
-            0,
-            0,
-            0
-        };
+            1,
+            6,
+            -7,
+            9};
 
-        inline constexpr double DRIVETRAIN_WIDTH = 11.25; //tune this
-        inline constexpr int8_t IMU_PORT = 0;
+        inline constexpr double DRIVETRAIN_WIDTH = 11.75; // tuned this
+        inline constexpr int8_t IMU_PORT = 10;
 
         inline constexpr auto CHASSIS_INTERNAL_GEARSET = pros::v5::MotorGears::blue;
 
@@ -39,27 +37,40 @@ namespace constants
         inline const lemlib::ControllerSettings LATERAL_CONTROLLER(
             9,   // proportional gain (kP)
             0,   // integral gain (kI)
-            70,   // derivative gain (kD)
+            70,  // derivative gain (kD)
             0,   // anti windup
             1,   // small error range, in inches
             100, // small error range timeout, in milliseconds
             3,   // large error range, in inches
             500, // large error range timeout, in milliseconds
-            0   // maximum acceleration (slew)
+            0    // maximum acceleration (slew)
         );
 
         // angular PID controller
         inline const lemlib::ControllerSettings ANGULAR_CONTROLLER(
-            7, // proportional gain (kP)
-            0,// integral gain (kI)
-            55,// derivative gain (kD)
-            0, // anti windup
-            1, // small error range, in degrees
-            100, // small error range timeout, in milliseconds
-            3, // large error range, in degrees
-            500, // large error range timeout, in milliseconds
-            0// maximum acceleration (slew)
+            6,    // proportional gain (kP)
+            0,    // integral gain (kI)
+            60,   // derivative gain (kD)
+            0,    // anti windup
+            0.2,  // small error range, in degrees
+            400,  // small error range timeout, in milliseconds
+            1,    // large error range, in degrees
+            1000, // large error range timeout, in milliseconds
+            0     // maximum acceleration (slew)
         );
+
+        // angular PID controller
+        // inline const lemlib::ControllerSettings ANGULAR_CONTROLLER(
+        //     6,    // proportional gain (kP)
+        //     0,    // integral gain (kI)
+        //     51.567, // derivative gain (kD)
+        //     0,    // anti windup
+        //     0,    // small error range, in degrees
+        //     0,    // small error range timeout, in milliseconds
+        //     0,    // large error range, in degrees
+        //     0,    // large error range timeout, in milliseconds
+        //     0     // maximum acceleration (slew)
+        // );
 
         inline pros::MotorGroup LEFT_MOTORS({LEFT_PORTS[0],
                                              LEFT_PORTS[1],
@@ -81,44 +92,39 @@ namespace constants
             &RIGHT_MOTORS,              // right motor group
             DRIVETRAIN_WIDTH,           // 10 inch track width
             lemlib::Omniwheel::NEW_325, // using new 3.25" omnis
-            360,                        // drivetrain rpm is 360
+            600,                        // drivetrain rpm is 600
             2                           // horizontal drift is 2 (for now)
         );
 
-        inline pros::Rotation VERTICAL_ROTATION(-13);
-    
-        inline lemlib::TrackingWheel VERTICAL_TRACKING (
-            &VERTICAL_ROTATION, // rotation sensor
-            lemlib::Omniwheel::NEW_2, // wheel diameter
-            0 // distance from center of rotation
-        );
-
         inline lemlib::OdomSensors SENSORS(
-            &VERTICAL_TRACKING, // vertical tracking wheel 1
+            nullptr, // vertical tracking wheel 1
             nullptr,
             nullptr, // horizontal tracking wheel 1
             nullptr,
-            &IMU     // inertial sensor
+            &IMU // inertial sensor
         );
 
         inline constexpr int DEFAULT_TIMEOUT = 5000;
     }
 
-    namespace intake {
+    namespace intake
+    {
         inline constexpr int MAX_INTAKE_SPEED = 12000;
-        inline constexpr std::array<int8_t, 2> INTAKE_PORTS = {0, 0};
+        inline constexpr std::array<int8_t, 3> INTAKE_PORTS = {-14, 15, 11};
 
         inline constexpr int JAM_CURRENT_THRESHOLD = 1000; // in mA, tune this
-        inline constexpr int JAM_VOLTAGE_THRESHOLD = 500; // in mV, tune this
+        inline constexpr int JAM_VOLTAGE_THRESHOLD = 500;  // in mV, tune this
     }
 
-    namespace outtake {
+    namespace outtake
+    {
         inline constexpr int MAX_OUTTAKE_SPEED = 12000;
-        inline constexpr std::array<int8_t, 2> OUTTAKE_PORTS = {0, 0};
+        inline constexpr std::array<int8_t, 2> OUTTAKE_PORTS = {16, -17};
         inline constexpr char HEIGHT_ADJUST_PORT = 'Z';
     }
 
-    namespace loader {
+    namespace loader
+    {
         inline constexpr char LOADER_PORT = 'Z';
     }
 }

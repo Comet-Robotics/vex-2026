@@ -27,7 +27,18 @@ public:
      * Get the IMU used for the drivebase. This is useful for getting the current heading of the robot, which is used for odometry and other functions. It can also be used for other purposes, such as balancing a robot on a platform.
      * @return The IMU used for the drivebase
      */
-    pros::IMU getIMU() { return IMU; }
+    pros::IMU getIMU()
+    {
+        return IMU;
+    }
+
+    /**
+     * Get the current heading of the robot in degrees. This is useful for odometry and other functions that require the current heading of the robot. The heading is returned in the range of 0 to 360 degrees, where 0 degrees is facing up, 90 degrees is facing right, 180 degrees is facing down, and 270 degrees is facing left.
+     */
+    double getAngle()
+    {
+        return IMU.get_heading();
+    }
 
     /**
      * A simple function to control the drivebase with a drive and turn value, where drive is the forward/backward movement and turn is the left/right movement. This is useful for controlling the robot with a controller, where the drive value is typically the left stick y-axis and the turn value is typically the right stick x-axis. The values are expected to be in the range of -127 to 127, which is the standard range for VEX motor control.

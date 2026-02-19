@@ -34,6 +34,7 @@ void opcontrol()
         else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // intaking
         {
             intake->setIntakeMode(IntakeMode::FORWARD);
+            outtake->stop();
         }
         else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) // outtaking
         {
