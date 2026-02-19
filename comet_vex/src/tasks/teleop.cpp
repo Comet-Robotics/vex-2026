@@ -23,7 +23,7 @@ void opcontrol()
         // drivebase
         double drive = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         double turn = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-        drivebase->errorDrive(drive, turn);
+        drivebase->signedDrive(drive, turn);
 
         // intake/outtake
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) // intaking from loader

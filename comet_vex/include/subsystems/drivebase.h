@@ -62,6 +62,26 @@ public:
         RIGHT_MOTORS.move_voltage((drive - turn) * 12000);
     }
 
+    void signedDrive(float drive, float turn)
+    {
+        drive /= 127.0;
+        turn /= 127.0;
+
+        drive = signedPower(drive, driveExponent);
+        turn = signedPower(turn, turnExponent);
+
+        // normalize for maximum magnitude of 1
+        float maxMagnitude = std::max(std::abs(drive + turn), std::abs(drive - turn));
+        if (maxMagnitude > 1)
+        {
+            drive /= maxMagnitude;
+            turn /= maxMagnitude;
+        }
+
+        LEFT_MOTORS.move_voltage((drive + turn) * 12000);
+        RIGHT_MOTORS.move_voltage((drive - turn) * 12000);
+    }
+
     /**
      * A function that turns the robot to a point and then moves to that point. This is useful for autonomous routines where the robot needs to move to a specific location on the field. The function takes in the x and y coordinates of the point, as well as optional parameters for the turn and move functions, such as maximum speed and timeout. The function will first turn to face the point, and then move to the point. If async is true, the function will return immediately after starting the turn, and the move will start once the turn is complete. If async is false, the function will block until both the turn and move are complete.
      * @param x The x coordinate of the point to move to
@@ -153,4 +173,23 @@ public:
             pros::delay(interval);
         }
     }
+
+    /**
+     * A helper function that applies an exponent to a value while preserving the sign of the value. This is useful for applying a non-linear curve to controller inputs, where you want to have finer control at lower speeds while still allowing for full power at higher inputs. The function takes in a power value and an exponent, and returns the power value raised to the exponent, with the original sign of the power value preserved.
+     *
+     * Base must be in the range [-1, 1]. Exponent must be greater than 0.
+     * @param base The value to apply the exponent to
+     * @param exponent The exponent to apply to the base value
+     */
+    double signedPower(double base, double exponent)
+    {
+        int sign = (base >= 0) ? 1 : -1;
+        base = std::pow(std::abs(base), exponent);
+        base *= sign;
+        return base;
+    }
+
+private:
+    double driveExponent = 1.5;
+    double turnExponent = 1.5;
 };
