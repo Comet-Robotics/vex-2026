@@ -62,6 +62,11 @@ public:
         RIGHT_MOTORS.move_voltage((drive - turn) * 12000);
     }
 
+    /**
+     * A function that applies a signed power curve to the drive and turn values, which allows for finer control at low speeds while still allowing for full power at high speeds. The drive and turn values are first normalized to the range of -1 to 1, then the signed power function is applied, then the values are normalized again for a maximum total magnitude of 1, then scaled up to send voltage to the motors. The driveExponent and turnExponent constants can be adjusted to change the shape of the curve, with higher values resulting in a steeper curve and more sensitivity at low speeds.
+     * @param drive The forward/backward movement value, in the range of -127 to 127
+     * @param turn The left/right movement value, in the range of -127 to 127
+     */
     void signedDrive(float drive, float turn)
     {
         drive /= 127.0;
