@@ -6,14 +6,15 @@
  * @class PID
  * @brief A simple PID controller implementation with anti-windup and optional derivative filtering
  */
-class PID {
+class PID
+{
 public:
     /**
      * Constructor to initialize PID gains, time step, and internal state
-      * @param kp Proportional gain
-      * @param ki Integral gain
-      * @param kd Derivative gain
-      * @param dt Time step for the controller (seconds)
+     * @param kp Proportional gain
+     * @param ki Integral gain
+     * @param kd Derivative gain
+     * @param dt Time step for the controller (seconds)
      */
     PID(double kp = 0.0, double ki = 0.0, double kd = 0.0, double dt = 0.01)
         : kp_(kp), ki_(ki), kd_(kd), dt_(dt),
@@ -24,14 +25,16 @@ public:
 
     /**
      * Calculate the PID output based on the setpoint and current measurement
-      * @param setpoint The desired target value
-      * @param measurement The current measured value
-      * @param dt_override Optional time step override (if negative, uses internal dt)
-      * @return The PID controller output, clamped to output limits
+     * @param setpoint The desired target value
+     * @param measurement The current measured value
+     * @param dt_override Optional time step override (if negative, uses internal dt)
+     * @return The PID controller output, clamped to output limits
      */
-    double update(double setpoint, double measurement, double dt_override = -1.0) {
+    double update(double setpoint, double measurement, double dt_override = -1.0)
+    {
         double dt = (dt_override > 0.0) ? dt_override : dt_;
-        if (dt <= 0.0) return 0.0;
+        if (dt <= 0.0)
+            return 0.0;
 
         double error = setpoint - measurement;
 
@@ -45,7 +48,8 @@ public:
 
         // Derivative term: derivative on measurement to reduce setpoint "kick"
         double raw_deriv = -(measurement - prev_meas_) / dt; // negative because d(error)/dt = -d(meas)/dt when setpoint is constant
-        if (tau_ > 0.0) {
+        if (tau_ > 0.0)
+        {
             // First-order low-pass filter: alpha = tau / (tau + dt)
             double alpha = tau_ / (tau_ + dt);
             prev_deriv_ = alpha * prev_deriv_ + (1.0 - alpha) * raw_deriv;
@@ -63,22 +67,34 @@ public:
 
     /**
      * Reset the PID controller's internal state (integrator and previous measurement/derivative)
-      * @param integrator Optional initial value for the integrator (default is 0.0)
+     * @param integrator Optional initial value for the integrator (default is 0.0)
      */
-    void reset(double integrator = 0.0) {
+    void reset(double integrator = 0.0)
+    {
         integrator_ = integrator;
         prev_meas_ = 0.0;
         prev_deriv_ = 0.0;
     }
 
     // Setters
-    void setGains(double kp, double ki, double kd) { kp_ = kp; ki_ = ki; kd_ = kd; }
-    void setDt(double dt) { if (dt > 0.0) dt_ = dt; }
-    void setOutputLimits(double min_out, double max_out) {
+    void setGains(double kp, double ki, double kd)
+    {
+        kp_ = kp;
+        ki_ = ki;
+        kd_ = kd;
+    }
+    void setDt(double dt)
+    {
+        if (dt > 0.0)
+            dt_ = dt;
+    }
+    void setOutputLimits(double min_out, double max_out)
+    {
         out_min_ = std::min(min_out, max_out);
         out_max_ = std::max(min_out, max_out);
     }
-    void setIntegralLimits(double min_int, double max_int) {
+    void setIntegralLimits(double min_int, double max_int)
+    {
         int_min_ = std::min(min_int, max_int);
         int_max_ = std::max(min_int, max_int);
         // clamp current integrator to new bounds

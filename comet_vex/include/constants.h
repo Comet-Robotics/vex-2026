@@ -115,6 +115,7 @@ namespace constants
     namespace outtake {
         inline constexpr int MAX_OUTTAKE_SPEED = 12000;
         inline constexpr std::array<int8_t, 2> OUTTAKE_PORTS = {0, 0};
+        inline constexpr char HEIGHT_ADJUST_PORT = 'Z';
     }
 
     namespace loader {

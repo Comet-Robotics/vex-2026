@@ -7,11 +7,11 @@
  * This header provides functions to normalize angles to standard ranges (e.g., [-pi, pi] for radians and [-180, 180] for degrees) and to convert between degrees and radians. These functions are essential for ensuring consistent angle representations throughout the codebase, especially when working with robot localization and control algorithms.
  */
 
- /**
-  * Normalize an angle in radians to the range [-pi, pi]
-  * @param angle The angle in radians to normalize
-  * @return The normalized angle in radians, within the range [-pi, pi]
-  */
+/**
+ * Normalize an angle in radians to the range [-pi, pi]
+ * @param angle The angle in radians to normalize
+ * @return The normalized angle in radians, within the range [-pi, pi]
+ */
 inline double normalizeAngle(double angle)
 {
     while (angle > M_PI)

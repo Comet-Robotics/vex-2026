@@ -3,9 +3,8 @@
 #include "subsystems/drivebase.h"
 #include "pros/llemu.hpp"
 
-
-
-void autonomous_initialize() {
+void autonomous_initialize()
+{
     pros::lcd::initialize();
     pros::lcd::print(0, "before calibrate imu");
     drivebase->calibrateChassis(true);
@@ -13,26 +12,30 @@ void autonomous_initialize() {
 
     drivebase->setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
 
-    new pros::Task([=]() { intake->intakeTask(); });
-
+    new pros::Task([=]()
+                   { intake->intakeTask(); });
 }
 
-void autonomous() {
+void autonomous()
+{
     // angularTest();
     // lateralTest();
 }
 
-void angularTest() {
+void angularTest()
+{
     drivebase->setPose(0, 0, 0);
     drivebase->turnToHeading(90, 100000);
 }
 
-void lateralTest() {
+void lateralTest()
+{
     drivebase->setPose(0, 0, 0);
     drivebase->moveToPoint(0, 24, 100000);
 }
 
-void autonomousSkills73NotARobot() {
+void autonomousSkills73NotARobot()
+{
     drivebase->setPoseComet(-46, 0, 90);
     intake->setIntakeMode(IntakeMode::UNFOLD);
 
@@ -41,7 +44,7 @@ void autonomousSkills73NotARobot() {
     drivebase->turnThenMoveToPoint(-46, 24, DEFAULT_TIMEOUT, {}, {}, false);
     // TODO: raise arm
     drivebase->moveToPoseComet(-48, 48, 90, DEFAULT_TIMEOUT, {}, false);
-    
+
     // obtain loader blocks
     loader->activate();
     intake->setIntakeMode(IntakeMode::FORWARD);
@@ -50,7 +53,7 @@ void autonomousSkills73NotARobot() {
     loader->deactivate();
     drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
     intake->setIntakeMode(IntakeMode::OFF);
-    
+
     // score into long goal
     drivebase->turnThenMoveToPoint(-31, 48, DEFAULT_TIMEOUT, {}, {}, false);
     intake->setIntakeMode(IntakeMode::FORWARD);
@@ -58,14 +61,14 @@ void autonomousSkills73NotARobot() {
     pros::delay(5000);
     outtake->stop();
     drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    
+
     // obtain blocks from side
     intake->setIntakeMode(IntakeMode::FORWARD);
     drivebase->turnThenMoveToPoint(-48, 65, DEFAULT_TIMEOUT, {}, {}, false);
     pros::delay(500);
     drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
     intake->setIntakeMode(IntakeMode::OFF);
-    
+
     // score into long goal again
     drivebase->turnThenMoveToPoint(-31, 48, DEFAULT_TIMEOUT, {}, {}, false);
     intake->setIntakeMode(IntakeMode::FORWARD);
@@ -78,7 +81,8 @@ void autonomousSkills73NotARobot() {
     drivebase->turnThenMoveToPoint(-62, 6, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
 }
 
-void autonomousSkills73Robot() {
+void autonomousSkills73Robot()
+{
     // starting postion
     drivebase->setPoseComet(-55, -15, 90);
 
@@ -90,8 +94,8 @@ void autonomousSkills73Robot() {
     pros::delay(1000);
     loader->deactivate();
     drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    intake->setIntakeMode(IntakeMode::OFF); 
-    
+    intake->setIntakeMode(IntakeMode::OFF);
+
     // score in long goal
     drivebase->turnThenMoveToPoint(-31, -48, DEFAULT_TIMEOUT, {}, {}, false);
     intake->setIntakeMode(IntakeMode::FORWARD);
@@ -101,7 +105,7 @@ void autonomousSkills73Robot() {
     drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
 
     // get blocks from side
-    intake->setIntakeMode(IntakeMode::FORWARD); 
+    intake->setIntakeMode(IntakeMode::FORWARD);
     drivebase->turnThenMoveToPoint(-48, -65, DEFAULT_TIMEOUT, {}, {}, false);
     pros::delay(500);
     drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
@@ -110,10 +114,10 @@ void autonomousSkills73Robot() {
     // score in long goal again
     drivebase->turnThenMoveToPoint(-31, -48, DEFAULT_TIMEOUT, {}, {}, false);
     intake->setIntakeMode(IntakeMode::FORWARD);
-    outtake->forward(); 
+    outtake->forward();
     pros::delay(2000);
     outtake->stop();
-    
+
     // park
     drivebase->moveToPoseComet(-62, -24, 90, DEFAULT_TIMEOUT, {.forwards = false}, false);
     drivebase->turnThenMoveToPoint(-62, -6, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);

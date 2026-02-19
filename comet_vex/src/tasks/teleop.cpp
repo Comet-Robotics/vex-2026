@@ -8,7 +8,8 @@ void opcontrol_initialize()
 {
     pros::lcd::initialize();
 
-    new pros::Task([=]() { intake->intakeTask(); });
+    new pros::Task([=]()
+                   { intake->intakeTask(); });
 }
 
 void opcontrol()
@@ -25,7 +26,12 @@ void opcontrol()
         drivebase->errorDrive(drive, turn);
 
         // intake/outtake
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // intaking
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) // intaking from loader
+        {
+            loader->activate();
+            intake->setIntakeMode(IntakeMode::FORWARD);
+        }
+        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // intaking
         {
             intake->setIntakeMode(IntakeMode::FORWARD);
         }
@@ -46,22 +52,24 @@ void opcontrol()
         else // stop
         {
             intake->setIntakeMode(IntakeMode::OFF);
+            loader->deactivate();
             outtake->stop();
         }
 
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-            // TODO: outtake height adjust
+        // outtake height adjust
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+        {
+            outtake->adjustDown();
+        }
+        else
+        {
+            outtake->adjustUp();
         }
 
         // toggle loader
         // if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
         //     loader->toggle();
         // }
-
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-            loader->activate();
-            intake->setIntakeMode(IntakeMode::FORWARD);
-        }
 
         pros::delay(10);
     }

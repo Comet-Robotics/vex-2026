@@ -4,7 +4,8 @@
 #include "tasks/auton.h"
 #include "tasks/teleop.h"
 
-void initialize() {
+void initialize()
+{
 	pros::lcd::initialize();
 
 	subsystems_initialize();
