@@ -522,7 +522,7 @@ public:
 
                 // Compute log weight
                 double ll = 0.0;
-                for (size_t k = 0; k < numBeams; k++)
+                for (int k = 0; k < numBeams; k++)
                 {
                     if (abs_errs[k] <= threshold)
                     {
