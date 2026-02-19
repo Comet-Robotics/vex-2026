@@ -48,15 +48,15 @@ namespace constants
 
         // angular PID controller
         inline const lemlib::ControllerSettings ANGULAR_CONTROLLER(
-            6,    // proportional gain (kP)
-            0,    // integral gain (kI)
-            60,   // derivative gain (kD)
-            0,    // anti windup
-            0.2,  // small error range, in degrees
-            400,  // small error range timeout, in milliseconds
-            1,    // large error range, in degrees
-            1000, // large error range timeout, in milliseconds
-            0     // maximum acceleration (slew)
+            6,   // proportional gain (kP)
+            0,   // integral gain (kI)
+            60,  // derivative gain (kD)
+            2.5, // anti windup
+            1,   // small error range, in degrees
+            100, // small error range timeout, in milliseconds
+            3,   // large error range, in degrees
+            500, // large error range timeout, in milliseconds
+            0    // maximum acceleration (slew)
         );
 
         // angular PID controller
