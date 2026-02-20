@@ -107,6 +107,7 @@ void autonomousSkills73Robot()
 {
     // starting postion
     drivebase->setPoseComet(-55, -15, -90);
+    intake->setIntakeMode(IntakeMode::UNFOLD);
 
     // get blocks from loader
     drivebase->moveToPoseComet(-48, -48, -90, DEFAULT_TIMEOUT, {}, false);
@@ -147,7 +148,31 @@ void autonomousSkills73Robot()
 
 void autonomous2v2Nobot()
 {
-    drivebase->setPoseComet(-55, -15, 90);
+    drivebase->setPoseComet(-55, 15, 90);
+    intake->setIntakeMode(IntakeMode::UNFOLD);
+
+    drivebase->moveToPoseComet(-48, 48, 90, DEFAULT_TIMEOUT, {}, false);
+    loader->activate();
+    intake->setIntakeMode(IntakeMode::FORWARD);
+    drivebase->turnThenMoveToPoint(-63, 48, DEFAULT_TIMEOUT, {}, {}, false);
+    pros::delay(1000);
+    loader->deactivate();
+    drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
+    intake->setIntakeMode(IntakeMode::OFF);
+
+    drivebase->turnThenMoveToPoint(-31, 48, DEFAULT_TIMEOUT, {}, {}, false);
+    intake->setIntakeMode(IntakeMode::FORWARD);
+    outtake->forward();
+    pros::delay(5000);
+    intake->setIntakeMode(IntakeMode::OFF);
+    outtake->stop();
+}
+
+void autonomous2v2Robot()
+{
+    drivebase->setPoseComet(-55, -15, -90);
+    intake->setIntakeMode(IntakeMode::UNFOLD);
+
     drivebase->moveToPoseComet(-48, -48, -90, DEFAULT_TIMEOUT, {}, false);
     loader->activate();
     intake->setIntakeMode(IntakeMode::FORWARD);
@@ -161,6 +186,7 @@ void autonomous2v2Nobot()
     intake->setIntakeMode(IntakeMode::FORWARD);
     outtake->forward();
     pros::delay(5000);
+    intake->setIntakeMode(IntakeMode::OFF);
     outtake->stop();
 }
 
