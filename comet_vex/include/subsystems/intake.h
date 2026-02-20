@@ -2,6 +2,7 @@
 
 #include "constants.h"
 #include "pros/motor_group.hpp"
+#include "pros/llemu.hpp"
 
 using namespace constants::intake;
 
@@ -80,6 +81,7 @@ public:
     void setIntakeMode(IntakeMode mode)
     {
         this->intakeMode.store(mode);
+        firstRun = true;
     }
 
     /**
@@ -95,14 +97,14 @@ public:
                 this->stop();
                 break;
             case IntakeMode::FORWARD:
-                // if (isJammed())
-                // {
-                //     runDeJam();
-                // }
-                // else
-                // {
-                //     this->forward();
-                // }
+                if (isJammed())
+                {
+                    runDeJam();
+                }
+                else
+                {
+                    this->forward();
+                }
 
                 this->forward();
                 break;
@@ -110,8 +112,12 @@ public:
                 this->reverse();
                 break;
             case IntakeMode::UNFOLD:
-                this->reverse();
-                pros::delay(200);
+                if (firstRun)
+                {
+                    this->reverse();
+                    pros::delay(200);
+                    firstRun = false;
+                }
                 this->stop();
                 break;
             case IntakeMode::LOADER:
@@ -127,6 +133,9 @@ public:
      */
     bool isJammed()
     {
+        pros::lcd::print(2, "Current Draw: %d mA", this->get_current_draw());
+        pros::lcd::print(3, "Voltage: %d mV", this->get_voltage());
+        pros::lcd::print(4, "Jammed: %s", (this->get_current_draw() > JAM_CURRENT_THRESHOLD && this->get_voltage() > JAM_VOLTAGE_THRESHOLD) ? "YES" : "NO");
         return this->get_current_draw() > JAM_CURRENT_THRESHOLD &&
                this->get_voltage() > JAM_VOLTAGE_THRESHOLD;
     }
@@ -144,4 +153,5 @@ public:
 
 private:
     std::atomic<IntakeMode> intakeMode{IntakeMode::OFF};
+    bool firstRun = true;
 };
