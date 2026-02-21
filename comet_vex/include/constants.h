@@ -2,7 +2,6 @@
 
 #include "lemlib/chassis/trackingWheel.hpp"
 #include "pros/abstract_motor.hpp"
-#include "pros/rotation.hpp"
 #include <array>
 #include <cstdint>
 #include "lemlib/chassis/chassis.hpp"
@@ -110,12 +109,16 @@ namespace constants
     namespace intake
     {
         inline constexpr int MAX_INTAKE_SPEED = 12000;
-        inline constexpr std::array<int8_t, 5> INTAKE_PORTS = {
-            12,  // front intake right
-            -13, // front intake left
-            -14, // back intake left
-            15,  // back intake right
-            11,  // conveyor
+        // inline constexpr std::array<int8_t, 5> INTAKE_PORTS = {
+        //     12,  // front intake right
+        //     -13, // front intake left
+        //     -14, // back intake left
+        //     15,  // back intake right
+        //     11,  // conveyor
+        // };
+        inline constexpr std::array<int8_t, 2> INTAKE_PORTS = {
+            1,  // front intake right
+            -2, // front intake left
         };
 
         inline constexpr int JAM_CURRENT_THRESHOLD = 1000; // in mA, tune this
@@ -134,6 +137,6 @@ namespace constants
 
     namespace loader
     {
-        inline constexpr char LOADER_PORT = 'Z';
+        inline constexpr char LOADER_PORT = 'A';
     }
 }

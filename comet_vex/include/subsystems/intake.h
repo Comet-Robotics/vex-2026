@@ -85,6 +85,15 @@ public:
     }
 
     /**
+     * Gets the current intake mode of the intake mechanism.
+     * @return The current intake mode.
+     */
+    IntakeMode getIntakeMode()
+    {
+        return this->intakeMode.load();
+    }
+
+    /**
      * The intake task that continuously runs in the background to control the intake motors based on the current intake mode. This task checks the intake mode and sets the motor behavior accordingly, including handling jam detection and de-jamming if necessary.
      */
     void intakeTask()
@@ -97,14 +106,14 @@ public:
                 this->stop();
                 break;
             case IntakeMode::FORWARD:
-                if (isJammed())
-                {
-                    runDeJam();
-                }
-                else
-                {
-                    this->forward();
-                }
+                // if (isJammed())
+                // {
+                //     runDeJam();
+                // }
+                // else
+                // {
+                //     this->forward();
+                // }
 
                 this->forward();
                 break;

@@ -1,7 +1,6 @@
 #include "tasks/teleop.h"
 #include "subsystems.h"
 #include "subsystems/drivebase.h"
-#include <sstream>
 #include "pros/llemu.hpp"
 
 void opcontrol_initialize()
@@ -60,17 +59,20 @@ void opcontrol()
         // outtake height adjust
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
         {
-            outtake->adjustDown();
+            outtake->adjustUp();
         }
         else
         {
-            outtake->adjustUp();
+            outtake->adjustDown();
         }
 
         // toggle loader
         // if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
         //     loader->toggle();
         // }
+
+        pros::lcd::print(5, "Intake mode: %d", static_cast<int>(intake->getIntakeMode()));
+        pros::lcd::clear();
 
         pros::delay(10);
     }
