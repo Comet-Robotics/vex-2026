@@ -5,9 +5,10 @@
 
 void opcontrol_initialize()
 {
-    static pros::Task intakeTask([]()
-                                 { intake->intakeTask(); },
-                                 "Intake Task");
+    pros::lcd::print(1, "Initializing teleop...");
+
+    new pros::Task([=]()
+                   { intake->intakeTask(); });
 }
 
 void opcontrol()
@@ -21,7 +22,7 @@ void opcontrol()
         // drivebase
         double drive = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         double turn = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-        // drivebase->signedDrive(drive, turn);
+        drivebase->signedDrive(drive, turn);
 
         // intake/outtake
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) // intaking from loader
@@ -66,9 +67,9 @@ void opcontrol()
         }
 
         // toggle loader
-        // if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-        //     loader->toggle();
-        // }
+        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+            loader->toggle();
+        }
 
         pros::lcd::print(3, "Intake mode: %d", static_cast<int>(intake->getIntakeMode()));
         pros::lcd::print(4, "Intake Motor Temp: %f", intake->getIntakeMotorTemp());

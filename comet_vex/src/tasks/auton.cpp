@@ -5,11 +5,7 @@
 
 void autonomous_initialize()
 {
-    pros::lcd::print(0, "before calibrate imu");
-    drivebase->calibrateChassis(true);
-    pros::lcd::print(0, "after calibrate imu");
-
-    drivebase->setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+    pros::lcd::print(1, "Initializing autonomous...");
 
     new pros::Task([=]()
                    { intake->intakeTask(); });
