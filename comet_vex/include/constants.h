@@ -15,7 +15,7 @@ namespace constants
         inline constexpr bool USE_TANK = false;
         // front, back, top front, top back
         inline constexpr std::array<int8_t, 4> LEFT_PORTS = {
-            -2,
+            -2 ,
             -3,
             4,
             -5};
@@ -117,8 +117,8 @@ namespace constants
         //     11,  // conveyor
         // };
         inline constexpr std::array<int8_t, 2> INTAKE_PORTS = {
-            1,  // front intake right
-            -2, // front intake left
+            12,  // front intake right
+            -13, // front intake left
         };
 
         inline constexpr int JAM_CURRENT_THRESHOLD = 1000; // in mA, tune this

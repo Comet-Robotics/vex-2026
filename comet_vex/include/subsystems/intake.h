@@ -84,6 +84,11 @@ public:
         firstRun = true;
     }
 
+    double getIntakeMotorTemp()
+    {
+        return this->get_temperature();
+    }
+
     /**
      * Gets the current intake mode of the intake mechanism.
      * @return The current intake mode.

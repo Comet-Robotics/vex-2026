@@ -5,7 +5,6 @@
 
 void autonomous_initialize()
 {
-    pros::lcd::initialize();
     pros::lcd::print(0, "before calibrate imu");
     drivebase->calibrateChassis(true);
     pros::lcd::print(0, "after calibrate imu");

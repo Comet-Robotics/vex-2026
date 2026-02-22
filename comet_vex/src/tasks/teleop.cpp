@@ -1,14 +1,13 @@
 #include "tasks/teleop.h"
 #include "subsystems.h"
-#include "subsystems/drivebase.h"
 #include "pros/llemu.hpp"
+#include "pros/rtos.hpp"
 
 void opcontrol_initialize()
 {
-    pros::lcd::initialize();
-
-    new pros::Task([=]()
-                   { intake->intakeTask(); });
+    static pros::Task intakeTask([]()
+                                 { intake->intakeTask(); },
+                                 "Intake Task");
 }
 
 void opcontrol()
@@ -22,7 +21,7 @@ void opcontrol()
         // drivebase
         double drive = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         double turn = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-        drivebase->signedDrive(drive, turn);
+        // drivebase->signedDrive(drive, turn);
 
         // intake/outtake
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) // intaking from loader
@@ -71,8 +70,10 @@ void opcontrol()
         //     loader->toggle();
         // }
 
-        pros::lcd::print(5, "Intake mode: %d", static_cast<int>(intake->getIntakeMode()));
-        pros::lcd::clear();
+        pros::lcd::print(3, "Intake mode: %d", static_cast<int>(intake->getIntakeMode()));
+        pros::lcd::print(4, "Intake Motor Temp: %f", intake->getIntakeMotorTemp());
+        pros::lcd::print(5, "Outtake Extended: %d", outtake->getHeight());
+        pros::lcd::print(6, "Loader Extended: %d", loader->is_extended());
 
         pros::delay(10);
     }
