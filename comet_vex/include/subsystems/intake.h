@@ -11,8 +11,7 @@ enum class IntakeMode
     OFF,
     FORWARD,
     REVERSE,
-    UNFOLD,
-    LOADER
+    UNFOLD
 };
 
 class Intake : public pros::MotorGroup
@@ -133,8 +132,6 @@ public:
                     firstRun = false;
                 }
                 this->stop();
-                break;
-            case IntakeMode::LOADER:
                 break;
             }
             pros::delay(10);

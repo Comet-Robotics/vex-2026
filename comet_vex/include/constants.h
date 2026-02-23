@@ -12,10 +12,13 @@ namespace constants
 
     namespace drivebase
     {
+        inline constexpr double driveExponent = 1.5;
+        inline constexpr double turnExponent = 1.5;
+
         inline constexpr bool USE_TANK = false;
         // front, back, top front, top back
         inline constexpr std::array<int8_t, 4> LEFT_PORTS = {
-            -2 ,
+            -2,
             -3,
             4,
             -5};
