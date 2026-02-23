@@ -126,7 +126,6 @@ class Serial : public Device {
 	 * pros::Serial serial(1);
 	 * serial.flush();
 	 * \endcode
-	 
 	 */
 	virtual std::int32_t flush() const;
 
@@ -339,7 +338,7 @@ namespace literals {
  * }
  * \endcode
  */
-const pros::Serial operator"" _ser(const unsigned long long int m);
+const pros::Serial operator""_ser(const unsigned long long int m);
 }  // namespace literals
 }  // namespace pros
 #endif  // _PROS_SERIAL_HPP_
