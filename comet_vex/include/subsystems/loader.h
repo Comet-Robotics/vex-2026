@@ -5,10 +5,10 @@
 
 using namespace constants::loader;
 
-class Loader : public pros::adi::DigitalOut
+class Loader : public pros::adi::Pneumatics
 {
 public:
-    Loader() : pros::adi::DigitalOut(LOADER_PORT)
+    Loader() : pros::adi::Pneumatics(LOADER_PORT, false, false)
     {
         deactivate();
     }
@@ -18,8 +18,7 @@ public:
      */
     void activate()
     {
-        set_value(true);
-        deployed = true;
+        set_value(HIGH);
     }
 
     /**
@@ -27,8 +26,7 @@ public:
      */
     void deactivate()
     {
-        set_value(false);
-        deployed = false;
+        set_value(LOW);
     }
 
     /**
@@ -36,10 +34,8 @@ public:
      */
     void toggle()
     {
-        deployed = !deployed;
-        set_value(deployed);
+        set_value(!is_extended());
     }
 
 private:
-    bool deployed = false;
 };

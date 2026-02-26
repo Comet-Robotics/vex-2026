@@ -1,15 +1,10 @@
 #include "tasks/teleop.h"
 #include "subsystems.h"
 #include "subsystems/drivebase.h"
-#include <sstream>
 #include "pros/llemu.hpp"
 
 void opcontrol_initialize()
 {
-    pros::lcd::initialize();
-
-    new pros::Task([=]()
-                   { intake->intakeTask(); });
 }
 
 void opcontrol()
@@ -67,11 +62,26 @@ void opcontrol()
             outtake->adjustUp();
         }
 
+        // deploy loader
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
+        {
+            loader->activate();
+        }
+        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN))
+        {
+            loader->deactivate();
+        }
+
         // toggle loader
         // if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
         //     loader->toggle();
         // }
 
+        IntakeMode currentIntakeMode = intake->getIntakeMode();
+        // pros::lcd::print(0, "Intake Mode: %s", (currentIntakeMode == IntakeMode::OFF) ? "OFF" : (currentIntakeMode == IntakeMode::FORWARD) ? "FORWARD"
+        //                                                                                     : (currentIntakeMode == IntakeMode::REVERSE)   ? "REVERSE"
+        //                                                                                     : (currentIntakeMode == IntakeMode::UNFOLD)    ? "UNFOLD"
+        //                                                                                                                                    : "LOADER");
         pros::delay(10);
     }
 }
