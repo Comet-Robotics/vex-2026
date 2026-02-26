@@ -1,14 +1,11 @@
 #include "tasks/teleop.h"
 #include "subsystems.h"
+#include "subsystems/drivebase.h"
 #include "pros/llemu.hpp"
 #include "pros/rtos.hpp"
 
 void opcontrol_initialize()
 {
-    pros::lcd::print(1, "Initializing teleop...");
-
-    new pros::Task([=]()
-                   { intake->intakeTask(); });
 }
 
 void opcontrol()
@@ -63,19 +60,29 @@ void opcontrol()
         }
         else
         {
-            outtake->adjustDown();
+            outtake->adjustUp();
+        }
+
+        // deploy loader
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
+        {
+            loader->activate();
+        }
+        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN))
+        {
+            loader->deactivate();
         }
 
         // toggle loader
-        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-            loader->toggle();
-        }
+        // if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+        //     loader->toggle();
+        // }
 
-        pros::lcd::print(3, "Intake mode: %d", static_cast<int>(intake->getIntakeMode()));
-        pros::lcd::print(4, "Intake Motor Temp: %f", intake->getIntakeMotorTemp());
-        pros::lcd::print(5, "Outtake Extended: %d", outtake->getHeight());
-        pros::lcd::print(6, "Loader Extended: %d", loader->is_extended());
-
+        IntakeMode currentIntakeMode = intake->getIntakeMode();
+        // pros::lcd::print(0, "Intake Mode: %s", (currentIntakeMode == IntakeMode::OFF) ? "OFF" : (currentIntakeMode == IntakeMode::FORWARD) ? "FORWARD"
+        //                                                                                     : (currentIntakeMode == IntakeMode::REVERSE)   ? "REVERSE"
+        //                                                                                     : (currentIntakeMode == IntakeMode::UNFOLD)    ? "UNFOLD"
+        //                                                                                                                                    : "LOADER");
         pros::delay(10);
     }
 }

@@ -119,7 +119,7 @@ public:
                 //     this->forward();
                 // }
 
-                this->forward();
+                // this->forward();
                 break;
             case IntakeMode::REVERSE:
                 this->reverse();
@@ -134,8 +134,13 @@ public:
                 this->stop();
                 break;
             }
-            pros::delay(10);
+            pros::delay(50);
         }
+    }
+
+    IntakeMode getIntakeMode()
+    {
+        return this->intakeMode.load();
     }
 
     /**
@@ -144,11 +149,12 @@ public:
      */
     bool isJammed()
     {
-        pros::lcd::print(2, "Current Draw: %d mA", this->get_current_draw());
-        pros::lcd::print(3, "Voltage: %d mV", this->get_voltage());
-        pros::lcd::print(4, "Jammed: %s", (this->get_current_draw() > JAM_CURRENT_THRESHOLD && this->get_voltage() > JAM_VOLTAGE_THRESHOLD) ? "YES" : "NO");
-        return this->get_current_draw() > JAM_CURRENT_THRESHOLD &&
-               this->get_voltage() > JAM_VOLTAGE_THRESHOLD;
+        // pros::delay(10);
+        // pros::lcd::print(2, "Current Draw: %d mA", this->get_current_draw());
+        // pros::delay(10);
+        // // pros::lcd::print(3, "Voltage: %d mV", this->get_voltage());
+        // pros::lcd::print(3, "Jammed: %s", (this->get_current_draw() > JAM_CURRENT_THRESHOLD && this->get_voltage() > JAM_VOLTAGE_THRESHOLD) ? "YES" : "NO");
+        return this->get_current_draw() > JAM_CURRENT_THRESHOLD;
     }
 
     /**
@@ -157,9 +163,9 @@ public:
     void runDeJam()
     {
         this->reverse();
-        pros::delay(100);
+        pros::delay(150);
         this->forward();
-        pros::delay(100);
+        pros::delay(150);
     }
 
 private:

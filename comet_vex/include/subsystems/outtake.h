@@ -73,15 +73,6 @@ public:
         heightAdjust.set_value(LOW);
     }
 
-    /**
-     * Gets the current height of the outtake mechanism based on the state of the height adjust digital output.
-     * @return The current height of the outtake mechanism, where true indicates the adjusted up position and false indicates the adjusted down position.
-     */
-    bool getHeight()
-    {
-        return heightAdjust.is_extended();
-    }
-
 private:
     pros::adi::Pneumatics heightAdjust;
 };

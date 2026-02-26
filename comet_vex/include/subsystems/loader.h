@@ -38,5 +38,4 @@ public:
     }
 
 private:
-    bool deployed = false;
 };

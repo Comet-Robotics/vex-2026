@@ -194,4 +194,25 @@ private:
         base *= sign;
         return base;
     }
+
+    /**
+     * A function to drive the robot at full voltage for a specified amount of time.
+     * @param time The amount of time to drive at full voltage, in milliseconds
+     */
+    void driveFullVoltage(double time)
+    {
+        int before = pros::millis();
+        LEFT_MOTORS.move_voltage(12000);
+        RIGHT_MOTORS.move_voltage(12000);
+        while (pros::millis() - before < time)
+        {
+            pros::delay(10);
+        }
+        LEFT_MOTORS.move_voltage(0);
+        RIGHT_MOTORS.move_voltage(0);
+    }
+
+private:
+    double driveExponent = 1.5;
+    double turnExponent = 1.5;
 };
