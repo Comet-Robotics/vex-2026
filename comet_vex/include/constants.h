@@ -16,17 +16,19 @@ namespace constants
         inline constexpr bool USE_TANK = false;
         // front, back, top front, top back
         inline constexpr std::array<int8_t, 4> LEFT_PORTS = {
-            -5,
-            6,
-            -7,
-            -8};
+            0,
+            0,
+            0,
+            0,
+        };
 
         // front, back, top front, top back
         inline constexpr std::array<int8_t, 4> RIGHT_PORTS = {
-            1,
-            -2,
-            3,
-            4};
+            0,
+            0,
+            0,
+            0,
+        };
 
         inline constexpr double DRIVETRAIN_WIDTH = 11.75; // tuned this
         inline constexpr int8_t IMU_PORT = 10;
@@ -111,11 +113,13 @@ namespace constants
     namespace intake
     {
         inline constexpr int MAX_INTAKE_SPEED = 12000;
-        inline constexpr std::array<int8_t, 5> INTAKE_PORTS = {
-            12,  // front intake right
-            -9,  // front intake left
-            11,  // conveyor right
-            -14, // conveyor left
+        inline constexpr std::array<int8_t, 6> INTAKE_PORTS = {
+            1,   // back intake right
+            13, // front intake right
+            -12, // front intake left
+            -14, // back intake left
+            15,  // right conveyor
+            -16  // left conveyor
         };
 
         inline constexpr int JAM_CURRENT_THRESHOLD = 1000;  // in mA, tune this
@@ -126,8 +130,8 @@ namespace constants
     {
         inline constexpr int MAX_OUTTAKE_SPEED = 12000;
         inline constexpr std::array<int8_t, 2> OUTTAKE_PORTS = {
-            16,  // outtake left
-            -18, // outtake right
+            17,  // outtake left
+            -11, // outtake right
         };
         inline constexpr char HEIGHT_ADJUST_PORT = 'A';
     }
