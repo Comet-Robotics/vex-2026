@@ -63,7 +63,7 @@ public:
      */
     void adjustUp()
     {
-        heightAdjust.set_value(HIGH);
+        heightAdjust.extend();
     }
 
     /**
@@ -71,7 +71,7 @@ public:
      */
     void adjustDown()
     {
-        heightAdjust.set_value(LOW);
+        heightAdjust.retract();
     }
 
     /**

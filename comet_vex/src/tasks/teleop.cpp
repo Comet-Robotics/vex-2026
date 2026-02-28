@@ -87,8 +87,7 @@ void opcontrol()
         IntakeMode currentIntakeMode = intake->getIntakeMode();
         // pros::lcd::print(0, "Intake Mode: %s", (currentIntakeMode == IntakeMode::OFF) ? "OFF" : (currentIntakeMode == IntakeMode::FORWARD) ? "FORWARD"
         //                                                                                     : (currentIntakeMode == IntakeMode::REVERSE)   ? "REVERSE"
-        //                                                                                     : (currentIntakeMode == IntakeMode::UNFOLD)    ? "UNFOLD"
-        //                                                                                                                                    : "LOADER");
+        //                                                                                       : (currentIntakeMode == IntakeMode::UNFOLD)    ? "UNFOLD"
         pros::delay(10);
     }
 }
