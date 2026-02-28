@@ -200,7 +200,7 @@ void autonomousSkills73Nobot()
 void autonomousSkills73Robot()
 {
     // starting postion
-    drivebase->setPoseComet(-50, -15, 90);
+    drivebase->setPoseComet(-64, -15, 90);
     intake->setIntakeMode(IntakeMode::UNFOLD);
 
     // get blocks from loader
