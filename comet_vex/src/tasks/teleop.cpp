@@ -2,7 +2,6 @@
 #include "subsystems.h"
 #include "subsystems/drivebase.h"
 #include "pros/llemu.hpp"
-#include "pros/rtos.hpp"
 
 void opcontrol_initialize()
 {
@@ -40,7 +39,14 @@ void opcontrol()
         else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) // scoring
         {
             intake->setIntakeMode(IntakeMode::FORWARD);
-            outtake->forward();
+            if (!outtake->isHigh())
+            {
+                outtake->forwardSlow();
+            }
+            else
+            {
+                outtake->forward();
+            }
         }
         else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) // fallback to unfold intake
         {
@@ -56,7 +62,7 @@ void opcontrol()
         // outtake height adjust
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
         {
-            outtake->adjustUp();
+            outtake->adjustDown();
         }
         else
         {

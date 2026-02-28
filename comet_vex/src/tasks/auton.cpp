@@ -154,11 +154,11 @@ void autonomousSkills73Nobot()
 {
     drivebase->setPoseComet(-46, 0, 90);
     intake->setIntakeMode(IntakeMode::UNFOLD);
+    arm->activate(); // should already be activated but just in case
 
     // remove blocks from park zone
-    // TODO: deploy arm then wait a bit
     drivebase->turnThenMoveToPoint(-46, 24, DEFAULT_TIMEOUT, {}, {}, false);
-    // TODO: raise arm
+    arm->deactivate();
     drivebase->moveToPoseComet(-48, 48, 90, DEFAULT_TIMEOUT, {}, false);
 
     // obtain loader blocks
@@ -200,15 +200,15 @@ void autonomousSkills73Nobot()
 void autonomousSkills73Robot()
 {
     // starting postion
-    drivebase->setPoseComet(-50, -15, -90);
+    drivebase->setPoseComet(-50, -15, 90);
     intake->setIntakeMode(IntakeMode::UNFOLD);
 
     // get blocks from loader
-    drivebase->moveToPoseComet(-50, -48, -90, DEFAULT_TIMEOUT, {}, false);
-    drivebase->turnToPoint(-63, -48, DEFAULT_TIMEOUT, {}, false);
+    drivebase->moveToPoseComet(-50, -48, 90, DEFAULT_TIMEOUT, {.forwards = false}, false);
+    drivebase->turnToPoint(-65, -48, DEFAULT_TIMEOUT, {}, false);
     loader->activate();
     intake->setIntakeMode(IntakeMode::FORWARD);
-    drivebase->driveFullVoltage(1000);
+    drivebase->moveToPoseComet(-63, -48, 180, DEFAULT_TIMEOUT, {}, false);
     pros::delay(5000);
     drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
     loader->deactivate();

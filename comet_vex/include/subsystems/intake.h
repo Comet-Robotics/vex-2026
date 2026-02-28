@@ -11,7 +11,8 @@ enum class IntakeMode
     OFF,
     FORWARD,
     REVERSE,
-    UNFOLD
+    UNFOLD,
+    LOADER
 };
 
 class Intake : public pros::MotorGroup
@@ -32,7 +33,7 @@ public:
      */
     inline void reverse()
     {
-        this->move_voltage(-MAX_INTAKE_SPEED);
+        this->move_voltage(-REVERSE_SPEED);
     }
 
     /**
@@ -83,20 +84,6 @@ public:
         firstRun = true;
     }
 
-    double getIntakeMotorTemp()
-    {
-        return this->get_temperature();
-    }
-
-    /**
-     * Gets the current intake mode of the intake mechanism.
-     * @return The current intake mode.
-     */
-    IntakeMode getIntakeMode()
-    {
-        return this->intakeMode.load();
-    }
-
     /**
      * The intake task that continuously runs in the background to control the intake motors based on the current intake mode. This task checks the intake mode and sets the motor behavior accordingly, including handling jam detection and de-jamming if necessary.
      */
@@ -110,14 +97,14 @@ public:
                 this->stop();
                 break;
             case IntakeMode::FORWARD:
-                // if (isJammed())
-                // {
-                //     runDeJam();
-                // }
-                // else
-                // {
-                //     this->forward();
-                // }
+                if (isJammed())
+                {
+                    runDeJam();
+                }
+                else
+                {
+                    this->forward();
+                }
 
                 // this->forward();
                 break;
@@ -128,10 +115,12 @@ public:
                 if (firstRun)
                 {
                     this->reverse();
-                    pros::delay(200);
+                    pros::delay(1000);
                     firstRun = false;
                 }
                 this->stop();
+                break;
+            case IntakeMode::LOADER:
                 break;
             }
             pros::delay(50);

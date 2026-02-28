@@ -113,6 +113,7 @@ namespace constants
     namespace intake
     {
         inline constexpr int MAX_INTAKE_SPEED = 12000;
+        inline constexpr int REVERSE_SPEED = 6000;
         // inline constexpr std::array<int8_t, 5> INTAKE_PORTS = {
         //     12,  // front intake right
         //     -13, // front intake left
@@ -120,7 +121,7 @@ namespace constants
         //     15,  // back intake right
         //     11,  // conveyor
         // };
-        inline constexpr std::array<int8_t, 2> INTAKE_PORTS = {
+        inline constexpr std::array<int8_t, 4> INTAKE_PORTS = {
             12,  // front intake right
             -9,  // front intake left
             11,  // conveyor right
@@ -134,6 +135,7 @@ namespace constants
     namespace outtake
     {
         inline constexpr int MAX_OUTTAKE_SPEED = 12000;
+        inline constexpr int SLOW_OUTTAKE_SPEED = 6000;
         inline constexpr std::array<int8_t, 2> OUTTAKE_PORTS = {
             16,  // outtake left
             -18, // outtake right
@@ -144,5 +146,10 @@ namespace constants
     namespace loader
     {
         inline constexpr char LOADER_PORT = 'B';
+    }
+
+    namespace arm
+    {
+        inline constexpr char ARM_PORT = 'Z';
     }
 }
