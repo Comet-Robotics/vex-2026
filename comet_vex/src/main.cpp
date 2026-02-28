@@ -1,5 +1,4 @@
 #include "main.h"
-#include "subsystems.h"
 #include "tasks/auton.h"
 #include "tasks/teleop.h"
 
@@ -9,7 +8,6 @@ void initialize()
 
 	pros::lcd::print(0, "Initializing...");
 
-	subsystems_initialize();
 	autonomous_initialize();
 	opcontrol_initialize();
 
