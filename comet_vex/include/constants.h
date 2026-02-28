@@ -16,18 +16,18 @@ namespace constants
         inline constexpr bool USE_TANK = false;
         // front, back, top front, top back
         inline constexpr std::array<int8_t, 4> LEFT_PORTS = {
-            0,
-            0,
-            0,
-            0,
+            -8,
+            -9,
+            -19,
+            7,
         };
 
         // front, back, top front, top back
         inline constexpr std::array<int8_t, 4> RIGHT_PORTS = {
-            0,
-            0,
-            0,
-            0,
+            5,
+            -6,
+            20,
+            4,
         };
 
         inline constexpr double DRIVETRAIN_WIDTH = 11.75; // tuned this
@@ -113,9 +113,10 @@ namespace constants
     namespace intake
     {
         inline constexpr int MAX_INTAKE_SPEED = 12000;
+        inline constexpr int REVERSE_SPEED = 6000;
         inline constexpr std::array<int8_t, 6> INTAKE_PORTS = {
             1,   // back intake right
-            13, // front intake right
+            13,  // front intake right
             -12, // front intake left
             -14, // back intake left
             15,  // right conveyor
@@ -129,6 +130,7 @@ namespace constants
     namespace outtake
     {
         inline constexpr int MAX_OUTTAKE_SPEED = 12000;
+        inline constexpr int SLOW_OUTTAKE_SPEED = 6000;
         inline constexpr std::array<int8_t, 2> OUTTAKE_PORTS = {
             17,  // outtake left
             -11, // outtake right
@@ -140,4 +142,6 @@ namespace constants
     {
         inline constexpr char LOADER_PORT = 'B';
     }
+
+    
 }

@@ -33,7 +33,7 @@ public:
      */
     inline void reverse()
     {
-        this->move_voltage(-MAX_INTAKE_SPEED);
+        this->move_voltage(-REVERSE_SPEED);
     }
 
     /**
@@ -115,7 +115,7 @@ public:
                 if (firstRun)
                 {
                     this->reverse();
-                    pros::delay(200);
+                    pros::delay(1000);
                     firstRun = false;
                 }
                 this->stop();

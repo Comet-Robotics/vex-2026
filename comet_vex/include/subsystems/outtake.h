@@ -16,6 +16,8 @@ public:
      */
     inline void forward() { this->move_voltage(MAX_OUTTAKE_SPEED); }
 
+    inline void forwardSlow() { this->move_voltage(SLOW_OUTTAKE_SPEED); }
+
     /**
      * Sets the outtake motors to move in reverse at maximum speed.
      */
@@ -70,6 +72,15 @@ public:
     void adjustDown()
     {
         heightAdjust.set_value(LOW);
+    }
+
+    /**
+     * Gets the current state of the height adjust digital output, which can be used to determine the current height of the outtake mechanism.
+     * @return true if the height adjust digital output is activated, indicating that the outtake mechanism is at its higher position, and false if it is deactivated, indicating that the outtake mechanism is at its lower position.
+     */
+    bool isHigh()
+    {
+        return heightAdjust.is_extended();
     }
 
 private:
