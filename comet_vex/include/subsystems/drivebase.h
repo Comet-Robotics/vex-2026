@@ -179,6 +179,33 @@ public:
         }
     }
 
+    /**
+     * Set the x coordinate of the robot's pose.
+     * @param x The new x coordinate to set for the robot's pose
+     */
+    void setX(double x)
+    {
+        setPose(x, getPose().y, getPose().theta);
+    }
+
+    /**
+     * Set the y coordinate of the robot's pose.
+     * @param y The new y coordinate to set for the robot's pose
+     */
+    void setY(double y)
+    {
+        setPose(getPose().x, y, getPose().theta);
+    }
+
+    /**
+     * Set the heading (theta) of the robot's pose.
+     * @param theta The new heading to set for the robot's pose, in degrees
+     */
+    void setTheta(double theta)
+    {
+        setPose(getPose().x, getPose().y, theta);
+    }
+
 private:
     /**
      * A helper function that applies an exponent to a value while preserving the sign of the value. This is useful for applying a non-linear curve to controller inputs, where you want to have finer control at lower speeds while still allowing for full power at higher inputs. The function takes in a power value and an exponent, and returns the power value raised to the exponent, with the original sign of the power value preserved.

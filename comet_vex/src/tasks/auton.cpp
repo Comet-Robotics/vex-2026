@@ -296,7 +296,7 @@ void autonomous()
     // angularTest();
     // lateralTest();
     // timeoutTest();
-    autonomousSkills73Robot();
-    // autonomousSkills73Nobot();
+    // autonomousSkills73Robot();
+    autonomousSkills73Nobot();
     // autonomous2v2Robot();
 }

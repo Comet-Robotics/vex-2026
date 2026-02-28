@@ -10,7 +10,7 @@ class Arm : public pros::adi::Pneumatics
 public:
     Arm() : pros::adi::Pneumatics(ARM_PORT, false, true)
     {
-        deactivate();
+        activate();
     }
 
     /**

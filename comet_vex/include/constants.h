@@ -150,6 +150,6 @@ namespace constants
 
     namespace arm
     {
-        inline constexpr char ARM_PORT = 'Z';
+        inline constexpr char ARM_PORT = 'C';
     }
 }

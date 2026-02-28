@@ -79,6 +79,16 @@ void opcontrol()
             loader->deactivate();
         }
 
+        // activate arm
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
+        {
+            arm->activate();
+        }
+        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
+        {
+            arm->deactivate();
+        }
+
         // toggle loader
         // if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
         //     loader->toggle();
@@ -88,7 +98,8 @@ void opcontrol()
         // pros::lcd::print(0, "Intake Mode: %s", (currentIntakeMode == IntakeMode::OFF) ? "OFF" : (currentIntakeMode == IntakeMode::FORWARD) ? "FORWARD"
         //                                                                                     : (currentIntakeMode == IntakeMode::REVERSE)   ? "REVERSE"
         //                                                                                     : (currentIntakeMode == IntakeMode::UNFOLD)    ? "UNFOLD"
-        //                                                                                                                                    : "LOADER");
+        //
+        pros::lcd::print(0, "Outtake Height: %s", (outtake->isHigh() ? "HIGH" : "LOW"));
         pros::delay(10);
     }
 }
