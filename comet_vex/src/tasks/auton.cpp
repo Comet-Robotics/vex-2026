@@ -152,7 +152,7 @@ void timeoutTest()
 
 void autonomousSkills73Nobot()
 {
-    drivebase->setPoseComet(-46, 0, 90);
+    drivebase->setPoseComet(-46, -6, 90);
     intake->setIntakeMode(IntakeMode::UNFOLD);
     arm->activate(); // should already be activated but just in case
 
@@ -194,7 +194,7 @@ void autonomousSkills73Nobot()
 
     // park
     drivebase->moveToPoseComet(-62, 24, 90, DEFAULT_TIMEOUT, {.forwards = false}, false);
-    drivebase->turnThenMoveToPoint(-62, 6, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
+    drivebase->turnThenMoveToPoint(-62, -12, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
 }
 
 void autonomousSkills73Robot()
