@@ -242,9 +242,9 @@ void autonomousSkills73Robot()
 
     // park
     drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    drivebase->turnToHeadingComet(90, DEFAULT_TIMEOUT);
-    drivebase->moveToPoseComet(-62, -24, 90, DEFAULT_TIMEOUT, {}, false);
-    drivebase->turnThenMoveToPoint(-62, -6, DEFAULT_TIMEOUT, {}, {}, false);
+    drivebase->turnToHeadingComet(-90, DEFAULT_TIMEOUT);
+    drivebase->moveToPoseComet(-62, -24, 90, DEFAULT_TIMEOUT, {.forwards = false}, false);
+    drivebase->turnThenMoveToPoint(-62, -6, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
 }
 
 void autonomous2v2Nobot()
