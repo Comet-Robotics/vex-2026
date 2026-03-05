@@ -5,7 +5,6 @@
 
 void autonomous_initialize()
 {
-    drivebase->calibrateChassis(true);
 }
 
 void angularTest()
@@ -155,51 +154,86 @@ void autonomousSkills73Nobot()
     drivebase->setPoseComet(-46, -6, 90);
     intake->setIntakeMode(IntakeMode::UNFOLD);
     arm->activate(); // should already be activated but just in case
+    loader->activate();
+    outtake->adjustUp();
 
     // remove blocks from park zone
-    drivebase->turnThenMoveToPoint(-46, 24, DEFAULT_TIMEOUT, {}, {}, false);
+    drivebase->turnThenMoveToPoint(-46, 24, DEFAULT_TIMEOUT_LONG, {}, {}, false);
     arm->deactivate();
-    drivebase->moveToPoseComet(-48, 48, 90, DEFAULT_TIMEOUT, {}, false);
+    drivebase->moveToPoseComet(-48, 48, 90, DEFAULT_TIMEOUT_LONG, {}, false);
 
     // obtain loader blocks
+    drivebase->turnToPoint(-62, 48, DEFAULT_TIMEOUT, {}, false);
     loader->activate();
-    intake->setIntakeMode(IntakeMode::FORWARD);
-    drivebase->turnThenMoveToPoint(-62, 48, DEFAULT_TIMEOUT, {}, {}, false);
-    pros::delay(1000);
-    loader->deactivate();
+    intake->setIntakeMode(IntakeMode::FORWARD_SLOW);
+    drivebase->turnThenMoveToPoint(-62, 48, 1500, {}, {}, false);
+    for (int i = 0; i < 12; i++)
+    {
+        drivebase->driveVoltage(300, 4000);
+        pros::delay(350);
+        drivebase->driveVoltage(150, 4000, false);
+        pros::delay(200);
+    }
+    drivebase->driveVoltage(200, 4000, false);
+    drivebase->setX(-58);
     drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
+    loader->deactivate();
     intake->setIntakeMode(IntakeMode::OFF);
 
     // score into long goal
-    drivebase->turnThenMoveToPoint(-31, 48, DEFAULT_TIMEOUT, {}, {}, false);
+    drivebase->turnThenMoveToPoint(-33, 49, 1500, {}, {}, false);
     intake->setIntakeMode(IntakeMode::FORWARD);
     outtake->forward();
     pros::delay(5000);
+    outtake->reverse();
+    pros::delay(500);
+    outtake->forward();
+    pros::delay(5000);
     outtake->stop();
+    drivebase->setX(-33);
+    drivebase->setY(49);
     drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
 
     // obtain blocks from side
     intake->setIntakeMode(IntakeMode::FORWARD);
-    drivebase->turnThenMoveToPoint(-48, 65, DEFAULT_TIMEOUT, {}, {}, false);
+    drivebase->turnThenMoveToPoint(-50, 65, 1300, {}, {}, false);
     pros::delay(500);
+    drivebase->setY(64);
     drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
     intake->setIntakeMode(IntakeMode::OFF);
 
     // score into long goal again
-    drivebase->turnThenMoveToPoint(-31, 48, DEFAULT_TIMEOUT, {}, {}, false);
+    drivebase->turnThenMoveToPoint(-33, 49, DEFAULT_TIMEOUT, {}, {}, false);
     intake->setIntakeMode(IntakeMode::FORWARD);
     outtake->forward();
-    pros::delay(2000);
+    pros::delay(4000);
     outtake->stop();
+    intake->setIntakeMode(IntakeMode::OFF);
+    drivebase->setX(-33);
+    drivebase->setY(49);
+
+    // push long goal
+    drivebase->turnThenMoveToPoint(-54, 49, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
+    drivebase->moveToPoseComet(-33, 51, 0, DEFAULT_TIMEOUT, {.maxSpeed = 30}, false);
 
     // park
-    drivebase->moveToPoseComet(-62, 24, 90, DEFAULT_TIMEOUT, {.forwards = false}, false);
-    drivebase->turnThenMoveToPoint(-62, -12, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
+    drivebase->turnThenMoveToPoint(-42, 51, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
+    loader->activate();
+    drivebase->turnThenMoveToPoint(-42, 0, DEFAULT_TIMEOUT_LONG, {}, {}, false);
+    loader->deactivate();
+    drivebase->turnToHeadingComet(180, DEFAULT_TIMEOUT, {}, false);
+    drivebase->signedDrive(127, 0);
+    while (drivebase->getIMU().get_pitch() > -2)
+    {
+        pros::delay(10);
+    }
+    pros::delay(500);
+    drivebase->signedDrive(0, 0);
 }
 
 void autonomousSkills73Robot()
 {
-    // starting postion
+    // starting position
     drivebase->setPoseComet(-50, -15, 90);
     intake->setIntakeMode(IntakeMode::UNFOLD);
 
@@ -291,6 +325,17 @@ void autonomous2v2Robot()
     outtake->stop();
 }
 
+void testGoalPush()
+{
+    drivebase->setPoseComet(-33, 49, 0);
+    outtake->adjustUp();
+    loader->deactivate();
+
+    // push long goal
+    drivebase->turnThenMoveToPoint(-54, 49, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
+    drivebase->moveToPoseComet(-33, 51, 0, DEFAULT_TIMEOUT, {.maxSpeed = 30}, false);
+}
+
 void autonomous()
 {
     // angularTest();
@@ -299,4 +344,5 @@ void autonomous()
     // autonomousSkills73Robot();
     autonomousSkills73Nobot();
     // autonomous2v2Robot();
+    // testGoalPush();
 }

@@ -9,7 +9,10 @@ class Outtake : public pros::MotorGroup
 {
 public:
     Outtake() : pros::MotorGroup(std::vector<int8_t>(OUTTAKE_PORTS.begin(), OUTTAKE_PORTS.end())),
-                heightAdjust(HEIGHT_ADJUST_PORT, false, false) {}
+                heightAdjust(HEIGHT_ADJUST_PORT, false, false)
+    {
+        adjustUp();
+    }
 
     /**
      * Sets the outtake motors to move forward at maximum speed.
@@ -64,6 +67,7 @@ public:
     void adjustUp()
     {
         heightAdjust.set_value(HIGH);
+        extended = true;
     }
 
     /**
@@ -72,6 +76,7 @@ public:
     void adjustDown()
     {
         heightAdjust.set_value(LOW);
+        extended = false;
     }
 
     /**
@@ -80,9 +85,10 @@ public:
      */
     bool isHigh()
     {
-        return heightAdjust.is_extended();
+        return extended;
     }
 
 private:
     pros::adi::Pneumatics heightAdjust;
+    bool extended = false;
 };

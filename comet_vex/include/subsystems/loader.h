@@ -8,9 +8,8 @@ using namespace constants::loader;
 class Loader : public pros::adi::Pneumatics
 {
 public:
-    Loader() : pros::adi::Pneumatics(LOADER_PORT, false, false)
+    Loader() : pros::adi::Pneumatics(LOADER_PORT, true, false)
     {
-        deactivate();
     }
 
     /**

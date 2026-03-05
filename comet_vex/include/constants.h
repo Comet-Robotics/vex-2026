@@ -15,6 +15,8 @@ namespace constants
         inline constexpr double driveExponent = 1.5;
         inline constexpr double turnExponent = 1.5;
 
+        inline constexpr double PITCH_THRESHOLD = -7.0; // degrees
+
         inline constexpr bool USE_TANK = false;
         // front, back, top front, top back
         inline constexpr std::array<int8_t, 4> LEFT_PORTS = {
@@ -113,7 +115,7 @@ namespace constants
     namespace intake
     {
         inline constexpr int MAX_INTAKE_SPEED = 12000;
-        inline constexpr int REVERSE_SPEED = 6000;
+        inline constexpr int REVERSE_SPEED = 12000;
         // inline constexpr std::array<int8_t, 5> INTAKE_PORTS = {
         //     12,  // front intake right
         //     -13, // front intake left
@@ -138,7 +140,7 @@ namespace constants
         inline constexpr int SLOW_OUTTAKE_SPEED = 6000;
         inline constexpr std::array<int8_t, 2> OUTTAKE_PORTS = {
             16,  // outtake left
-            -18, // outtake right
+            -17, // outtake right
         };
         inline constexpr char HEIGHT_ADJUST_PORT = 'A';
     }

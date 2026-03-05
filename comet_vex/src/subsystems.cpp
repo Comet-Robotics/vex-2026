@@ -6,6 +6,7 @@ void subsystems_initialize()
 
     drivebase = new Drivebase();
     drivebase->setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+    drivebase->calibrateChassis(true);
 
     intake = new Intake();
     outtake = new Outtake();

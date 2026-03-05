@@ -13,8 +13,12 @@ void opcontrol()
 
     intake->setIntakeMode(IntakeMode::UNFOLD);
 
+    drivebase->setPoseComet(0, 0, 0);
+
     while (true)
     {
+        bool loaderDeployed = false;
+
         // drivebase
         double drive = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         double turn = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
@@ -23,7 +27,7 @@ void opcontrol()
         // intake/outtake
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) // intaking from loader
         {
-            loader->activate();
+            loaderDeployed = true;
             intake->setIntakeMode(IntakeMode::FORWARD);
         }
         else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // intaking
@@ -55,7 +59,7 @@ void opcontrol()
         else // stop
         {
             intake->setIntakeMode(IntakeMode::OFF);
-            loader->deactivate();
+            loaderDeployed = false;
             outtake->stop();
         }
 
@@ -63,6 +67,7 @@ void opcontrol()
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
         {
             outtake->adjustDown();
+            loaderDeployed = true;
         }
         else
         {
@@ -70,13 +75,13 @@ void opcontrol()
         }
 
         // deploy loader
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
         {
-            loader->activate();
+            loaderDeployed = true;
         }
-        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN))
+        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
         {
-            loader->deactivate();
+            loaderDeployed = false;
         }
 
         // activate arm
@@ -87,6 +92,25 @@ void opcontrol()
         else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
         {
             arm->deactivate();
+        }
+
+        double pitch = drivebase->getIMU().get_pitch();
+
+        // anti-tip loader deploy
+        // only applies if robot is tipping forward
+        if (pitch < PITCH_THRESHOLD)
+        {
+            loaderDeployed = true;
+        }
+
+        // set loader state
+        if (loaderDeployed)
+        {
+            loader->activate();
+        }
+        else
+        {
+            loader->deactivate();
         }
 
         // toggle loader
@@ -100,6 +124,11 @@ void opcontrol()
         //                                                                                     : (currentIntakeMode == IntakeMode::UNFOLD)    ? "UNFOLD"
         //
         pros::lcd::print(0, "Outtake Height: %s", (outtake->isHigh() ? "HIGH" : "LOW"));
-        pros::delay(10);
+        // pros::lcd::print(1, "Loader: %s", loaderDeployed ? "DEPLOYED" : "RETRACTED");
+        // pros::lcd::print(2, "Tipping Forward: %s", (pitch < PITCH_THRESHOLD) ? "YES" : "NO");
+        // pros::lcd::print(3, "Pitch: %f", pitch);
+
+        pros::lcd::print(1, "Pose: (%f, %f, %f)", drivebase->getPose().x, drivebase->getPose().y, drivebase->getPose().theta);
+        pros::delay(50);
     }
 }

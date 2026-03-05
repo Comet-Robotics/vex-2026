@@ -206,6 +206,26 @@ public:
         setPose(getPose().x, getPose().y, theta);
     }
 
+    /**
+     * A function to drive the robot at a specified voltage for a specified amount of time.
+     * @param time The amount of time to drive at the specified voltage, in milliseconds
+     * @param voltage The voltage to drive the robot at, in millivolts (e.g. 12000 for full voltage)
+     * @param forwards Whether to drive forwards (true) or backwards (false). Default is true (forwards).
+     */
+    void driveVoltage(double time, int voltage, bool forwards = true)
+    {
+        int before = pros::millis();
+        int signedVoltage = forwards ? voltage : -voltage;
+        LEFT_MOTORS.move_voltage(signedVoltage);
+        RIGHT_MOTORS.move_voltage(signedVoltage);
+        while (pros::millis() - before < time)
+        {
+            pros::delay(10);
+        }
+        LEFT_MOTORS.move_voltage(0);
+        RIGHT_MOTORS.move_voltage(0);
+    }
+
 private:
     /**
      * A helper function that applies an exponent to a value while preserving the sign of the value. This is useful for applying a non-linear curve to controller inputs, where you want to have finer control at lower speeds while still allowing for full power at higher inputs. The function takes in a power value and an exponent, and returns the power value raised to the exponent, with the original sign of the power value preserved.
@@ -220,23 +240,6 @@ private:
         base = std::pow(std::abs(base), exponent);
         base *= sign;
         return base;
-    }
-
-    /**
-     * A function to drive the robot at full voltage for a specified amount of time.
-     * @param time The amount of time to drive at full voltage, in milliseconds
-     */
-    void driveFullVoltage(double time)
-    {
-        int before = pros::millis();
-        LEFT_MOTORS.move_voltage(12000);
-        RIGHT_MOTORS.move_voltage(12000);
-        while (pros::millis() - before < time)
-        {
-            pros::delay(10);
-        }
-        LEFT_MOTORS.move_voltage(0);
-        RIGHT_MOTORS.move_voltage(0);
     }
 
 private:

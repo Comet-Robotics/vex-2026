@@ -10,6 +10,7 @@ enum class IntakeMode
 {
     OFF,
     FORWARD,
+    FORWARD_SLOW,
     REVERSE,
     UNFOLD,
     LOADER
@@ -26,6 +27,11 @@ public:
     inline void forward()
     {
         this->move_voltage(MAX_INTAKE_SPEED);
+    }
+
+    inline void forwardSlow()
+    {
+        this->move_voltage(MAX_INTAKE_SPEED * 2 / 3);
     }
 
     /**
@@ -107,6 +113,16 @@ public:
                 }
 
                 // this->forward();
+                break;
+            case IntakeMode::FORWARD_SLOW:
+                if (isJammed())
+                {
+                    runDeJam();
+                }
+                else
+                {
+                    this->forwardSlow();
+                }
                 break;
             case IntakeMode::REVERSE:
                 this->reverse();
