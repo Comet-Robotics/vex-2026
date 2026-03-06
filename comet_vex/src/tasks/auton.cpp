@@ -149,17 +149,15 @@ void timeoutTest()
     }
 }
 
-void autonomousSkills73Nobot()
+void autonomousSkills73BevelGear()
 {
     drivebase->setPoseComet(-46, -6, 90);
     intake->setIntakeMode(IntakeMode::UNFOLD);
-    arm->activate(); // should already be activated but just in case
     loader->activate();
     outtake->adjustUp();
 
     // remove blocks from park zone
     drivebase->turnThenMoveToPoint(-46, 24, DEFAULT_TIMEOUT_LONG, {}, {}, false);
-    arm->deactivate();
     drivebase->moveToPoseComet(-48, 48, 90, DEFAULT_TIMEOUT_LONG, {}, false);
 
     // obtain loader blocks
@@ -176,12 +174,9 @@ void autonomousSkills73Nobot()
     }
     drivebase->driveVoltage(200, 4000, false);
     drivebase->setX(-58);
-    drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    loader->deactivate();
-    intake->setIntakeMode(IntakeMode::OFF);
 
     // score into long goal
-    drivebase->turnThenMoveToPoint(-33, 49, 1500, {}, {}, false);
+    drivebase->turnThenMoveToPoint(-33, 49, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
     intake->setIntakeMode(IntakeMode::FORWARD);
     outtake->forward();
     pros::delay(5000);
@@ -192,7 +187,7 @@ void autonomousSkills73Nobot()
     outtake->stop();
     drivebase->setX(-33);
     drivebase->setY(49);
-    drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
+    drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {}, {}, false);
 
     // obtain blocks from side
     intake->setIntakeMode(IntakeMode::FORWARD);
@@ -203,7 +198,7 @@ void autonomousSkills73Nobot()
     intake->setIntakeMode(IntakeMode::OFF);
 
     // score into long goal again
-    drivebase->turnThenMoveToPoint(-33, 49, DEFAULT_TIMEOUT, {}, {}, false);
+    drivebase->turnThenMoveToPoint(-33, 49, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
     intake->setIntakeMode(IntakeMode::FORWARD);
     outtake->forward();
     pros::delay(4000);
@@ -211,10 +206,6 @@ void autonomousSkills73Nobot()
     intake->setIntakeMode(IntakeMode::OFF);
     drivebase->setX(-33);
     drivebase->setY(49);
-
-    // push long goal
-    drivebase->turnThenMoveToPoint(-54, 49, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    drivebase->moveToPoseComet(-33, 51, 0, DEFAULT_TIMEOUT, {.maxSpeed = 30}, false);
 
     // park
     drivebase->turnThenMoveToPoint(-42, 51, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
@@ -229,100 +220,6 @@ void autonomousSkills73Nobot()
     }
     pros::delay(500);
     drivebase->signedDrive(0, 0);
-}
-
-void autonomousSkills73Robot()
-{
-    // starting position
-    drivebase->setPoseComet(-50, -15, 90);
-    intake->setIntakeMode(IntakeMode::UNFOLD);
-
-    // get blocks from loader
-    drivebase->moveToPoseComet(-50, -48, 90, DEFAULT_TIMEOUT, {.forwards = false}, false);
-    drivebase->turnToPoint(-65, -48, DEFAULT_TIMEOUT, {}, false);
-    loader->activate();
-    intake->setIntakeMode(IntakeMode::FORWARD);
-    drivebase->moveToPoseComet(-63, -48, 180, DEFAULT_TIMEOUT, {}, false);
-    pros::delay(5000);
-    drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    loader->deactivate();
-    intake->setIntakeMode(IntakeMode::OFF);
-
-    // score in long goal
-    outtake->adjustUp();
-    drivebase->turnThenMoveToPoint(-31, -48, DEFAULT_TIMEOUT, {}, {}, false);
-    intake->setIntakeMode(IntakeMode::FORWARD);
-    outtake->forward();
-    pros::delay(5000);
-    outtake->stop();
-    outtake->adjustDown();
-    drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-
-    // get blocks from side
-    intake->setIntakeMode(IntakeMode::FORWARD);
-    drivebase->turnThenMoveToPoint(-48, -65, DEFAULT_TIMEOUT, {}, {}, false);
-    pros::delay(500);
-    drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    intake->setIntakeMode(IntakeMode::OFF);
-
-    // score in long goal again
-    outtake->adjustUp();
-    drivebase->turnThenMoveToPoint(-31, -48, DEFAULT_TIMEOUT, {}, {}, false);
-    intake->setIntakeMode(IntakeMode::FORWARD);
-    outtake->forward();
-    pros::delay(2000);
-    outtake->adjustDown();
-    outtake->stop();
-
-    // park
-    drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    drivebase->turnToHeadingComet(90, DEFAULT_TIMEOUT);
-    drivebase->moveToPoseComet(-62, -24, 90, DEFAULT_TIMEOUT, {}, false);
-    drivebase->turnThenMoveToPoint(-62, -6, DEFAULT_TIMEOUT, {}, {}, false);
-}
-
-void autonomous2v2Nobot()
-{
-    drivebase->setPoseComet(-55, 15, 90);
-    intake->setIntakeMode(IntakeMode::UNFOLD);
-
-    drivebase->moveToPoseComet(-48, 48, 90, DEFAULT_TIMEOUT, {}, false);
-    loader->activate();
-    intake->setIntakeMode(IntakeMode::FORWARD);
-    drivebase->turnThenMoveToPoint(-63, 48, DEFAULT_TIMEOUT, {}, {}, false);
-    pros::delay(1000);
-    loader->deactivate();
-    drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    intake->setIntakeMode(IntakeMode::OFF);
-
-    drivebase->turnThenMoveToPoint(-31, 48, DEFAULT_TIMEOUT, {}, {}, false);
-    intake->setIntakeMode(IntakeMode::FORWARD);
-    outtake->forward();
-    pros::delay(5000);
-    intake->setIntakeMode(IntakeMode::OFF);
-    outtake->stop();
-}
-
-void autonomous2v2Robot()
-{
-    drivebase->setPoseComet(-55, -15, -90);
-    intake->setIntakeMode(IntakeMode::UNFOLD);
-
-    drivebase->moveToPoseComet(-48, -48, -90, DEFAULT_TIMEOUT, {}, false);
-    loader->activate();
-    intake->setIntakeMode(IntakeMode::FORWARD);
-    drivebase->turnThenMoveToPoint(-63, -48, DEFAULT_TIMEOUT, {}, {}, false);
-    pros::delay(1000);
-    loader->deactivate();
-    drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    intake->setIntakeMode(IntakeMode::OFF);
-
-    drivebase->turnThenMoveToPoint(-31, -48, DEFAULT_TIMEOUT, {}, {}, false);
-    intake->setIntakeMode(IntakeMode::FORWARD);
-    outtake->forward();
-    pros::delay(5000);
-    intake->setIntakeMode(IntakeMode::OFF);
-    outtake->stop();
 }
 
 void testGoalPush()
@@ -342,7 +239,7 @@ void autonomous()
     // lateralTest();
     // timeoutTest();
     // autonomousSkills73Robot();
-    autonomousSkills73Nobot();
+    autonomousSkills73BevelGear();
     // autonomous2v2Robot();
     // testGoalPush();
 }

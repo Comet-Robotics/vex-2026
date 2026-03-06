@@ -12,7 +12,6 @@ void subsystems_initialize()
     outtake = new Outtake();
     outtake->adjustDown();
     loader = new Loader();
-    arm = new Arm();
 
     new pros::Task([=]()
                    { intake->intakeTask(); });
