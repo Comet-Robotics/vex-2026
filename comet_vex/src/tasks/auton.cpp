@@ -183,12 +183,13 @@ void autonomousSkills73Nobot()
     // score into long goal
     drivebase->turnThenMoveToPoint(-33, 49, 1500, {}, {}, false);
     intake->setIntakeMode(IntakeMode::FORWARD);
-    outtake->forward();
-    pros::delay(5000);
-    outtake->reverse();
-    pros::delay(500);
-    outtake->forward();
-    pros::delay(5000);
+    for (int i = 0; i < 4; i++)
+    {
+        outtake->forward();
+        pros::delay(2500);
+        outtake->reverse();
+        pros::delay(250);
+    }
     outtake->stop();
     drivebase->setX(-33);
     drivebase->setY(49);
@@ -205,8 +206,13 @@ void autonomousSkills73Nobot()
     // score into long goal again
     drivebase->turnThenMoveToPoint(-33, 49, DEFAULT_TIMEOUT, {}, {}, false);
     intake->setIntakeMode(IntakeMode::FORWARD);
-    outtake->forward();
-    pros::delay(4000);
+    for (int i = 0; i < 2; i++)
+    {
+        outtake->forward();
+        pros::delay(2500);
+        outtake->reverse();
+        pros::delay(250);
+    }
     outtake->stop();
     intake->setIntakeMode(IntakeMode::OFF);
     drivebase->setX(-33);
