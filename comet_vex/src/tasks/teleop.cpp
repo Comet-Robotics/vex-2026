@@ -84,16 +84,6 @@ void opcontrol()
             loaderDeployed = false;
         }
 
-        // activate arm
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
-        {
-            arm->activate();
-        }
-        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
-        {
-            arm->deactivate();
-        }
-
         double pitch = drivebase->getIMU().get_pitch();
 
         // anti-tip loader deploy

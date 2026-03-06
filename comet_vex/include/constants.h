@@ -20,17 +20,19 @@ namespace constants
         inline constexpr bool USE_TANK = false;
         // front, back, top front, top back
         inline constexpr std::array<int8_t, 4> LEFT_PORTS = {
-            -5,
-            6,
-            -7,
-            -8};
+            -17, // front top
+            -20, // back top
+            18,  // front bottom
+            19,  // back bottom
+        };
 
         // front, back, top front, top back
         inline constexpr std::array<int8_t, 4> RIGHT_PORTS = {
-            1,
-            -2,
-            3,
-            4};
+            7,  // front top
+            10, // back top
+            -8, // front bottom
+            -9, // back bottom
+        };
 
         inline constexpr double DRIVETRAIN_WIDTH = 11.75; // tuned this
         inline constexpr int8_t IMU_PORT = 10;
@@ -148,10 +150,5 @@ namespace constants
     namespace loader
     {
         inline constexpr char LOADER_PORT = 'B';
-    }
-
-    namespace arm
-    {
-        inline constexpr char ARM_PORT = 'C';
     }
 }
