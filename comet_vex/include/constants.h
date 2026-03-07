@@ -117,7 +117,8 @@ namespace constants
     namespace conveyor
     {
         inline constexpr int MAX_CONVEYOR_SPEED = 12000;
-        inline constexpr int SLOW_CONVEYOR_SPEED = 9000;
+        inline constexpr int SLOW_CONVEYOR_SPEED = 7500;
+        inline constexpr int SLOW_REVERSE_SPEED = 5000;
         inline constexpr std::array<int8_t, 3> CONVEYOR_PORTS = {
             11, // conveyor left
             -6, // conveyor right

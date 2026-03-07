@@ -26,6 +26,8 @@ public:
      */
     inline void reverse() { this->move_voltage(-MAX_CONVEYOR_SPEED); }
 
+    inline void reverseSlow() { this->move_voltage(-SLOW_REVERSE_SPEED); }
+
     /**
      * Stops the conveyor motors.
      */

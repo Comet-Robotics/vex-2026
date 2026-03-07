@@ -13,9 +13,11 @@ void opcontrol()
 
     drivebase->setPoseComet(0, 0, 0);
 
+    bool loaderDeployed = false;
+
     while (true)
     {
-        bool loaderDeployed = false;
+        // bool loaderDeployed = false;
 
         // drivebase
         double drive = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
@@ -23,37 +25,41 @@ void opcontrol()
         drivebase->signedDrive(drive, turn);
 
         // intake/outtake
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) // intaking from loader
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // intaking from loader
         {
-            loaderDeployed = true;
+            // loaderDeployed = true;
             conveyor->forward();
             blocker->activate();
         }
-        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // intaking
-        {
-            conveyor->forward();
-            blocker->activate();
-        }
+        // else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // intaking
+        // {
+        //     conveyor->forward();
+        //     blocker->activate();
+        // }
         else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) // outtaking
         {
             conveyor->reverse();
         }
         else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) // scoring
         {
-            if (!conveyor->isHigh())
-            {
-                conveyor->forwardSlow();
-            }
-            else
-            {
-                conveyor->forward();
-            }
+            // if (!conveyor->isHigh())
+            // {
+            //     conveyor->forwardSlow();
+            // }
+            // else
+            // {
+            //     conveyor->forward();
+            // }
+            conveyor->forwardSlow();
             blocker->deactivate();
+        }
+        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) // outtake reverse
+        {
+            conveyor->reverseSlow();
         }
         else // stop
         {
             conveyor->stop();
-            loaderDeployed = false;
         }
 
         // outtake height adjust
@@ -67,14 +73,19 @@ void opcontrol()
         }
 
         // deploy loader
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT))
         {
             loaderDeployed = true;
         }
-        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
+        else if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT))
         {
             loaderDeployed = false;
         }
+
+        // if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT))
+        // {
+        //     loaderDeployed = !loaderDeployed;
+        // }
 
         // double pitch = drivebase->getIMU().get_pitch();
 
