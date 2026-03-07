@@ -149,21 +149,19 @@ void timeoutTest()
     }
 }
 
-void autonomousSkills73BevelGear()
+void autonomousSkillsSoloBevelGear()
 {
-    drivebase->setPoseComet(-46, -6, 90);
-    intake->setIntakeMode(IntakeMode::UNFOLD);
+    drivebase->setPoseComet(-46, 14, 90); // parallel with black part of park zone, just barely over it
     loader->activate();
-    outtake->adjustUp();
+    conveyor->adjustDown();
+    blocker->activate();
 
-    // remove blocks from park zone
-    drivebase->turnThenMoveToPoint(-46, 24, DEFAULT_TIMEOUT_LONG, {}, {}, false);
-    drivebase->moveToPoseComet(-48, 48, 90, DEFAULT_TIMEOUT_LONG, {}, false);
+    // drivebase->turnThenMoveToPoint(-46, 24, DEFAULT_TIMEOUT_LONG, {}, {}, false);
+    drivebase->moveToPoseComet(-48, 48, 90, DEFAULT_TIMEOUT, {}, false);
 
     // obtain loader blocks
     drivebase->turnToPoint(-62, 48, DEFAULT_TIMEOUT, {}, false);
-    loader->activate();
-    intake->setIntakeMode(IntakeMode::FORWARD_SLOW);
+    conveyor->forwardSlow();
     drivebase->turnThenMoveToPoint(-62, 48, 1500, {}, {}, false);
     for (int i = 0; i < 12; i++)
     {
@@ -174,36 +172,37 @@ void autonomousSkills73BevelGear()
     }
     drivebase->driveVoltage(200, 4000, false);
     drivebase->setX(-58);
+    conveyor->stop();
+    conveyor->adjustUp();
 
     // score into long goal
     drivebase->turnThenMoveToPoint(-33, 49, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    intake->setIntakeMode(IntakeMode::FORWARD);
-    outtake->forward();
+    conveyor->forward();
     pros::delay(5000);
-    outtake->reverse();
-    pros::delay(500);
-    outtake->forward();
-    pros::delay(5000);
-    outtake->stop();
+    conveyor->reverse();
+    drivebase->driveVoltage(300, 4000);
+    conveyor->forward();
+    drivebase->driveVoltage(300, 4000, false);
+    pros::delay(2000);
+    conveyor->stop();
     drivebase->setX(-33);
     drivebase->setY(49);
     drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {}, {}, false);
+    loader->deactivate();
+    conveyor->adjustDown();
 
     // obtain blocks from side
-    intake->setIntakeMode(IntakeMode::FORWARD);
-    drivebase->turnThenMoveToPoint(-50, 65, 1300, {}, {}, false);
+    conveyor->forward();
+    drivebase->turnThenMoveToPoint(-50, 63, 1300, {}, {}, false);
     pros::delay(500);
-    drivebase->setY(64);
     drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    intake->setIntakeMode(IntakeMode::OFF);
+    conveyor->stop();
+    conveyor->adjustUp();
 
     // score into long goal again
     drivebase->turnThenMoveToPoint(-33, 49, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    intake->setIntakeMode(IntakeMode::FORWARD);
-    outtake->forward();
+    conveyor->forward();
     pros::delay(4000);
-    outtake->stop();
-    intake->setIntakeMode(IntakeMode::OFF);
     drivebase->setX(-33);
     drivebase->setY(49);
 
@@ -222,15 +221,92 @@ void autonomousSkills73BevelGear()
     drivebase->signedDrive(0, 0);
 }
 
-void testGoalPush()
+void autonomousSkills73BevelGear()
 {
-    drivebase->setPoseComet(-33, 49, 0);
-    outtake->adjustUp();
+    // starting position
+    drivebase->setPoseComet(-62.75, -16, -90); // against wall and just barely over loader
+    loader->activate();
+    conveyor->adjustDown();
+    blocker->activate();
+
+    // remove blocks from park zone
+    // drivebase->turnThenMoveToPoint(-46, -24, DEFAULT_TIMEOUT_LONG, {}, {}, false);
+    drivebase->moveToPoseComet(-48, -48, -90, DEFAULT_TIMEOUT_LONG, {}, false);
+    drivebase->turnToPoint(-62, -48, DEFAULT_TIMEOUT, {}, false);
+    conveyor->forward();
+    drivebase->turnThenMoveToPoint(-62, -48, 1500, {}, {}, false);
+    for (int i = 0; i < 12; i++)
+    {
+        drivebase->driveVoltage(300, 4000);
+        pros::delay(350);
+        drivebase->driveVoltage(150, 4000, false);
+        pros::delay(200);
+    }
+    drivebase->driveVoltage(200, 4000, false);
+    drivebase->setX(-58);
+    conveyor->stop();
+    conveyor->adjustUp();
+
+    // score into long goal
+    drivebase->turnThenMoveToPoint(-33, -49, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
+    conveyor->forward();
+    pros::delay(5000);
+    conveyor->reverse();
+    drivebase->driveVoltage(300, 4000);
+    conveyor->forward();
+    drivebase->driveVoltage(300, 4000, false);
+    pros::delay(2000);
+    conveyor->stop();
+    drivebase->setX(-33);
+    drivebase->setY(-49);
+    drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {}, {}, false);
+    conveyor->adjustDown();
     loader->deactivate();
 
-    // push long goal
-    drivebase->turnThenMoveToPoint(-54, 49, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
-    drivebase->moveToPoseComet(-33, 51, 0, DEFAULT_TIMEOUT, {.maxSpeed = 30}, false);
+    // obtain blocks from side
+    conveyor->forward();
+    drivebase->turnThenMoveToPoint(-50, -63.5, 1300, {}, {}, false);
+    pros::delay(500);
+    drivebase->setY(-63.5);
+    drivebase->turnThenMoveToPoint(-48, -48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
+    conveyor->stop();
+    conveyor->adjustUp();
+
+    // score into long goal again
+    drivebase->turnThenMoveToPoint(-33, -49, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
+    conveyor->forward();
+    pros::delay(4000);
+    conveyor->stop();
+    drivebase->setX(-33);
+    drivebase->setY(-49);
+
+    // move to other side of field
+    drivebase->moveToPoseComet(-48, -60, 180, DEFAULT_TIMEOUT, {}, false);
+    drivebase->turnThenMoveToPoint(60, -60, DEFAULT_TIMEOUT_LONG, {}, {}, false);
+    drivebase->driveVoltage(1000, 6000, false);
+    drivebase->setX(63);
+
+    // obtain blocks from other loader
+    drivebase->turnToPoint(48, -48, DEFAULT_TIMEOUT, {}, false);
+    conveyor->forwardSlow();
+    drivebase->turnThenMoveToPoint(62, -48, 1500, {}, {}, false);
+    for (int i = 0; i < 12; i++)
+    {
+        drivebase->driveVoltage(300, 4000);
+        pros::delay(350);
+        drivebase->driveVoltage(150, 4000, false);
+        pros::delay(200);
+    }
+    drivebase->driveVoltage(200, 4000, false);
+    drivebase->setX(58);
+    conveyor->stop();
+    conveyor->adjustUp();
+
+    // score into long goal from other side
+    drivebase->turnThenMoveToPoint(33, 49, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
+    conveyor->forward();
+    pros::delay(5000);
+    conveyor->stop();
 }
 
 void autonomous()
@@ -238,7 +314,7 @@ void autonomous()
     // angularTest();
     // lateralTest();
     // timeoutTest();
-    // autonomousSkills73Robot();
+    // autonomousSkillsSoloBevelGear();
     autonomousSkills73BevelGear();
     // autonomous2v2Robot();
     // testGoalPush();

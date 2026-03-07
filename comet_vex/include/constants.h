@@ -114,41 +114,25 @@ namespace constants
         inline constexpr int DEFAULT_TIMEOUT_LONG = 5000;
     }
 
-    namespace intake
+    namespace conveyor
     {
-        inline constexpr int MAX_INTAKE_SPEED = 12000;
-        inline constexpr int REVERSE_SPEED = 12000;
-        // inline constexpr std::array<int8_t, 5> INTAKE_PORTS = {
-        //     12,  // front intake right
-        //     -13, // front intake left
-        //     -14, // back intake left
-        //     15,  // back intake right
-        //     11,  // conveyor
-        // };
-        inline constexpr std::array<int8_t, 4> INTAKE_PORTS = {
-            12,  // front intake right
-            -9,  // front intake left
-            11,  // conveyor right
-            -14, // conveyor left
-        };
-
-        inline constexpr int JAM_CURRENT_THRESHOLD = 1000;  // in mA, tune this
-        inline constexpr int JAM_VOLTAGE_THRESHOLD = 99999; // in mV, tune this
-    }
-
-    namespace outtake
-    {
-        inline constexpr int MAX_OUTTAKE_SPEED = 12000;
-        inline constexpr int SLOW_OUTTAKE_SPEED = 6000;
-        inline constexpr std::array<int8_t, 2> OUTTAKE_PORTS = {
-            16,  // outtake left
-            -17, // outtake right
+        inline constexpr int MAX_CONVEYOR_SPEED = 12000;
+        inline constexpr int SLOW_CONVEYOR_SPEED = 9000;
+        inline constexpr std::array<int8_t, 3> CONVEYOR_PORTS = {
+            11, // conveyor left
+            -6, // conveyor right
+            -16 // intake
         };
         inline constexpr char HEIGHT_ADJUST_PORT = 'A';
     }
 
     namespace loader
     {
-        inline constexpr char LOADER_PORT = 'B';
+        inline constexpr char LOADER_PORT = 'G';
+    }
+
+    namespace blocker
+    {
+        inline constexpr char BLOCKER_PORT = 'D';
     }
 }

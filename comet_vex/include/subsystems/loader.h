@@ -17,7 +17,7 @@ public:
      */
     void activate()
     {
-        set_value(HIGH);
+        set_value(LOW);
     }
 
     /**
@@ -25,7 +25,7 @@ public:
      */
     void deactivate()
     {
-        set_value(LOW);
+        set_value(HIGH);
     }
 
     /**

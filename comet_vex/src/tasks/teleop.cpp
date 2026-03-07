@@ -11,8 +11,6 @@ void opcontrol()
 {
     pros::Controller master(pros::E_CONTROLLER_MASTER);
 
-    intake->setIntakeMode(IntakeMode::UNFOLD);
-
     drivebase->setPoseComet(0, 0, 0);
 
     while (true)
@@ -28,50 +26,44 @@ void opcontrol()
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) // intaking from loader
         {
             loaderDeployed = true;
-            intake->setIntakeMode(IntakeMode::FORWARD);
+            conveyor->forward();
+            blocker->activate();
         }
         else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // intaking
         {
-            intake->setIntakeMode(IntakeMode::FORWARD);
-            outtake->stop();
+            conveyor->forward();
+            blocker->activate();
         }
         else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) // outtaking
         {
-            intake->setIntakeMode(IntakeMode::REVERSE);
-            outtake->reverse();
+            conveyor->reverse();
         }
         else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) // scoring
         {
-            intake->setIntakeMode(IntakeMode::FORWARD);
-            if (!outtake->isHigh())
+            if (!conveyor->isHigh())
             {
-                outtake->forwardSlow();
+                conveyor->forwardSlow();
             }
             else
             {
-                outtake->forward();
+                conveyor->forward();
             }
-        }
-        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) // fallback to unfold intake
-        {
-            intake->setIntakeMode(IntakeMode::UNFOLD);
+            blocker->deactivate();
         }
         else // stop
         {
-            intake->setIntakeMode(IntakeMode::OFF);
+            conveyor->stop();
             loaderDeployed = false;
-            outtake->stop();
         }
 
         // outtake height adjust
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
         {
-            outtake->adjustDown();
-            loaderDeployed = true;
+            conveyor->adjustUp();
         }
         else
         {
-            outtake->adjustUp();
+            conveyor->adjustDown();
         }
 
         // deploy loader
@@ -84,14 +76,14 @@ void opcontrol()
             loaderDeployed = false;
         }
 
-        double pitch = drivebase->getIMU().get_pitch();
+        // double pitch = drivebase->getIMU().get_pitch();
 
-        // anti-tip loader deploy
-        // only applies if robot is tipping forward
-        if (pitch < PITCH_THRESHOLD)
-        {
-            loaderDeployed = true;
-        }
+        // // anti-tip loader deploy
+        // // only applies if robot is tipping forward
+        // if (pitch < PITCH_THRESHOLD)
+        // {
+        //     loaderDeployed = true;
+        // }
 
         // set loader state
         if (loaderDeployed)
@@ -108,17 +100,17 @@ void opcontrol()
         //     loader->toggle();
         // }
 
-        IntakeMode currentIntakeMode = intake->getIntakeMode();
+        // IntakeMode currentIntakeMode = intake->getIntakeMode();
         // pros::lcd::print(0, "Intake Mode: %s", (currentIntakeMode == IntakeMode::OFF) ? "OFF" : (currentIntakeMode == IntakeMode::FORWARD) ? "FORWARD"
         //                                                                                     : (currentIntakeMode == IntakeMode::REVERSE)   ? "REVERSE"
         //                                                                                     : (currentIntakeMode == IntakeMode::UNFOLD)    ? "UNFOLD"
         //
-        pros::lcd::print(0, "Outtake Height: %s", (outtake->isHigh() ? "HIGH" : "LOW"));
+        // pros::lcd::print(0, "Outtake Height: %s", (outtake->isHigh() ? "HIGH" : "LOW"));
         // pros::lcd::print(1, "Loader: %s", loaderDeployed ? "DEPLOYED" : "RETRACTED");
         // pros::lcd::print(2, "Tipping Forward: %s", (pitch < PITCH_THRESHOLD) ? "YES" : "NO");
         // pros::lcd::print(3, "Pitch: %f", pitch);
 
-        pros::lcd::print(1, "Pose: (%f, %f, %f)", drivebase->getPose().x, drivebase->getPose().y, drivebase->getPose().theta);
-        pros::delay(50);
+        // pros::lcd::print(1, "Pose: (%f, %f, %f)", drivebase->getPose().x, drivebase->getPose().y, drivebase->getPose().theta);
+        pros::delay(20);
     }
 }

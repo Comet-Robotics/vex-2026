@@ -3,36 +3,36 @@
 #include "constants.h"
 #include "pros/motor_group.hpp"
 
-using namespace constants::outtake;
+using namespace constants::conveyor;
 
-class Outtake : public pros::MotorGroup
+class Conveyor : public pros::MotorGroup
 {
 public:
-    Outtake() : pros::MotorGroup(std::vector<int8_t>(OUTTAKE_PORTS.begin(), OUTTAKE_PORTS.end())),
-                heightAdjust(HEIGHT_ADJUST_PORT, false, false)
+    Conveyor() : pros::MotorGroup(std::vector<int8_t>(CONVEYOR_PORTS.begin(), CONVEYOR_PORTS.end())),
+                 heightAdjust(HEIGHT_ADJUST_PORT, false, false)
     {
-        adjustUp();
+        set_brake_mode_all(pros::E_MOTOR_BRAKE_BRAKE);
     }
 
     /**
-     * Sets the outtake motors to move forward at maximum speed.
+     * Sets the conveyor motors to move forward at maximum speed.
      */
-    inline void forward() { this->move_voltage(MAX_OUTTAKE_SPEED); }
+    inline void forward() { this->move_voltage(MAX_CONVEYOR_SPEED); }
 
-    inline void forwardSlow() { this->move_voltage(SLOW_OUTTAKE_SPEED); }
+    inline void forwardSlow() { this->move_voltage(SLOW_CONVEYOR_SPEED); }
 
     /**
-     * Sets the outtake motors to move in reverse at maximum speed.
+     * Sets the conveyor motors to move in reverse at maximum speed.
      */
-    inline void reverse() { this->move_voltage(-MAX_OUTTAKE_SPEED); }
+    inline void reverse() { this->move_voltage(-MAX_CONVEYOR_SPEED); }
 
     /**
-     * Stops the outtake motors.
+     * Stops the conveyor motors.
      */
     inline void stop() { this->move_voltage(0); }
 
     /**
-     * Toggles the forward movement of the outtake motors. If the motors are currently moving forward, they will stop. If they are stopped or moving in reverse, they will start moving forward.
+     * Toggles the forward movement of the conveyor motors. If the motors are currently moving forward, they will stop. If they are stopped or moving in reverse, they will start moving forward.
      */
     void toggleForward()
     {
@@ -66,7 +66,7 @@ public:
      */
     void adjustUp()
     {
-        heightAdjust.set_value(HIGH);
+        heightAdjust.set_value(LOW);
         extended = true;
     }
 
@@ -75,7 +75,7 @@ public:
      */
     void adjustDown()
     {
-        heightAdjust.set_value(LOW);
+        heightAdjust.set_value(HIGH);
         extended = false;
     }
 

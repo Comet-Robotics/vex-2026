@@ -1,4 +1,5 @@
 #include "subsystems.h"
+#include "pros/llemu.hpp"
 
 void subsystems_initialize()
 {
@@ -8,11 +9,8 @@ void subsystems_initialize()
     drivebase->setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
     drivebase->calibrateChassis(true);
 
-    intake = new Intake();
-    outtake = new Outtake();
-    outtake->adjustDown();
+    conveyor = new Conveyor();
+    conveyor->adjustDown();
     loader = new Loader();
-
-    new pros::Task([=]()
-                   { intake->intakeTask(); });
+    blocker = new Blocker();
 }
