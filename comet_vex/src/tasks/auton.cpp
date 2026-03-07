@@ -167,7 +167,7 @@ void autonomousSkills73Nobot()
     loader->activate();
     intake->setIntakeMode(IntakeMode::FORWARD_SLOW);
     drivebase->turnThenMoveToPoint(-62, 48, 1500, {}, {}, false);
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < 8; i++)
     {
         drivebase->driveVoltage(300, 4000);
         pros::delay(350);
@@ -186,9 +186,9 @@ void autonomousSkills73Nobot()
     for (int i = 0; i < 4; i++)
     {
         outtake->forward();
-        pros::delay(2500);
+        pros::delay(2000);
         outtake->reverse();
-        pros::delay(250);
+        pros::delay(400);
     }
     outtake->stop();
     drivebase->setX(-33);
@@ -199,19 +199,21 @@ void autonomousSkills73Nobot()
     intake->setIntakeMode(IntakeMode::FORWARD);
     drivebase->turnThenMoveToPoint(-50, 65, 1300, {}, {}, false);
     pros::delay(500);
-    drivebase->setY(64);
+    drivebase->setY(63.5);
     drivebase->turnThenMoveToPoint(-48, 48, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
     intake->setIntakeMode(IntakeMode::OFF);
 
     // score into long goal again
     drivebase->turnThenMoveToPoint(-33, 49, DEFAULT_TIMEOUT, {}, {}, false);
+    intake->setIntakeMode(IntakeMode::REVERSE);
+    pros::delay(350);
     intake->setIntakeMode(IntakeMode::FORWARD);
     for (int i = 0; i < 2; i++)
     {
         outtake->forward();
-        pros::delay(2500);
+        pros::delay(3500);
         outtake->reverse();
-        pros::delay(250);
+        pros::delay(350);
     }
     outtake->stop();
     intake->setIntakeMode(IntakeMode::OFF);
@@ -225,7 +227,7 @@ void autonomousSkills73Nobot()
     // park
     drivebase->turnThenMoveToPoint(-42, 51, DEFAULT_TIMEOUT, {.forwards = false}, {.forwards = false}, false);
     loader->activate();
-    drivebase->turnThenMoveToPoint(-42, 0, DEFAULT_TIMEOUT_LONG, {}, {}, false);
+    drivebase->turnThenMoveToPoint(-42, 2, DEFAULT_TIMEOUT_LONG, {}, {}, false);
     loader->deactivate();
     drivebase->turnToHeadingComet(180, DEFAULT_TIMEOUT, {}, false);
     drivebase->signedDrive(127, 0);
@@ -233,7 +235,7 @@ void autonomousSkills73Nobot()
     {
         pros::delay(10);
     }
-    pros::delay(500);
+    pros::delay(1000);
     drivebase->signedDrive(0, 0);
 }
 
