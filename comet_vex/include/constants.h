@@ -1,139 +1,149 @@
 #pragma once
 
-#include "lemlib/chassis/trackingWheel.hpp"
-#include "pros/abstract_motor.hpp"
-#include <array>
 #include <cstdint>
-#include "lemlib/chassis/chassis.hpp"
+#include <array>
+#include "pros/imu.hpp"
+#include "pros/abstract_motor.hpp"
+
+#define EIGEN_DONT_VECTORIZE
+#include "Eigen/Dense"
+
+using namespace Eigen;
 
 namespace constants
 {
-    // using namespace pros;
-
-    namespace drivebase
+    namespace ports
     {
-        inline constexpr double driveExponent = 1.5;
-        inline constexpr double turnExponent = 1.5;
 
-        inline constexpr double PITCH_THRESHOLD = -7.0; // degrees
+        // for each of these, first num is the motor controlling the top gear, second is controlling the bottom gear
+        // 1
+        constexpr std::array<int8_t, 2> FRONT_RIGHT_PORTS = {
+            -1,
+            2,
+        };
+        // 2
+        constexpr std::array<int8_t, 2> FRONT_LEFT_PORTS = {
+            -6,
+            5,
+        };
+        // 3
+        constexpr std::array<int8_t, 2> BACK_LEFT_PORTS = {
+            -7, // -7
+            8,  // 8
+        };
+        // 4
+        constexpr std::array<int8_t, 2> BACK_RIGHT_PORTS = {
+            -4,
+            3,
+        }; // 3 -4 is backwards
 
-        inline constexpr bool USE_TANK = false;
-        // front, back, top front, top back
-        inline constexpr std::array<int8_t, 4> LEFT_PORTS = {
-            -17, // front top
-            -20, // back top
-            18,  // front bottom
-            19,  // back bottom
+        constexpr int8_t FRONT_RIGHT_ROTATION_SENSOR_PORT = 11;
+        constexpr int8_t FRONT_LEFT_ROTATION_SENSOR_PORT = 12;
+        constexpr int8_t BACK_LEFT_ROTATION_SENSOR_PORT = 13;
+        constexpr int8_t BACK_RIGHT_ROTATION_SENSOR_PORT = 14;
+
+        constexpr int8_t IMU_PORT = 20;
+    }
+
+    namespace drivetrain
+    {
+        constexpr pros::MotorGears CHASSIS_INTERNAL_GEARSET = pros::MotorGears::blue;
+
+        constexpr double MAX_LINEAR_SPEED = 77.0;   // inches per second
+        constexpr double MAX_ANGULAR_SPEED = 550.0; // degrees per second
+
+        constexpr double WHEEL_DIAMETER = 2.75;      // inches
+        constexpr double GEAR_RATIO = 544.0 / 555.0; // output (wheel) speed / input (motor) speed
+
+        inline pros::Imu IMU(ports::IMU_PORT);
+
+        constexpr double ROTATION_FACTOR = (20 * 360.0) / (27669 + 27854); // Number of rotations * 360 degrees / difference in encoder counts
+        // how to tune: go forward a known distance while keeping the module at a fixed angle, and set factor to (actual distance traveled) / (calculated distance)
+        constexpr double LINEAR_FACTOR = (24.0 / 28.0) * (24.0 / 24.65);
+        constexpr double TRACK_LENGTH = 8;     // distance between front and back wheels
+        constexpr double TRACK_WIDTH = 10.125; // distance between left and right wheels
+
+        constexpr std::array<std::array<double, 2>, 4> wheelPositions = {
+            std::array<double, 2>{TRACK_LENGTH / 2.0, -TRACK_WIDTH / 2.0}, // Front Right
+            std::array<double, 2>{TRACK_LENGTH / 2.0, TRACK_WIDTH / 2.0},  // Front Left
+            std::array<double, 2>{-TRACK_LENGTH / 2.0, TRACK_WIDTH / 2.0}, // Back Left
+            std::array<double, 2>{-TRACK_LENGTH / 2.0, -TRACK_WIDTH / 2.0} // Back Right
         };
 
-        // front, back, top front, top back
-        inline constexpr std::array<int8_t, 4> RIGHT_PORTS = {
-            7,  // front top
-            10, // back top
-            -8, // front bottom
-            -9, // back bottom
+        // conversion matrix for kinematics
+        inline MatrixXd initializeConversionMatrix()
+        {
+            MatrixXd matrix(8, 3);
+            for (int i = 0; i < 4; i++)
+            {
+                double x = wheelPositions[i][0];
+                double y = wheelPositions[i][1];
+                matrix.row(i * 2) = Vector3d(1, 0, -y);
+                matrix.row(i * 2 + 1) = Vector3d(0, 1, x);
+            }
+            return matrix;
+        }
+
+        inline MatrixXd CONVERSION_MATRIX = initializeConversionMatrix();
+
+        constexpr std::array<double, 3> FRONT_LEFT_PID = {
+            0.02,
+            0.0,
+            0.001,
+        };
+        constexpr std::array<double, 3> FRONT_RIGHT_PID = {
+            0.02,
+            0.0,
+            0.001,
+        };
+        constexpr std::array<double, 3> BACK_LEFT_PID = {
+            0.02,
+            0.0,
+            0.001,
+        };
+        constexpr std::array<double, 3> BACK_RIGHT_PID = {
+            0.02,
+            0.0,
+            0.001,
         };
 
-        inline constexpr double DRIVETRAIN_WIDTH = 11.75; // tuned this
-        inline constexpr int8_t IMU_PORT = 10;
-
-        inline constexpr auto CHASSIS_INTERNAL_GEARSET = pros::v5::MotorGears::blue;
-
-        // lateral PID controller
-        inline const lemlib::ControllerSettings LATERAL_CONTROLLER(
-            9,   // proportional gain (kP)
-            1,   // integral gain (kI)
-            70,  // derivative gain (kD)
-            2,   // anti windup
-            1,   // small error range, in inches
-            100, // small error range timeout, in milliseconds
-            3,   // large error range, in inches
-            500, // large error range timeout, in milliseconds
-            0    // maximum acceleration (slew)
-        );
-
-        // angular PID controller
-        inline const lemlib::ControllerSettings ANGULAR_CONTROLLER(
-            5,   // proportional gain (kP)
-            0.2, // integral gain (kI)
-            40,  // derivative gain (kD)
-            2.5, // anti windup
-            1,   // small error range, in degrees
-            100, // small error range timeout, in milliseconds
-            3,   // large error range, in degrees
-            500, // large error range timeout, in milliseconds
-            0    // maximum acceleration (slew)
-        );
-
-        // angular PID controller
-        // inline const lemlib::ControllerSettings ANGULAR_CONTROLLER(
-        //     6,   // proportional gain (kP)
-        //     0.5, // integral gain (kI)
-        //     60,  // derivative gain (kD)
-        //     2.5, // anti windup
-        //     0,   // small error range, in degrees
-        //     0,   // small error range timeout, in milliseconds
-        //     0,   // large error range, in degrees
-        //     0,   // large error range timeout, in milliseconds
-        //     0    // maximum acceleration (slew)
-        // );
-
-        inline pros::MotorGroup LEFT_MOTORS({LEFT_PORTS[0],
-                                             LEFT_PORTS[1],
-                                             LEFT_PORTS[2],
-                                             LEFT_PORTS[3]},
-                                            CHASSIS_INTERNAL_GEARSET);
-
-        inline pros::MotorGroup RIGHT_MOTORS({RIGHT_PORTS[0],
-                                              RIGHT_PORTS[1],
-                                              RIGHT_PORTS[2],
-                                              RIGHT_PORTS[3]},
-                                             CHASSIS_INTERNAL_GEARSET);
-
-        inline pros::Imu IMU(IMU_PORT);
-
-        // drivetrain settings
-        inline lemlib::Drivetrain DRIVETRAIN(
-            &LEFT_MOTORS,               // left motor group
-            &RIGHT_MOTORS,              // right motor group
-            DRIVETRAIN_WIDTH,           // 10 inch track width
-            lemlib::Omniwheel::NEW_325, // using new 3.25" omnis
-            600,                        // drivetrain rpm is 600
-            2                           // horizontal drift is 2 (for now)
-        );
-
-        inline lemlib::OdomSensors SENSORS(
-            nullptr, // vertical tracking wheel 1
-            nullptr,
-            nullptr, // horizontal tracking wheel 1
-            nullptr,
-            &IMU // inertial sensor
-        );
-
-        inline constexpr int DEFAULT_TIMEOUT = 3000;
-        inline constexpr int DEFAULT_TIMEOUT_LONG = 5000;
-    }
-
-    namespace conveyor
-    {
-        inline constexpr int MAX_CONVEYOR_SPEED = 12000;
-        inline constexpr int SLOW_CONVEYOR_SPEED = 7500;
-        inline constexpr int SLOW_REVERSE_SPEED = 5000;
-        inline constexpr std::array<int8_t, 3> CONVEYOR_PORTS = {
-            11, // conveyor left
-            -6, // conveyor right
-            -16 // intake
+        constexpr std::array<double, 3> X_PID = {
+            10.0,
+            0.0,
+            0.0,
         };
-        inline constexpr char HEIGHT_ADJUST_PORT = 'A';
+        constexpr std::array<double, 3> Y_PID = {
+            10.0,
+            0.0,
+            0.0,
+        };
+        constexpr std::array<double, 3> THETA_PID = {
+            16.0,
+            0.0,
+            0.0,
+        };
+
+        constexpr std::array<double, 3> HEADING_HOLD_PID = {
+            0.05,
+            0.0,
+            0.0,
+        };
+
+        constexpr double DEADZONE_THRESHOLD = 0.1; // for controller inputs
+
+        // FEATURE FLAGS
+        constexpr bool COSINE_SCALING = true;        // whether to scale speed by cosine of angle delta
+        constexpr bool STAY_AT_ORIENTATION = true;   // whether to maintain pod orientation when not commanded to rotate
+        constexpr bool FIELD_CENTRIC_DEFAULT = true; // whether to use field-centric controls by default
+        constexpr bool USE_ROTATION_SENSORS = true;  // whether to use separate rotation sensors for module angle
+        constexpr bool HEADING_HOLD = true;          // whether to maintain heading when not commanded to rotate
     }
 
-    namespace loader
+    namespace autonomous
     {
-        inline constexpr char LOADER_PORT = 'G';
+        constexpr double TIME_TOLERANCE = 0.05; // seconds
     }
 
-    namespace blocker
-    {
-        inline constexpr char BLOCKER_PORT = 'D';
-    }
+    constexpr int MOTOR_TEMPERATURE_THRESHOLD = 55; // degrees Celsius
+    constexpr int TELEOP_POLL_TIME = 20;            // milliseconds
 }

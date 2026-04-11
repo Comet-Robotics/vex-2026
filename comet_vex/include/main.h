@@ -4,7 +4,7 @@
  * Contains common definitions and header files used throughout your PROS
  * project.
  *
- * \copyright Copyright (c) 2017-2024, Purdue University ACM SIGBots.
+ * \copyright Copyright (c) 2017-2023, Purdue University ACM SIGBots.
  * All rights reserved.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -34,7 +34,7 @@
  */
 #define PROS_USE_LITERALS
 
-#include "api.h"
+// #include "api.h"
 
 /**
  * You should add more #includes here

@@ -1,13 +1,16 @@
 #pragma once
 
-#include "subsystems/drivebase.h"
-#include "subsystems/conveyor.h"
-#include "subsystems/loader.h"
-#include "subsystems/blocker.h"
+#include "subsystems/SwerveDrive.h"
 
-inline Drivebase *drivebase = nullptr;
-inline Conveyor *conveyor = nullptr;
-inline Loader *loader = nullptr;
-inline Blocker *blocker = nullptr;
+inline SwerveDrive *drivebase = nullptr;
 
-void subsystems_initialize(void);
+// Initialize the subsystems
+inline void subsystems_initialize()
+{
+    drivebase = new SwerveDrive();
+    constants::drivetrain::IMU.reset();
+    while (constants::drivetrain::IMU.is_calibrating())
+    {
+        pros::delay(20);
+    }
+}
