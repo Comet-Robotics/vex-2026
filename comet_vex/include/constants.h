@@ -144,6 +144,32 @@ namespace constants
         constexpr double TIME_TOLERANCE = 0.05; // seconds
     }
 
+    namespace conveyor
+    {
+        inline constexpr int MAX_CONVEYOR_SPEED = 12000;
+        inline constexpr int SLOW_CONVEYOR_SPEED = 7500;
+        inline constexpr int SLOW_REVERSE_SPEED = 5000;
+        inline constexpr std::array<int8_t, 3> CONVEYOR_PORTS = {
+            0,
+            0,
+            0,
+        };
+        inline constexpr char HEIGHT_ADJUST_PORT = 'Z';
+    }
+
+    namespace loader
+    {
+        inline constexpr char LOADER_PORT = 'Z';
+        inline constexpr std::array<int8_t, 1> LOADER_MOTOR_PORTS = {
+            0,
+        };
+    }
+
+    namespace blocker
+    {
+        inline constexpr char BLOCKER_PORT = 'Z';
+    }
+
     constexpr int MOTOR_TEMPERATURE_THRESHOLD = 55; // degrees Celsius
     constexpr int TELEOP_POLL_TIME = 20;            // milliseconds
 }
