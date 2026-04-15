@@ -170,6 +170,21 @@ namespace constants
         inline constexpr char BLOCKER_PORT = 'Z';
     }
 
+    namespace wings
+    {
+        inline constexpr char WINGS_PORT = 'Z';
+    }
+
+    namespace park
+    {
+        inline constexpr std::array<int8_t, 2> PARK_PORTS = {
+            0,  // left
+            -0, // right (reversed)
+        };
+        inline constexpr int MAX_PARK_SPEED = 12000;
+        inline constexpr int SETUP_POSITION = 20; // degrees to rotate for setup
+    }
+
     constexpr int MOTOR_TEMPERATURE_THRESHOLD = 55; // degrees Celsius
     constexpr int TELEOP_POLL_TIME = 20;            // milliseconds
 }

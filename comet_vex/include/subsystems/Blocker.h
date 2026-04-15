@@ -10,27 +10,27 @@ class Blocker : public pros::adi::Pneumatics
 public:
     Blocker() : pros::adi::Pneumatics(BLOCKER_PORT, false, false)
     {
-        activate();
+        block();
     }
 
     /**
-     * Activates the blocker mechanism by setting the digital output to true. This will allow the robot to extend the blocker.
+     * Blocks the end of the conveyor
      */
-    void activate()
+    void block()
     {
         set_value(HIGH);
     }
 
     /**
-     * Deactivates the blocker mechanism by setting the digital output to false. This will retract the blocker.
+     * Unblocks the end of the conveyor
      */
-    void deactivate()
+    void unblock()
     {
         set_value(LOW);
     }
 
     /**
-     * Toggles the state of the blocker mechanism. If the blocker is currently activated, it will be deactivated, and if it is currently deactivated, it will be activated.
+     * Toggles the state of the blocker mechanism. If the blocker is currently blocked, it will be unblocked, and if it is currently unblocked, it will be blocked.
      */
     void toggle()
     {

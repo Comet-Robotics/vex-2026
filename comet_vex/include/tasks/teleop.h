@@ -1,8 +1,10 @@
 #pragma once
 
 #ifdef __cplusplus
-extern "C"
-{
+#include "pros/misc.hpp"
+extern pros::Controller controller;
+void drivebase_controls();
+extern "C" {
 #endif
 
     void opcontrol(void);

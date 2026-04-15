@@ -15,6 +15,46 @@ enum class AutonMode
  */
 inline constexpr AutonMode MODE = AutonMode::TEST;
 
+void events(const std::string &eventName)
+{
+    if (eventName == "intake")
+    {
+        conveyor->forward();
+        blocker->block();
+    }
+    else if (eventName == "score")
+    {
+        conveyor->forward();
+        blocker->unblock();
+    }
+    else if (eventName == "reverse")
+    {
+        conveyor->reverseSlow();
+        blocker->block();
+    }
+    else if (eventName == "stop")
+    {
+        conveyor->stop();
+        blocker->block();
+    }
+    else if (eventName == "adjustUp")
+    {
+        conveyor->adjustUp();
+    }
+    else if (eventName == "adjustDown")
+    {
+        conveyor->adjustDown();
+    }
+    else if (eventName == "deployLoader")
+    {
+        loader->activate();
+    }
+    else if (eventName == "retractLoader")
+    {
+        loader->deactivate();
+    }
+}
+
 void autonomousTest()
 {
     while (true)
@@ -35,7 +75,7 @@ void autonomousTest2()
     }
 }
 
-void runPath(const Trajectory &path, std::function<void(const std::string &)> onEvent = nullptr)
+void runPath(const Trajectory &path, std::function<void(const std::string &)> onEvent = events)
 {
     if (path.getPoints().empty())
         return;
@@ -96,8 +136,7 @@ void autonomousTest3()
 
     for (size_t i = 0; i < paths.size(); ++i)
     {
-        runPath(paths[i], [](const std::string &eventName)
-                { printf("Event triggered: %s\n", eventName.c_str()); });
+        runPath(paths[i]);
         wait(2);
     }
 
