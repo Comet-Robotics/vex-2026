@@ -19,12 +19,12 @@ void events(const std::string &eventName)
 {
     if (eventName == "intake")
     {
-        conveyor->forward();
+        conveyor->intake();
         blocker->block();
     }
     else if (eventName == "score")
     {
-        conveyor->forward();
+        conveyor->score();
         blocker->unblock();
     }
     else if (eventName == "reverse")

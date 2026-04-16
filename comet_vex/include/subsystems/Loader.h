@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pros/adi.hpp"
-#include "pros/motor_group.hpp"
+#include "pros/motors.hpp" // Changed to individual motors
 #include "constants.h"
 
 using namespace constants::loader;
@@ -9,17 +9,18 @@ using namespace constants::loader;
 class Loader : public pros::adi::Pneumatics
 {
 public:
+    // Initialize the single motor directly using the first element of your port array
     Loader() : pros::adi::Pneumatics(LOADER_PORT, true, false),
-               loaderMotors(std::vector<int8_t>(LOADER_MOTOR_PORTS.begin(), LOADER_MOTOR_PORTS.end()))
+               loaderMotor(LOADER_MOTOR_PORTS[0])
     {
-        loaderMotors.set_brake_mode_all(pros::E_MOTOR_BRAKE_BRAKE);
+        loaderMotor.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     }
 
-    void forward() { loaderMotors.move_voltage(12000); }
+    void forward() { loaderMotor.move_voltage(12000); }
 
-    void reverse() { loaderMotors.move_voltage(-12000); }
+    void reverse() { loaderMotor.move_voltage(-12000); }
 
-    void stop() { loaderMotors.move_voltage(0); }
+    void stop() { loaderMotor.move_voltage(0); }
 
     /**
      * Activates the loader mechanism by setting the digital output to true. This will allow the robot to intake blocks from the loader.
@@ -46,5 +47,5 @@ public:
     }
 
 private:
-    pros::MotorGroup loaderMotors;
+    pros::Motor loaderMotor; // Replaced MotorGroup with a single Motor
 };

@@ -42,7 +42,7 @@ namespace constants
         constexpr int8_t BACK_LEFT_ROTATION_SENSOR_PORT = 13;
         constexpr int8_t BACK_RIGHT_ROTATION_SENSOR_PORT = 14;
 
-        constexpr int8_t IMU_PORT = 20;
+        constexpr int8_t IMU_PORT = 10;
     }
 
     namespace drivetrain
@@ -71,9 +71,9 @@ namespace constants
         };
 
         // conversion matrix for kinematics
-        inline MatrixXd initializeConversionMatrix()
+        inline Matrix<double, 8, 3> initializeConversionMatrix()
         {
-            MatrixXd matrix(8, 3);
+            Matrix<double, 8, 3> matrix;
             for (int i = 0; i < 4; i++)
             {
                 double x = wheelPositions[i][0];
@@ -84,7 +84,7 @@ namespace constants
             return matrix;
         }
 
-        inline MatrixXd CONVERSION_MATRIX = initializeConversionMatrix();
+        inline Matrix<double, 8, 3> CONVERSION_MATRIX = initializeConversionMatrix();
 
         constexpr std::array<double, 3> FRONT_LEFT_PID = {
             0.02,
@@ -150,29 +150,29 @@ namespace constants
         inline constexpr int SLOW_CONVEYOR_SPEED = 7500;
         inline constexpr int SLOW_REVERSE_SPEED = 5000;
         inline constexpr std::array<int8_t, 3> CONVEYOR_PORTS = {
-            0,
-            0,
-            0,
+            9,   // intake
+            18,  // conveyor
+            -16, // outtake
         };
-        inline constexpr char HEIGHT_ADJUST_PORT = 'Z';
+        inline constexpr char HEIGHT_ADJUST_PORT = 'B';
     }
 
     namespace loader
     {
-        inline constexpr char LOADER_PORT = 'Z';
+        inline constexpr char LOADER_PORT = 'A';
         inline constexpr std::array<int8_t, 1> LOADER_MOTOR_PORTS = {
-            0,
+            -20,
         };
     }
 
     namespace blocker
     {
-        inline constexpr char BLOCKER_PORT = 'Z';
+        inline constexpr char BLOCKER_PORT = 'H';
     }
 
     namespace wings
     {
-        inline constexpr char WINGS_PORT = 'Z';
+        inline constexpr char WINGS_PORT = 'C';
     }
 
     namespace park
@@ -182,7 +182,7 @@ namespace constants
             -0, // right (reversed)
         };
         inline constexpr int MAX_PARK_SPEED = 12000;
-        inline constexpr int SETUP_POSITION = 20; // degrees to rotate for setup
+        inline constexpr int SETUP_POSITION = 50; // degrees to rotate for setup
     }
 
     constexpr int MOTOR_TEMPERATURE_THRESHOLD = 55; // degrees Celsius

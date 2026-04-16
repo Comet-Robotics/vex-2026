@@ -8,8 +8,8 @@ void initialize()
 {
 	pros::lcd::initialize();
 
-	autonomous_initialize();
-	opcontrol_initialize();
+	// autonomous_initialize();
+	// opcontrol_initialize();
 	subsystems_initialize();
 }
 

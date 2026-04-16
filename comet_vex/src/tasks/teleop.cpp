@@ -10,39 +10,43 @@ using namespace pros;
 bool isTestMode = false;
 bool loaderDeployed = false;
 
-void opcontrol_initialize() {}
+pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 void controls()
 {
     drivebase_controls();
 
-    // intake/outtake
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // intaking from loader
     {
         loaderDeployed = true;
-        conveyor->forward();
+        loader->forward();
+        conveyor->intake();
         blocker->block();
     }
     else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) // intaking from floor
     {
         loaderDeployed = false;
-        conveyor->forward();
+        loader->stop();
+        conveyor->intake();
         blocker->block();
     }
     else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) // scoring
     {
         loaderDeployed = false;
-        conveyor->forward();
+        loader->stop();
+        conveyor->score();
         blocker->unblock();
     }
     else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) // reverse slow
     {
         loaderDeployed = false;
+        loader->stop();
         conveyor->reverseSlow();
     }
     else // stop
     {
         loaderDeployed = false;
+        loader->stop();
         conveyor->stop();
     }
 
@@ -56,31 +60,6 @@ void controls()
         conveyor->adjustDown();
     }
 
-    // // deploy loader
-    // if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT))
-    // {
-    //     loaderDeployed = true;
-    // }
-    // else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT))
-    // {
-    //     loaderDeployed = false;
-    // }
-
-    // if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT))
-    // {
-    //     loaderDeployed = !loaderDeployed;
-    // }
-
-    // double pitch = drivebase->getIMU().get_pitch();
-
-    // // anti-tip loader deploy
-    // // only applies if robot is tipping forward
-    // if (pitch < PITCH_THRESHOLD)
-    // {
-    //     loaderDeployed = true;
-    // }
-
-    // set loader state
     if (loaderDeployed)
     {
         loader->activate();
@@ -89,24 +68,9 @@ void controls()
     {
         loader->deactivate();
     }
-
-    // toggle loader
-    // if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-    //     loader->toggle();
-    // }
-
-    // IntakeMode currentIntakeMode = intake->getIntakeMode();
-    // pros::lcd::print(0, "Intake Mode: %s", (currentIntakeMode == IntakeMode::OFF) ? "OFF" : (currentIntakeMode == IntakeMode::FORWARD) ? "FORWARD"
-    //                                                                                     : (currentIntakeMode == IntakeMode::REVERSE)   ? "REVERSE"
-    //                                                                                     : (currentIntakeMode == IntakeMode::UNFOLD)    ? "UNFOLD"
-    //
-    // pros::lcd::print(0, "Outtake Height: %s", (outtake->isHigh() ? "HIGH" : "LOW"));
-    // pros::lcd::print(1, "Loader: %s", loaderDeployed ? "DEPLOYED" : "RETRACTED");
-    // pros::lcd::print(2, "Tipping Forward: %s", (pitch < PITCH_THRESHOLD) ? "YES" : "NO");
-    // pros::lcd::print(3, "Pitch: %f", pitch);
-
-    // pros::lcd::print(1, "Pose: (%f, %f, %f)", drivebase->getPose().x, drivebase->getPose().y, drivebase->getPose().theta);
 }
+
+void opcontrol_initialize() {}
 
 void drivebase_controls()
 {
@@ -191,6 +155,10 @@ void opcontrol()
         {
             controls();
         }
+
+        // controls();
+
+        // drivebase_controls();
 
         pros::delay(constants::TELEOP_POLL_TIME);
     }
