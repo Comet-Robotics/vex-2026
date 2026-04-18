@@ -221,10 +221,10 @@ public:
      */
     void xWheels()
     {
-        frontRight.setSpeedAndAngle(0, 45);
-        frontLeft.setSpeedAndAngle(0, -45);
-        backLeft.setSpeedAndAngle(0, 45);
-        backRight.setSpeedAndAngle(0, -45);
+        frontRight.setSpeedAndAngle(0, X_ANGLE);
+        frontLeft.setSpeedAndAngle(0, -X_ANGLE);
+        backLeft.setSpeedAndAngle(0, X_ANGLE);
+        backRight.setSpeedAndAngle(0, -X_ANGLE);
     }
 
     void update()
@@ -419,6 +419,9 @@ private:
     TrajectoryFollower follower{constants::autonomous::TIME_TOLERANCE};
     HolonomicController controller{X_PID, Y_PID, THETA_PID};
     PID headingHold{HEADING_HOLD_PID[0], HEADING_HOLD_PID[1], HEADING_HOLD_PID[2]};
+
+    // intuition says it's the opposite, but check math on atan2 to see why it's this
+    double X_ANGLE = AngleUtils::toDegrees(atan2(TRACK_WIDTH, TRACK_LENGTH));
 
     Pose2D currentPose;
 };
