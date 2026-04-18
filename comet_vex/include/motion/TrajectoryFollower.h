@@ -66,8 +66,8 @@ public:
         // define target point
         auto target = TrajectoryUtils::interpolate(elapsedSec, trajectory);
 
-        pros::lcd::print(2, "Elapsed Time: %1.2f sec", elapsedSec);
-        pros::lcd::print(3, "Target Point: X: %1.2f Y: %1.2f H: %1.2f", target.pose.x, target.pose.y, target.pose.heading);
+        // pros::lcd::print(x, "Elapsed Time: %1.2f sec", elapsedSec);
+        // pros::lcd::print(x, "Target Point: X: %1.2f Y: %1.2f H: %1.2f", target.pose.x, target.pose.y, target.pose.heading);
 
         // controller update
         return controller.update(currentPose, target);

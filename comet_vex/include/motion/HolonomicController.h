@@ -64,9 +64,9 @@ public:
         // double correctionXLocal = correctionX * cosHeading + correctionY * sinHeading;
         // double correctionYLocal = correctionX * sinHeading - correctionY * cosHeading;
 
-        pros::lcd::print(3, "Error: X: %1.2f Y: %1.2f H: %1.2f", dx, dy, dtheta);
-        pros::lcd::print(4, "Correction: X: %1.2f Y: %1.2f H: %1.2f", correctionX, correctionY, correctionTheta);
-        // pros::lcd::print(5, "Correction Local: X: %1.2f Y: %1.2f", correctionXLocal, correctionYLocal);
+        // pros::lcd::print(x, "Error: X: %1.2f Y: %1.2f H: %1.2f", dx, dy, dtheta);
+        // pros::lcd::print(x, "Correction: X: %1.2f Y: %1.2f H: %1.2f", correctionX, correctionY, correctionTheta);
+        // // pros::lcd::print(x, "Correction Local: X: %1.2f Y: %1.2f", correctionXLocal, correctionYLocal);
 
         // return ChassisSpeeds{correctionXLocal, correctionYLocal, correctionTheta};
         return ChassisSpeeds{correctionX, -correctionY, AngleUtils::toDegrees(correctionTheta)};

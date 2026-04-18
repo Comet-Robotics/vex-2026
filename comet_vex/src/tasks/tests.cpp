@@ -1,4 +1,4 @@
-#include "pros/llemu.hpp"
+// #include "pros/llemu.hpp"
 #include "tasks/tests.h"
 #include "tasks/teleop.h"
 #include "subsystems.h"
@@ -143,10 +143,10 @@ void motorHealthCheck()
     {
         drivebase->getModule(i).calculateLinearSpeed();
     }
-    pros::lcd::print(2, "Controls: Up = Full Forward, Down = Full Reverse");
-    pros::lcd::print(3, "FR: %.2f  FL: %.2f", drivebase->frontRight.getLinearSpeed(), drivebase->frontLeft.getLinearSpeed());
-    pros::lcd::print(4, "BL: %.2f  BR: %.2f", drivebase->backLeft.getLinearSpeed(), drivebase->backRight.getLinearSpeed());
-    pros::lcd::print(5, "FL_MotorVel: %.2f %.2f", drivebase->frontLeft.topMotor.get_actual_velocity(), drivebase->frontLeft.bottomMotor.get_actual_velocity());
+    // pros::lcd::print(x, "Controls: Up = Full Forward, Down = Full Reverse");
+    // pros::lcd::print(x, "FR: %.2f  FL: %.2f", drivebase->frontRight.getLinearSpeed(), drivebase->frontLeft.getLinearSpeed());
+    // pros::lcd::print(x, "BL: %.2f  BR: %.2f", drivebase->backLeft.getLinearSpeed(), drivebase->backRight.getLinearSpeed());
+    // pros::lcd::print(x, "FL_MotorVel: %.2f %.2f", drivebase->frontLeft.topMotor.get_actual_velocity(), drivebase->frontLeft.bottomMotor.get_actual_velocity());
 }
 
 void squareTest()
@@ -188,7 +188,7 @@ void squareTest()
     default:
         fwd = 0;
         strafe = 0;
-        pros::lcd::print(1, "Invalid square step: %d", squareStep);
+        // pros::lcd::print(x, "Invalid square step: %d", squareStep);
         break;
     }
 
@@ -214,10 +214,10 @@ void staticFrictionTest()
         }
     }
 
-    pros::lcd::print(2, "CURRENT POWER: %.2f", staticFrictionPower);
+    // pros::lcd::print(x, "CURRENT POWER: %.2f", staticFrictionPower);
 
-    pros::lcd::print(3, "FR: %.2f  FL: %.2f", firstMovePower[0], firstMovePower[1]);
-    pros::lcd::print(4, "BL: %.2f  BR: %.2f", firstMovePower[2], firstMovePower[3]);
+    // pros::lcd::print(x, "FR: %.2f  FL: %.2f", firstMovePower[0], firstMovePower[1]);
+    // pros::lcd::print(x, "BL: %.2f  BR: %.2f", firstMovePower[2], firstMovePower[3]);
 
     // determine if outlier exists
     double maxP, minP;
@@ -234,11 +234,11 @@ void staticFrictionTest()
     }
     if (maxP - minP > 0.1)
     {
-        pros::lcd::print(5, "Outlier! Max: %.2f Min: %.2f", maxP, minP);
+        // pros::lcd::print(x, "Outlier! Max: %.2f Min: %.2f", maxP, minP);
     }
     else
     {
-        pros::lcd::print(5, "No outlier. Max: %.2f Min: %.2f", maxP, minP);
+        // pros::lcd::print(x, "No outlier. Max: %.2f Min: %.2f", maxP, minP);
     }
 }
 
@@ -250,7 +250,7 @@ void maxVelocityTest()
         {
             drivebase->getModule(i).setSpeeds(0, 0);
         }
-        pros::lcd::print(2, "Test starting on next UP press...");
+        // pros::lcd::print(x, "Test starting on next UP press...");
         return;
     }
     int duration = 1000; // milliseconds
@@ -273,9 +273,9 @@ void maxVelocityTest()
             }
         }
 
-        pros::lcd::print(2, "Max Vels - ");
-        pros::lcd::print(3, "FR: %.2f  FL: %.2f", maxVels[0], maxVels[1]);
-        pros::lcd::print(4, "BL: %.2f  BR: %.2f", maxVels[2], maxVels[3]);
+        // pros::lcd::print(x, "Max Vels - ");
+        // pros::lcd::print(x, "FR: %.2f  FL: %.2f", maxVels[0], maxVels[1]);
+        // pros::lcd::print(x, "BL: %.2f  BR: %.2f", maxVels[2], maxVels[3]);
 
         pros::delay(20);
     }
@@ -287,7 +287,7 @@ void maxVelocityTest()
 
     while (true)
     {
-        pros::lcd::print(2, "Test complete. Max Vels - FR: %.2f, FL: %.2f, BL: %.2f, BR: %.2f", maxVels[0], maxVels[1], maxVels[2], maxVels[3]);
+        // pros::lcd::print(x, "Test complete. Max Vels - FR: %.2f, FL: %.2f, BL: %.2f, BR: %.2f", maxVels[0], maxVels[1], maxVels[2], maxVels[3]);
         pros::delay(1000);
     }
 }
@@ -371,7 +371,7 @@ std::vector<Test> tests = {
 
             drivebase->update();
 
-            pros::lcd::print(2, "Odom: X: %1.2f Y: %1.2f H: %1.2f", drivebase->getPose().x, drivebase->getPose().y, drivebase->getPose().heading);
+            // pros::lcd::print(x, "Odom: X: %1.2f Y: %1.2f H: %1.2f", drivebase->getPose().x, drivebase->getPose().y, drivebase->getPose().heading);
         },
     }};
 
@@ -401,7 +401,7 @@ void runTestModeIteration(pros::Controller &controller)
         printf("[TEST MODE] Switched to test: %s\n", tests[testIndex].name.c_str());
     }
 
-    pros::lcd::print(1, "[%d/%d] Test: %s", testIndex + 1, tests.size(), tests[testIndex].name.c_str());
+    // pros::lcd::print(x, "[%d/%d] Test: %s", testIndex + 1, tests.size(), tests[testIndex].name.c_str());
     printf("[TEST MODE] Running test: %s\n", tests[testIndex].name.c_str());
 
     tests[testIndex].run();

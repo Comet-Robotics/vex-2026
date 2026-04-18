@@ -178,7 +178,7 @@ void autonomous()
     switch (MODE)
     {
     case AutonMode::TEST:
-        pros::lcd::print(0, "Running autonomous test");
+        // pros::lcd::print(x, "Running autonomous test");
         autonomousTest3();
         break;
     default:

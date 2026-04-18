@@ -13,7 +13,7 @@
 #define EIGEN_DONT_VECTORIZE
 #include "Eigen/Dense"
 
-#include "pros/llemu.hpp"
+// #include "pros/llemu.hpp"
 
 using namespace constants::drivetrain;
 using namespace constants::ports;
@@ -58,7 +58,7 @@ public:
                 // so we don't snap back to an old heading
                 double angularVelocity = std::abs(imu->get_gyro_rate().z);
 
-                pros::lcd::print(6, "AngVelo: %1.2f", angularVelocity);
+                // pros::lcd::print(x, "AngVelo: %1.2f", angularVelocity);
 
                 if (!isHeadingHoldActive)
                 {
@@ -106,10 +106,10 @@ public:
         // double backRightSpeed = hypot(a, c);
         // double backRightAngle = AngleUtils::toDegrees(atan2(a, c));
 
-        // pros::lcd::print(1, "FR: %1.2f @ %1.2f, FL: %1.2f @ %1.2f",
+        // // pros::lcd::print(x, "FR: %1.2f @ %1.2f, FL: %1.2f @ %1.2f",
         //                  frontRightSpeed, frontRightAngle,
         //                  frontLeftSpeed, frontLeftAngle);
-        // pros::lcd::print(2, "BL: %1.2f @ %1.2f, BR: %1.2f @ %1.2f",
+        // // pros::lcd::print(x, "BL: %1.2f @ %1.2f, BR: %1.2f @ %1.2f",
         //                  backLeftSpeed, backLeftAngle,
         //                  backRightSpeed, backRightAngle);
 
@@ -347,8 +347,8 @@ public:
             basicSetModuleSpeeds(speeds.vx, speeds.vy, speeds.omega);
             update();
 
-            pros::lcd::print(1, "Current: X: %1.2f Y: %1.2f H: %1.2f", currentPose.x, currentPose.y, currentPose.heading);
-            pros::lcd::print(2, "Target: X: %1.2f Y: %1.2f H: %1.2f", targetPose.x, targetPose.y, targetPose.heading);
+            // pros::lcd::print(x, "Current: X: %1.2f Y: %1.2f H: %1.2f", currentPose.x, currentPose.y, currentPose.heading);
+            // pros::lcd::print(x, "Target: X: %1.2f Y: %1.2f H: %1.2f", targetPose.x, targetPose.y, targetPose.heading);
             pros::delay(20);
         }
     }
@@ -366,8 +366,8 @@ public:
             basicSetModuleSpeeds(speeds.vx, speeds.vy, speeds.omega);
             update();
 
-            pros::lcd::print(1, "Current: X: %1.2f Y: %1.2f H: %1.2f", currentPose.x, currentPose.y, currentPose.heading);
-            pros::lcd::print(2, "Target: X: %1.2f Y: %1.2f H: %1.2f", targetPose.x, targetPose.y, targetPose.heading);
+            // pros::lcd::print(x, "Current: X: %1.2f Y: %1.2f H: %1.2f", currentPose.x, currentPose.y, currentPose.heading);
+            // pros::lcd::print(x, "Target: X: %1.2f Y: %1.2f H: %1.2f", targetPose.x, targetPose.y, targetPose.heading);
 
             bool positionReached = currentPose.distance(targetPose) < 0.5;
             bool headingReached = std::abs(AngleUtils::shortestAngleDelta(currentPose.heading, targetPose.heading, false)) < AngleUtils::toRadians(2);

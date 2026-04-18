@@ -44,7 +44,6 @@
 #define PROS_VERSION_PATCH 1
 #define PROS_VERSION_STRING "4.1.1"
 
-
 #include "pros/adi.h"
 #include "pros/colors.h"
 #include "pros/device.h"
@@ -71,7 +70,7 @@
 #include "pros/gps.hpp"
 #include "pros/imu.hpp"
 #include "pros/link.hpp"
-#include "pros/llemu.hpp"
+// #include "pros/llemu.hpp"
 #include "pros/misc.hpp"
 #include "pros/motor_group.hpp"
 #include "pros/motors.hpp"
@@ -82,4 +81,4 @@
 #include "pros/vision.hpp"
 #endif
 
-#endif  // _PROS_API_H_
+#endif // _PROS_API_H_
