@@ -1,19 +1,18 @@
 #pragma once
 
 #include "constants.h"
-#include "pros/motors.hpp" // Swapped from motor_group.hpp
+#include "pros/motors.hpp"
 
 using namespace constants::park;
 
 class Park
 {
 public:
-    // Initialize the two motors directly from your port array
     Park() : m1(PARK_PORTS[0]),
              m2(PARK_PORTS[1])
     {
-        m1.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-        m2.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+        m1.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        m2.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
     }
 
     /**
@@ -23,6 +22,12 @@ public:
     {
         m1.move_voltage(MAX_PARK_SPEED);
         m2.move_voltage(MAX_PARK_SPEED);
+    }
+
+    inline void unpark()
+    {
+        m1.move_voltage(-MAX_PARK_SPEED);
+        m2.move_voltage(-MAX_PARK_SPEED);
     }
 
     /**
@@ -41,6 +46,13 @@ public:
     {
         m1.move_voltage(0);
         m2.move_voltage(0);
+    }
+
+    inline void print_temperatures()
+    {
+        int temp1 = m1.get_temperature();
+        int temp2 = m2.get_temperature();
+        printf("Park Motor Temperatures: %d, %d\n", temp1, temp2);
     }
 
 private:

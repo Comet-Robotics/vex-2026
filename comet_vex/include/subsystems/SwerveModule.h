@@ -122,6 +122,18 @@ public:
                bottomMotor.get_temperature() >= constants::MOTOR_TEMPERATURE_THRESHOLD;
     }
 
+    void overCurrentDetector() const
+    {
+        if (topMotor.is_over_current())
+        {
+            printf("Motor %d is over current\n", topMotor.get_port());
+        }
+        if (bottomMotor.is_over_current())
+        {
+            printf("Motor %d is over current\n", bottomMotor.get_port());
+        }
+    }
+
 private:
     pros::Rotation rotationSensor;
     bool fieldCentric;

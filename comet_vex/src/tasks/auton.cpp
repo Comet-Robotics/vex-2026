@@ -17,6 +17,7 @@ inline constexpr AutonMode MODE = AutonMode::TEST;
 
 void events(const std::string &eventName)
 {
+    printf("Event triggered: %s\n", eventName.c_str());
     if (eventName == "intake")
     {
         conveyor->intake();
@@ -32,10 +33,9 @@ void events(const std::string &eventName)
         conveyor->reverseSlow();
         blocker->block();
     }
-    else if (eventName == "stop")
+    else if (eventName == "stopConveyor")
     {
         conveyor->stop();
-        blocker->block();
     }
     else if (eventName == "adjustUp")
     {
@@ -52,6 +52,18 @@ void events(const std::string &eventName)
     else if (eventName == "retractLoader")
     {
         loader->deactivate();
+    }
+    else if (eventName == "wingDown")
+    {
+        wings->down();
+    }
+    else if (eventName == "wingUp")
+    {
+        wings->up();
+    }
+    else if (eventName == "resetDistance")
+    {
+        drivebase->setY(drivebase->getDistanceOffset());
     }
 }
 
@@ -145,7 +157,7 @@ void autonomousTest3()
     {
         drivebase->xWheels();
         drivebase->update();
-        pros::delay(constants::TELEOP_POLL_TIME); // Added delay to prevent CPU lockup
+        pros::delay(constants::TELEOP_POLL_TIME);
     }
 }
 

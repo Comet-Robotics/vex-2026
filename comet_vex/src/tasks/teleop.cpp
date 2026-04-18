@@ -37,11 +37,11 @@ void controls()
         conveyor->score();
         blocker->unblock();
     }
-    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) // reverse slow
+    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) // reverse slow
     {
         loaderDeployed = false;
         loader->stop();
-        conveyor->reverseSlow();
+        conveyor->reverse();
     }
     else // stop
     {
@@ -68,6 +68,21 @@ void controls()
     {
         loader->deactivate();
     }
+
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A))
+    {
+        park->park();
+    }
+    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B))
+    {
+        park->unpark();
+    }
+    else
+    {
+        park->stop();
+    }
+
+    park->print_temperatures();
 }
 
 void opcontrol_initialize() {}
@@ -105,12 +120,13 @@ void drivebase_controls()
 
     drivebase->update();
 
-    pros::lcd::print(0, "Temp");
-    pros::lcd::print(1, "1: %1.2f 2: %1.2f 3: %1.2f 4: %1.2f", drivebase->frontRight.topMotor.get_temperature(), drivebase->frontRight.bottomMotor.get_temperature(),
-                     drivebase->backRight.bottomMotor.get_temperature(), drivebase->backRight.topMotor.get_temperature());
-    pros::lcd::print(2, "5: %1.2f 6: %1.2f 7: %1.2f 8: %1.2f", drivebase->frontLeft.bottomMotor.get_temperature(), drivebase->frontLeft.topMotor.get_temperature(),
-                     drivebase->backLeft.topMotor.get_temperature(), drivebase->backLeft.bottomMotor.get_temperature());
-    pros::lcd::print(3, "Odom: X: %1.2f Y: %1.2f H: %1.2f", drivebase->getPose().x, drivebase->getPose().y, drivebase->getPose().heading);
+    // pros::lcd::print(0, "Temp");
+    // pros::lcd::print(1, "1: %1.2f 2: %1.2f 3: %1.2f 4: %1.2f", drivebase->frontRight.topMotor.get_temperature(), drivebase->frontRight.bottomMotor.get_temperature(),
+    //                  drivebase->backRight.bottomMotor.get_temperature(), drivebase->backRight.topMotor.get_temperature());
+    // pros::lcd::print(2, "5: %1.2f 6: %1.2f 7: %1.2f 8: %1.2f", drivebase->frontLeft.bottomMotor.get_temperature(), drivebase->frontLeft.topMotor.get_temperature(),
+    //                  drivebase->backLeft.topMotor.get_temperature(), drivebase->backLeft.bottomMotor.get_temperature());
+    // pros::lcd::print(3, "Odom: X: %1.2f Y: %1.2f H: %1.2f", drivebase->getPose().x, drivebase->getPose().y, drivebase->getPose().heading);
+
     // pros::lcd::print(3, "Current");
     // pros::lcd::print(4, "1: %1.2f 2: %1.2f 3: %1.2f 4: %1.2f", drivebase->frontRight.topMotor.get_current_draw(), drivebase->frontRight.bottomMotor.get_current_draw(),
     //                  drivebase->backRight.bottomMotor.get_current_draw(), drivebase->backRight.topMotor.get_current_draw());
@@ -139,11 +155,6 @@ void opcontrol()
             else
             {
                 pros::lcd::print(0, "Switched to COMP MODE");
-                // clear screen when returning
-                for (int i = 1; i < 7; i++)
-                {
-                    pros::lcd::clear_line(i);
-                }
             }
         }
 

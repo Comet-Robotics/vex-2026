@@ -4,6 +4,7 @@
 #include <array>
 #include "pros/imu.hpp"
 #include "pros/abstract_motor.hpp"
+#include "pros/distance.hpp"
 
 #define EIGEN_DONT_VECTORIZE
 #include "Eigen/Dense"
@@ -37,12 +38,30 @@ namespace constants
             3,
         }; // 3 -4 is backwards
 
+        // constexpr std::array<int8_t, 2> FRONT_RIGHT_PORTS = {
+        //     0,
+        //     0,
+        // };
+        // constexpr std::array<int8_t, 2> FRONT_LEFT_PORTS = {
+        //     0,
+        //     0,
+        // };
+        // constexpr std::array<int8_t, 2> BACK_LEFT_PORTS = {
+        //     0,
+        //     0,
+        // };
+        // constexpr std::array<int8_t, 2> BACK_RIGHT_PORTS = {
+        //     0,
+        //     0,
+        // };
+
         constexpr int8_t FRONT_RIGHT_ROTATION_SENSOR_PORT = 11;
         constexpr int8_t FRONT_LEFT_ROTATION_SENSOR_PORT = 12;
         constexpr int8_t BACK_LEFT_ROTATION_SENSOR_PORT = 13;
         constexpr int8_t BACK_RIGHT_ROTATION_SENSOR_PORT = 14;
 
-        constexpr int8_t IMU_PORT = 10;
+        constexpr int8_t IMU_PORT = 9;
+        constexpr int8_t DISTANCE_PORT = 19;
     }
 
     namespace drivetrain
@@ -55,13 +74,18 @@ namespace constants
         constexpr double WHEEL_DIAMETER = 2.75;      // inches
         constexpr double GEAR_RATIO = 544.0 / 555.0; // output (wheel) speed / input (motor) speed
 
-        inline pros::Imu IMU(ports::IMU_PORT);
-
         constexpr double ROTATION_FACTOR = (20 * 360.0) / (27669 + 27854); // Number of rotations * 360 degrees / difference in encoder counts
         // how to tune: go forward a known distance while keeping the module at a fixed angle, and set factor to (actual distance traveled) / (calculated distance)
         constexpr double LINEAR_FACTOR = (24.0 / 28.0) * (24.0 / 24.65);
         constexpr double TRACK_LENGTH = 8;     // distance between front and back wheels
         constexpr double TRACK_WIDTH = 10.125; // distance between left and right wheels
+
+        inline pros::Imu IMU(ports::IMU_PORT);
+        inline pros::Distance DISTANCE(ports::DISTANCE_PORT);
+
+        inline constexpr double distOffsetX = TRACK_WIDTH / 2 - 2.755906;
+        inline constexpr double distOffsetY = TRACK_LENGTH / 2 - 2.273622;
+        inline constexpr double wallY = 70.2; // y coordinate of wall
 
         constexpr std::array<std::array<double, 2>, 4> wheelPositions = {
             std::array<double, 2>{TRACK_LENGTH / 2.0, -TRACK_WIDTH / 2.0}, // Front Right
@@ -124,7 +148,7 @@ namespace constants
         };
 
         constexpr std::array<double, 3> HEADING_HOLD_PID = {
-            0.05,
+            0.04,
             0.0,
             0.0,
         };
@@ -150,8 +174,8 @@ namespace constants
         inline constexpr int SLOW_CONVEYOR_SPEED = 7500;
         inline constexpr int SLOW_REVERSE_SPEED = 5000;
         inline constexpr std::array<int8_t, 3> CONVEYOR_PORTS = {
-            9,   // intake
-            18,  // conveyor
+            17,  // intake
+            20,  // conveyor
             -16, // outtake
         };
         inline constexpr char HEIGHT_ADJUST_PORT = 'B';
@@ -161,7 +185,7 @@ namespace constants
     {
         inline constexpr char LOADER_PORT = 'A';
         inline constexpr std::array<int8_t, 1> LOADER_MOTOR_PORTS = {
-            -20,
+            -18,
         };
     }
 
@@ -178,8 +202,8 @@ namespace constants
     namespace park
     {
         inline constexpr std::array<int8_t, 2> PARK_PORTS = {
-            0,  // left
-            -0, // right (reversed)
+            10,  // left
+            -15, // right (reversed)
         };
         inline constexpr int MAX_PARK_SPEED = 12000;
         inline constexpr int SETUP_POSITION = 50; // degrees to rotate for setup

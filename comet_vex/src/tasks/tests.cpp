@@ -383,20 +383,26 @@ void tests_initialize()
     tests[testIndex].init();
 }
 
-void runTestModeIteration(pros::Controller& controller)
+void runTestModeIteration(pros::Controller &controller)
 {
+    printf("[TEST MODE] Start of method\n");
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1))
     {
-        testIndex = (testIndex + 1) % tests.size();
+        printf("[TEST MODE] R1 pressed. Current test: %s. Switching to next test.\n", tests[testIndex].name.c_str());
+        testIndex = (testIndex + 1) % (int)tests.size();
         tests[testIndex].init();
+        printf("[TEST MODE] Switched to test: %s\n", tests[testIndex].name.c_str());
     }
     else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1))
     {
-        testIndex = (testIndex - 1 + tests.size()) % tests.size();
+        printf("[TEST MODE] L1 pressed. Current test: %s. Switching to previous test.\n", tests[testIndex].name.c_str());
+        testIndex = (testIndex - 1 + (int)tests.size()) % (int)tests.size();
         tests[testIndex].init();
+        printf("[TEST MODE] Switched to test: %s\n", tests[testIndex].name.c_str());
     }
 
-    pros::lcd::print(0, "[%d/%d] Test: %s", testIndex + 1, tests.size(), tests[testIndex].name.c_str());
+    pros::lcd::print(1, "[%d/%d] Test: %s", testIndex + 1, tests.size(), tests[testIndex].name.c_str());
+    printf("[TEST MODE] Running test: %s\n", tests[testIndex].name.c_str());
 
     tests[testIndex].run();
 }

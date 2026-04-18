@@ -2,6 +2,7 @@
 
 #include "constants.h"
 #include "utils/AngleUtils.h"
+#include "utils/MathUtils.h"
 
 #include "SwerveModule.h"
 #include <cmath>
@@ -23,6 +24,8 @@ class SwerveDrive
 public:
     SwerveModule frontRight, frontLeft, backLeft, backRight;
     pros::Imu *imu = &constants::drivetrain::IMU;
+
+    int count = 0;
 
     SwerveDrive() : frontRight(FRONT_RIGHT_PORTS[0], FRONT_RIGHT_PORTS[1], FRONT_RIGHT_ROTATION_SENSOR_PORT),
                     frontLeft(FRONT_LEFT_PORTS[0], FRONT_LEFT_PORTS[1], FRONT_LEFT_ROTATION_SENSOR_PORT),
@@ -62,7 +65,7 @@ public:
                     targetHeading = currentHeadingClockwise;
 
                     // only lock in the heading once the robot's momentum has settled
-                    if (angularVelocity <= 15.0)
+                    if (angularVelocity <= 5.0)
                     {
                         isHeadingHoldActive = true;
                     }
@@ -157,6 +160,13 @@ public:
         frontLeft.setSpeedAndAngle(wheelStates(1, 0), wheelStates(1, 1));
         backLeft.setSpeedAndAngle(wheelStates(2, 0), wheelStates(2, 1));
         backRight.setSpeedAndAngle(wheelStates(3, 0), wheelStates(3, 1));
+        if (count % 10 == 0)
+        {
+            printf("Swerve Angles: FR: %1.2f, FL: %1.2f, BL: %1.2f, BR: %1.2f\n",
+                   wheelStates(0, 1), wheelStates(1, 1), wheelStates(2, 1), wheelStates(3, 1));
+            overCurrentDetector();
+        }
+        count++;
     }
 
     void basicSetModuleSpeeds(double forward, double strafe, double rotation, bool fieldCentric = true)
@@ -225,7 +235,7 @@ public:
         backRight.update();
 
         odometry.update(frontRight, frontLeft, backLeft, backRight, AngleUtils::toRadians(getHeading()));
-        printf("[SwerveDrive] Pose - X: %.2f, Y: %.2f, Heading: %.2f\n", currentPose.x, currentPose.y, currentPose.heading);
+        // printf("[SwerveDrive] Pose - X: %.2f, Y: %.2f, Heading: %.2f\n", currentPose.x, currentPose.y, currentPose.heading);
     }
 
     // void setAutonomous(bool autonomous) {
@@ -236,6 +246,22 @@ public:
     {
         odometry.setPose(pose);
         imu->set_heading(AngleUtils::toDegrees(AngleUtils::wrap2Pi(-pose.heading)));
+    }
+
+    void setY(double y)
+    {
+        Pose2D pose = getPose();
+        pose.y = y;
+        setPose(pose);
+    }
+
+    double getDistanceOffset()
+    {
+        double distVal = MathUtils::metersToInches(DISTANCE.get_distance()) / 1000.0;
+        double heading = getHeading();
+        double dist = distVal * cos(AngleUtils::toRadians(heading));
+        double sensor_offset = (distOffsetX * sin(AngleUtils::toRadians(heading)) + distOffsetY * cos(AngleUtils::toRadians(heading)));
+        return wallY - sensor_offset - dist;
     }
 
     Pose2D getPose()
@@ -367,6 +393,14 @@ public:
     bool isOverTemperature() const
     {
         return frontRight.isOverTemperature() || frontLeft.isOverTemperature() || backLeft.isOverTemperature() || backRight.isOverTemperature();
+    }
+
+    void overCurrentDetector() const
+    {
+        frontRight.overCurrentDetector();
+        frontLeft.overCurrentDetector();
+        backLeft.overCurrentDetector();
+        backRight.overCurrentDetector();
     }
 
     double getHeading()
