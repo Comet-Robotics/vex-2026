@@ -18,7 +18,7 @@ void controls()
 
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // intaking from loader
     {
-        loaderDeployed = true; 
+        loaderDeployed = true;
         loader->forward();
         conveyor->intake();
         blocker->block();
@@ -36,6 +36,7 @@ void controls()
         loader->stop();
         conveyor->score();
         blocker->unblock();
+        drivebase->xWheels();
     }
     else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) // reverse slow
     {
@@ -93,18 +94,13 @@ void drivebase_controls()
     double strafe = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X) / 127.0 * constants::drivetrain::MAX_LINEAR_SPEED;
     double rotation = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X) / 127.0 * constants::drivetrain::MAX_ANGULAR_SPEED;
 
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X))
-    {
-        drivebase->tareIMU();
-    }
-
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
     {
         drivebase->resetPose();
     }
 
     // // pros::lcd::print(x, "Fwd: %1.2f Str: %1.2f Rot: %1.2f", forward, strafe, rotation);
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B)) // X wheels
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) // X wheels
     {
         drivebase->xWheels();
     }
