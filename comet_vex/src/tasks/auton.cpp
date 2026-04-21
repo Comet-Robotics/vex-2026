@@ -124,7 +124,7 @@ void wait(double seconds)
 
 void autonomousTest3()
 {
-    Trajectory trajectory("/usd/paths/Auto.traj");
+    Trajectory trajectory("AWP_Virgo");
     std::vector<Trajectory> paths = trajectory.getSplits();
 
     drivebase->setPose(trajectory.getStart().pose);
