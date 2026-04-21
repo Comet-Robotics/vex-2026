@@ -140,17 +140,47 @@ void autonomousTest3()
             const auto &end = paths[i].getPoints().back();
             printf("  StartTime: %.2f sec, StartPose: (x=%.2f, y=%.2f, heading=%.2f deg)\n", start.t, start.pose.x, start.pose.y, AngleUtils::toDegrees(start.pose.heading));
             printf("  EndTime: %.2f sec, EndPose: (x=%.2f, y=%.2f, heading=%.2f deg)\n", end.t, end.pose.x, end.pose.y, AngleUtils::toDegrees(end.pose.heading));
+            printf("  Event Markers:\n");
+            for (const auto &event : paths[i].getEvents())
+            {
+                printf("    Time: %.2f sec, Name: %s\n", event.time, event.name.c_str());
+            }
         }
     }
 
     if (paths.empty())
         return;
 
-    for (size_t i = 0; i < paths.size(); ++i)
-    {
-        runPath(paths[i]);
-        wait(2);
-    }
+    // for (size_t i = 0; i < paths.size(); ++i)
+    // {
+    //     runPath(paths[i]);
+    //     wait(2);
+    // }
+
+    // Go to loader
+    runPath(paths[0]);
+    events("resetDistance");
+    wait(5);
+
+    // Go to mid goal
+    runPath(paths[1]);
+    events("score");
+    wait(0.5);
+
+    // Go back to loader
+    runPath(paths[2]);
+    events("resetDistance");
+    wait(5);
+
+    // Go to long goal
+    runPath(paths[3]);
+    events("score");
+    events("resetDistance");
+    wait(4);
+
+    // wing
+    runPath(paths[4]);
+    runPath(paths[5]);
 
     // lock wheels after finishing to prevent pushing
     while (true)

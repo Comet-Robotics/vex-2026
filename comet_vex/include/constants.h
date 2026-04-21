@@ -85,7 +85,7 @@ namespace constants
 
         inline constexpr double distOffsetX = TRACK_WIDTH / 2 - 2.755906;
         inline constexpr double distOffsetY = TRACK_LENGTH / 2 - 2.273622;
-        inline constexpr double wallY = 70.2; // y coordinate of wall
+        inline constexpr double wallY = 140.41; // y coordinate of wall
 
         constexpr std::array<std::array<double, 2>, 4> wheelPositions = {
             std::array<double, 2>{TRACK_LENGTH / 2.0, -TRACK_WIDTH / 2.0}, // Front Right

@@ -76,7 +76,7 @@ public:
 
                 std::string_view name_view = event["event"]["data"]["name"];
                 std::string name = std::string(name_view);
-                double time = double(event["from"]["targetTimestamp"]);
+                double time = double(event["from"]["targetTimestamp"]) + double(event["from"]["offset"]["val"]);
 
                 Event e{name, time};
                 eventMarkers.emplace_back(e);

@@ -83,6 +83,15 @@ void controls()
         park->stop();
     }
 
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+    {
+        wings->down();
+    }
+    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
+    {
+        wings->up();
+    }
+
     park->print_temperatures();
 }
 
