@@ -16,7 +16,7 @@ void controls()
 {
     drivebase_controls();
 
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // intaking from loader
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A)) // intaking from loader
     {
         loaderDeployed = true;
         loader->forward();
@@ -38,7 +38,7 @@ void controls()
         blocker->unblock();
         drivebase->xWheels();
     }
-    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) // reverse slow
+    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // reverse slow
     {
         loaderDeployed = false;
         loader->stop();
@@ -54,11 +54,11 @@ void controls()
     // outtake height adjust
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
     {
-        conveyor->adjustUp();
+        conveyor->adjustDown();
     }
     else
     {
-        conveyor->adjustDown();
+        conveyor->adjustUp();
     }
 
     if (loaderDeployed)
@@ -70,11 +70,11 @@ void controls()
         loader->deactivate();
     }
 
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A))
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X))
     {
         park->park();
     }
-    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B))
+    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
     {
         park->unpark();
     }
@@ -100,7 +100,7 @@ void drivebase_controls()
     }
 
     // // pros::lcd::print(x, "Fwd: %1.2f Str: %1.2f Rot: %1.2f", forward, strafe, rotation);
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) // X wheels
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B)) // X wheels
     {
         drivebase->xWheels();
     }

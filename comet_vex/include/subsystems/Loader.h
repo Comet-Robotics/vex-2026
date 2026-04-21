@@ -47,5 +47,5 @@ public:
     }
 
 private:
-    pros::Motor loaderMotor; // Replaced MotorGroup with a single Motor
+    pros::Motor loaderMotor;
 };

@@ -18,6 +18,8 @@ public:
         intakeMotor.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
         conveyorMotor.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
         outtakeMotor.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+
+        adjustDown();
     }
 
     inline void move_voltage(int voltage)
@@ -63,13 +65,13 @@ public:
 
     void adjustUp()
     {
-        heightAdjust.set_value(LOW);
+        heightAdjust.set_value(HIGH);
         extended = true;
     }
 
     void adjustDown()
     {
-        heightAdjust.set_value(HIGH);
+        heightAdjust.set_value(LOW);
         extended = false;
     }
 
