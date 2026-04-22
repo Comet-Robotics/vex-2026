@@ -12,6 +12,8 @@ bool loaderDeployed = false;
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
+int i = 0;
+
 void controls()
 {
     drivebase_controls();
@@ -38,7 +40,7 @@ void controls()
         blocker->unblock();
         drivebase->xWheels();
     }
-    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // reverse slow
+    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // reverse
     {
         loaderDeployed = false;
         loader->stop();
@@ -92,7 +94,13 @@ void controls()
         wings->up();
     }
 
-    park->print_temperatures();
+    if (i % 10 == 0)
+    {
+        printf("y: %1.2f, dist: %1.2f\n", drivebase->getDistanceOffset(), drivebase->getDistance());
+    }
+    i++;
+
+    // park->print_temperatures();
 }
 
 void opcontrol_initialize() {}

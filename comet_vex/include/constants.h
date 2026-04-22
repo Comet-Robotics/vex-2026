@@ -132,17 +132,17 @@ namespace constants
         };
 
         constexpr std::array<double, 3> X_PID = {
-            10.0,
+            12.0,
             0.0,
             0.0,
         };
         constexpr std::array<double, 3> Y_PID = {
-            10.0,
+            12.0,
             0.0,
             0.0,
         };
         constexpr std::array<double, 3> THETA_PID = {
-            16.0,
+            18.0,
             0.0,
             0.0,
         };
@@ -172,7 +172,7 @@ namespace constants
     {
         inline constexpr int MAX_CONVEYOR_SPEED = 12000;
         inline constexpr int SLOW_CONVEYOR_SPEED = 7500;
-        inline constexpr int SLOW_REVERSE_SPEED = 5000;
+        inline constexpr int SLOW_REVERSE_SPEED = 7500;
         inline constexpr std::array<int8_t, 3> CONVEYOR_PORTS = {
             17,  // intake
             20,  // conveyor

@@ -41,13 +41,19 @@ public:
         outtakeMotor.move_voltage(SLOW_CONVEYOR_SPEED); // Slower speed for outtake motor during intake
     }
 
+    inline void reverse()
+    {
+        intakeMotor.move_voltage(-MAX_CONVEYOR_SPEED);
+        conveyorMotor.move_voltage(-MAX_CONVEYOR_SPEED);
+        outtakeMotor.move_voltage(-SLOW_REVERSE_SPEED); // Slower speed for outtake motor during reverse
+    }
+
     inline void score()
     {
         this->move_voltage(MAX_CONVEYOR_SPEED);
     }
 
     inline void forwardSlow() { this->move_voltage(SLOW_CONVEYOR_SPEED); }
-    inline void reverse() { this->move_voltage(-MAX_CONVEYOR_SPEED); }
     inline void reverseSlow() { this->move_voltage(-SLOW_REVERSE_SPEED); }
     inline void stop() { this->move_voltage(0); }
 

@@ -257,11 +257,16 @@ public:
 
     double getDistanceOffset()
     {
-        double distVal = MathUtils::metersToInches(DISTANCE.get_distance()) / 1000.0;
+        double distVal = getDistance();
         double heading = getHeading();
         double dist = distVal * -cos(AngleUtils::toRadians(heading));
         double sensor_offset = (distOffsetX * sin(AngleUtils::toRadians(heading)) + distOffsetY * -cos(AngleUtils::toRadians(heading)));
         return wallY - sensor_offset - dist;
+    }
+
+    double getDistance()
+    {
+        return MathUtils::metersToInches(DISTANCE.get_distance()) / 1000.0;
     }
 
     Pose2D getPose()
@@ -370,8 +375,8 @@ public:
             // pros::lcd::print(x, "Target: X: %1.2f Y: %1.2f H: %1.2f", targetPose.x, targetPose.y, targetPose.heading);
 
             bool positionReached = currentPose.distance(targetPose) < 0.5;
-            bool headingReached = std::abs(AngleUtils::shortestAngleDelta(currentPose.heading, targetPose.heading, false)) < AngleUtils::toRadians(2);
-            bool timeout = pros::millis() - startTime > 5000;
+            bool headingReached = std::abs(AngleUtils::shortestAngleDelta(currentPose.heading, targetPose.heading, false)) < AngleUtils::toRadians(1);
+            bool timeout = pros::millis() - startTime > 2500;
 
             if ((positionReached && headingReached) || timeout)
             {

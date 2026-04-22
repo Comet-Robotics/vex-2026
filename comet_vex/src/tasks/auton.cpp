@@ -30,7 +30,7 @@ void events(const std::string &eventName)
     }
     else if (eventName == "reverse")
     {
-        conveyor->reverseSlow();
+        conveyor->reverse();
         blocker->block();
     }
     else if (eventName == "stopConveyor")
@@ -158,6 +158,7 @@ void autonomousTest3()
     // }
 
     // Go to loader
+    events("resetDistance");
     runPath(paths[0]);
     events("resetDistance");
     wait(5);
@@ -165,7 +166,7 @@ void autonomousTest3()
     // Go to mid goal
     runPath(paths[1]);
     events("score");
-    wait(0.5);
+    wait(0.6);
 
     // Go back to loader
     runPath(paths[2]);

@@ -21,7 +21,7 @@ def generate_header():
                 with open(filepath, "r") as f:
                     # Read the JSON to ensure it's valid, then dump it as a string
                     data = json.load(f)
-                    json_str = json.dumps(data)
+                    json_str = json.dumps(data, separators=(',', ':')) # remove whitespace for compactness
                     
                     # Write as a C++11 raw string literal inside the map
                     out.write(f'    {{"{name}", R"({json_str})"}},\n')
