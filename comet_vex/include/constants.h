@@ -16,26 +16,26 @@ namespace constants
     namespace ports
     {
 
-        // for each of these, first num is the motor controlling the top gear, second is controlling the bottom gear
+        // for each of these, first num is the inside motor and second num is the outside motor
         // 1
         constexpr std::array<int8_t, 2> FRONT_RIGHT_PORTS = {
-            -1,
-            2,
+            -7,
+            9,
         };
         // 2
         constexpr std::array<int8_t, 2> FRONT_LEFT_PORTS = {
-            -6,
-            5,
+            -13,
+            15,
         };
         // 3
         constexpr std::array<int8_t, 2> BACK_LEFT_PORTS = {
-            -7, // -7
-            8,  // 8
+            -16, // -7
+            17,  // 8
         };
         // 4
         constexpr std::array<int8_t, 2> BACK_RIGHT_PORTS = {
-            -4,
-            3,
+            -8,
+            10,
         }; // 3 -4 is backwards
 
         // constexpr std::array<int8_t, 2> FRONT_RIGHT_PORTS = {
@@ -55,13 +55,13 @@ namespace constants
         //     0,
         // };
 
-        constexpr int8_t FRONT_RIGHT_ROTATION_SENSOR_PORT = 11;
-        constexpr int8_t FRONT_LEFT_ROTATION_SENSOR_PORT = 12;
-        constexpr int8_t BACK_LEFT_ROTATION_SENSOR_PORT = 13;
-        constexpr int8_t BACK_RIGHT_ROTATION_SENSOR_PORT = 14;
+        constexpr int8_t FRONT_RIGHT_ROTATION_SENSOR_PORT = 4;
+        constexpr int8_t FRONT_LEFT_ROTATION_SENSOR_PORT = 19;
+        constexpr int8_t BACK_LEFT_ROTATION_SENSOR_PORT = 20;
+        constexpr int8_t BACK_RIGHT_ROTATION_SENSOR_PORT = 2;
 
-        constexpr int8_t IMU_PORT = 9;
-        constexpr int8_t DISTANCE_PORT = 19;
+        constexpr int8_t IMU_PORT = 14;
+        constexpr int8_t DISTANCE_PORT = 11;
     }
 
     namespace drivetrain
@@ -174,9 +174,9 @@ namespace constants
         inline constexpr int SLOW_CONVEYOR_SPEED = 7500;
         inline constexpr int SLOW_REVERSE_SPEED = 7500;
         inline constexpr std::array<int8_t, 3> CONVEYOR_PORTS = {
-            17,  // intake
-            20,  // conveyor
-            -16, // outtake
+            3,   // intake
+            5,   // conveyor
+            -12, // outtake
         };
         inline constexpr char HEIGHT_ADJUST_PORT = 'B';
     }
@@ -184,9 +184,6 @@ namespace constants
     namespace loader
     {
         inline constexpr char LOADER_PORT = 'A';
-        inline constexpr std::array<int8_t, 1> LOADER_MOTOR_PORTS = {
-            -18,
-        };
     }
 
     namespace blocker
@@ -202,8 +199,8 @@ namespace constants
     namespace park
     {
         inline constexpr std::array<int8_t, 2> PARK_PORTS = {
-            10,  // left
-            -15, // right (reversed)
+            6,   // left
+            -18, // right (reversed)
         };
         inline constexpr int MAX_PARK_SPEED = 12000;
         inline constexpr int SETUP_POSITION = 50; // degrees to rotate for setup

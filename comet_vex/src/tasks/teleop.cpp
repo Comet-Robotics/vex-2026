@@ -21,21 +21,18 @@ void controls()
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A)) // intaking from loader
     {
         loaderDeployed = true;
-        loader->forward();
         conveyor->intake();
         blocker->block();
     }
     else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) // intaking from floor
     {
         loaderDeployed = false;
-        loader->stop();
         conveyor->intake();
         blocker->block();
     }
     else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) // scoring
     {
         loaderDeployed = false;
-        loader->stop();
         conveyor->score();
         blocker->unblock();
         drivebase->xWheels();
@@ -43,13 +40,11 @@ void controls()
     else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // reverse
     {
         loaderDeployed = false;
-        loader->stop();
         conveyor->reverse();
     }
     else // stop
     {
         loaderDeployed = false;
-        loader->stop();
         conveyor->stop();
     }
 

@@ -166,7 +166,7 @@ void autonomousTest3()
     // Go to mid goal
     runPath(paths[1]);
     events("score");
-    wait(0.6);
+    wait(0.45);
 
     // Go back to loader
     runPath(paths[2]);
@@ -177,7 +177,7 @@ void autonomousTest3()
     runPath(paths[3]);
     events("score");
     events("resetDistance");
-    wait(4);
+    wait(2.5);
 
     // wing
     runPath(paths[4]);

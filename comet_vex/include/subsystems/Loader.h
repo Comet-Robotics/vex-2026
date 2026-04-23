@@ -10,17 +10,9 @@ class Loader : public pros::adi::Pneumatics
 {
 public:
     // Initialize the single motor directly using the first element of your port array
-    Loader() : pros::adi::Pneumatics(LOADER_PORT, true, false),
-               loaderMotor(LOADER_MOTOR_PORTS[0])
+    Loader() : pros::adi::Pneumatics(LOADER_PORT, true, false)
     {
-        loaderMotor.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     }
-
-    void forward() { loaderMotor.move_voltage(12000); }
-
-    void reverse() { loaderMotor.move_voltage(-12000); }
-
-    void stop() { loaderMotor.move_voltage(0); }
 
     /**
      * Activates the loader mechanism by setting the digital output to true. This will allow the robot to intake blocks from the loader.
@@ -47,5 +39,4 @@ public:
     }
 
 private:
-    pros::Motor loaderMotor;
 };
