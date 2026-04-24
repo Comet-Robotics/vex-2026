@@ -124,7 +124,7 @@ void wait(double seconds)
 
 void autonomousTest3()
 {
-    Trajectory trajectory("AWP_Virgo");
+    Trajectory trajectory("AWP_Libra");
     std::vector<Trajectory> paths = trajectory.getSplits();
 
     drivebase->setPose(trajectory.getStart().pose);
@@ -161,27 +161,28 @@ void autonomousTest3()
     events("resetDistance");
     runPath(paths[0]);
     events("resetDistance");
-    wait(5);
+    wait(3);
 
     // Go to mid goal
     runPath(paths[1]);
-    events("score");
-    wait(0.45);
+    events("reverse");
+    wait(0.65);
 
     // Go back to loader
     runPath(paths[2]);
     events("resetDistance");
-    wait(5);
+    runPath(paths[3]);
+    wait(3);
 
     // Go to long goal
-    runPath(paths[3]);
+    runPath(paths[4]);
     events("score");
     events("resetDistance");
     wait(2.5);
 
     // wing
-    runPath(paths[4]);
     runPath(paths[5]);
+    runPath(paths[6]);
 
     // lock wheels after finishing to prevent pushing
     while (true)
@@ -189,6 +190,23 @@ void autonomousTest3()
         drivebase->xWheels();
         drivebase->update();
         pros::delay(constants::TELEOP_POLL_TIME);
+    }
+}
+
+void autonomousTest4()
+{
+    Trajectory trajectory("Test");
+    std::vector<Trajectory> paths = trajectory.getSplits();
+
+    drivebase->setPose(trajectory.getStart().pose);
+
+    if (paths.empty())
+        return;
+
+    for (size_t i = 0; i < paths.size(); ++i)
+    {
+        runPath(paths[i]);
+        wait(2);
     }
 }
 

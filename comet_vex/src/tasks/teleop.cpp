@@ -4,6 +4,8 @@
 #include "tasks/teleop.h"
 #include "tasks/tests.h"
 #include "subsystems.h"
+#include "constants.h"
+#include <cstdio>
 
 using namespace pros;
 
@@ -18,26 +20,26 @@ void controls()
 {
     drivebase_controls();
 
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A)) // intaking from loader
+    if (controller.get_digital(constants::controls::INTAKE_LOADER)) // intaking from loader
     {
         loaderDeployed = true;
         conveyor->intake();
         blocker->block();
     }
-    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) // intaking from floor
+    else if (controller.get_digital(constants::controls::INTAKE_FLOOR)) // intaking from floor
     {
         loaderDeployed = false;
         conveyor->intake();
         blocker->block();
     }
-    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) // scoring
+    else if (controller.get_digital(constants::controls::SCORE)) // scoring
     {
         loaderDeployed = false;
         conveyor->score();
         blocker->unblock();
         drivebase->xWheels();
     }
-    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // reverse
+    else if (controller.get_digital(constants::controls::OUTTAKE_LOW)) // reverse
     {
         loaderDeployed = false;
         conveyor->reverse();
@@ -49,7 +51,7 @@ void controls()
     }
 
     // outtake height adjust
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+    if (controller.get_digital(constants::controls::ADJUST_DOWN))
     {
         conveyor->adjustDown();
     }
@@ -67,11 +69,11 @@ void controls()
         loader->deactivate();
     }
 
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X))
+    if (controller.get_digital(constants::controls::PARK))
     {
         park->park();
     }
-    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
+    else if (controller.get_digital(constants::controls::UNPARK))
     {
         park->unpark();
     }
@@ -80,11 +82,11 @@ void controls()
         park->stop();
     }
 
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+    if (controller.get_digital(constants::controls::WINGS_DOWN))
     {
         wings->down();
     }
-    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
+    else if (controller.get_digital(constants::controls::WINGS_UP))
     {
         wings->up();
     }
@@ -106,13 +108,13 @@ void drivebase_controls()
     double strafe = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X) / 127.0 * constants::drivetrain::MAX_LINEAR_SPEED;
     double rotation = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X) / 127.0 * constants::drivetrain::MAX_ANGULAR_SPEED;
 
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
+    if (controller.get_digital(constants::controls::RESET_POSE))
     {
         drivebase->resetPose();
     }
 
     // // pros::lcd::print(x, "Fwd: %1.2f Str: %1.2f Rot: %1.2f", forward, strafe, rotation);
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B)) // X wheels
+    if (controller.get_digital(constants::controls::X_WHEELS)) // X wheels
     {
         drivebase->xWheels();
     }
@@ -121,7 +123,7 @@ void drivebase_controls()
         drivebase->setModuleSpeeds(forward, strafe, rotation, constants::drivetrain::FIELD_CENTRIC_DEFAULT);
     }
 
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP))
+    if (controller.get_digital_new_press(constants::controls::HEADING_HOLD_TOGGLE))
     {
         drivebase->toggleHeadingHold();
     }
@@ -129,10 +131,13 @@ void drivebase_controls()
     drivebase->update();
 
     // // pros::lcd::print(x, "Temp");
-    // // pros::lcd::print(x, "1: %1.2f 2: %1.2f 3: %1.2f 4: %1.2f", drivebase->frontRight.topMotor.get_temperature(), drivebase->frontRight.bottomMotor.get_temperature(),
-    //                  drivebase->backRight.bottomMotor.get_temperature(), drivebase->backRight.topMotor.get_temperature());
-    // // pros::lcd::print(x, "5: %1.2f 6: %1.2f 7: %1.2f 8: %1.2f", drivebase->frontLeft.bottomMotor.get_temperature(), drivebase->frontLeft.topMotor.get_temperature(),
-    //                  drivebase->backLeft.topMotor.get_temperature(), drivebase->backLeft.bottomMotor.get_temperature());
+    if (i % 10 == 0)
+    {
+        printf("1: %1.2f 2: %1.2f 3: %1.2f 4: %1.2f ", drivebase->frontRight.topMotor.get_temperature(), drivebase->frontRight.bottomMotor.get_temperature(),
+                         drivebase->backRight.bottomMotor.get_temperature(), drivebase->backRight.topMotor.get_temperature());
+        printf("5: %1.2f 6: %1.2f 7: %1.2f 8: %1.2f\n", drivebase->frontLeft.bottomMotor.get_temperature(), drivebase->frontLeft.topMotor.get_temperature(),
+                         drivebase->backLeft.topMotor.get_temperature(), drivebase->backLeft.bottomMotor.get_temperature());
+    }
     // // pros::lcd::print(x, "Odom: X: %1.2f Y: %1.2f H: %1.2f", drivebase->getPose().x, drivebase->getPose().y, drivebase->getPose().heading);
 
     // // pros::lcd::print(x, "Current");
@@ -153,29 +158,29 @@ void opcontrol()
 
     while (true)
     {
-        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN))
-        {
-            isTestMode = !isTestMode;
-            if (isTestMode)
-            {
-                // pros::lcd::print(x, "Switched to TEST MODE");
-            }
-            else
-            {
-                // pros::lcd::print(x, "Switched to COMP MODE");
-            }
-        }
+        // if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN))
+        // {
+        //     isTestMode = !isTestMode;
+        //     if (isTestMode)
+        //     {
+        //         // pros::lcd::print(x, "Switched to TEST MODE");
+        //     }
+        //     else
+        //     {
+        //         // pros::lcd::print(x, "Switched to COMP MODE");
+        //     }
+        // }
 
-        if (isTestMode)
-        {
-            runTestModeIteration(controller);
-        }
-        else
-        {
-            controls();
-        }
+        // if (isTestMode)
+        // {
+        //     runTestModeIteration(controller);
+        // }
+        // else
+        // {
+        //     controls();
+        // }
 
-        // controls();
+        controls();
 
         // drivebase_controls();
 

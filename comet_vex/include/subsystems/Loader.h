@@ -1,7 +1,8 @@
 #pragma once
 
+#include "pros/adi.h"
 #include "pros/adi.hpp"
-#include "pros/motors.hpp" // Changed to individual motors
+// #include "pros/motors.hpp" // Changed to individual motors
 #include "constants.h"
 
 using namespace constants::loader;
@@ -10,7 +11,7 @@ class Loader : public pros::adi::Pneumatics
 {
 public:
     // Initialize the single motor directly using the first element of your port array
-    Loader() : pros::adi::Pneumatics(LOADER_PORT, true, false)
+    Loader() : pros::adi::Pneumatics(LOADER_PORT, false, true)
     {
     }
 
@@ -19,7 +20,7 @@ public:
      */
     void activate()
     {
-        set_value(LOW);
+        set_value(HIGH);
     }
 
     /**
@@ -27,7 +28,7 @@ public:
      */
     void deactivate()
     {
-        set_value(HIGH);
+        set_value(LOW);
     }
 
     /**

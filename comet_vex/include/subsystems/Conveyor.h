@@ -1,6 +1,7 @@
 #pragma once
 
 #include "constants.h"
+#include "pros/adi.h"
 #include "pros/motors.hpp" // Use individual motors instead of motor_group
 #include "pros/adi.hpp"
 
@@ -71,13 +72,13 @@ public:
 
     void adjustUp()
     {
-        heightAdjust.set_value(HIGH);
+        heightAdjust.set_value(LOW);
         extended = true;
     }
 
     void adjustDown()
     {
-        heightAdjust.set_value(LOW);
+        heightAdjust.set_value(HIGH);
         extended = false;
     }
 

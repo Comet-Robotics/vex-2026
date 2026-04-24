@@ -259,8 +259,8 @@ public:
     {
         double distVal = getDistance();
         double heading = getHeading();
-        double dist = distVal * -cos(AngleUtils::toRadians(heading));
-        double sensor_offset = (distOffsetX * sin(AngleUtils::toRadians(heading)) + distOffsetY * -cos(AngleUtils::toRadians(heading)));
+        double dist = distVal * cos(AngleUtils::toRadians(heading));
+        double sensor_offset = (distOffsetY * sin(AngleUtils::toRadians(heading)) + distOffsetX * cos(AngleUtils::toRadians(heading)));
         return wallY - sensor_offset - dist;
     }
 

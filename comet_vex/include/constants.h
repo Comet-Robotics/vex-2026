@@ -5,6 +5,7 @@
 #include "pros/imu.hpp"
 #include "pros/abstract_motor.hpp"
 #include "pros/distance.hpp"
+#include "pros/misc.h"
 
 #define EIGEN_DONT_VECTORIZE
 #include "Eigen/Dense"
@@ -19,23 +20,23 @@ namespace constants
         // for each of these, first num is the inside motor and second num is the outside motor
         // 1
         constexpr std::array<int8_t, 2> FRONT_RIGHT_PORTS = {
-            -7,
-            9,
+            -18,
+            4
         };
         // 2
         constexpr std::array<int8_t, 2> FRONT_LEFT_PORTS = {
-            -13,
-            15,
+            -12,
+            11,
         };
         // 3
         constexpr std::array<int8_t, 2> BACK_LEFT_PORTS = {
-            -16, // -7
-            17,  // 8
+            -14, // -7
+            20,  // 8
         };
         // 4
         constexpr std::array<int8_t, 2> BACK_RIGHT_PORTS = {
-            -8,
-            10,
+            -6,
+            7,
         }; // 3 -4 is backwards
 
         // constexpr std::array<int8_t, 2> FRONT_RIGHT_PORTS = {
@@ -55,13 +56,32 @@ namespace constants
         //     0,
         // };
 
-        constexpr int8_t FRONT_RIGHT_ROTATION_SENSOR_PORT = 4;
-        constexpr int8_t FRONT_LEFT_ROTATION_SENSOR_PORT = 19;
-        constexpr int8_t BACK_LEFT_ROTATION_SENSOR_PORT = 20;
+        constexpr int8_t FRONT_RIGHT_ROTATION_SENSOR_PORT = 10;
+        constexpr int8_t FRONT_LEFT_ROTATION_SENSOR_PORT = 15;
+        constexpr int8_t BACK_LEFT_ROTATION_SENSOR_PORT = 16;
         constexpr int8_t BACK_RIGHT_ROTATION_SENSOR_PORT = 2;
 
-        constexpr int8_t IMU_PORT = 14;
-        constexpr int8_t DISTANCE_PORT = 11;
+        constexpr int8_t IMU_PORT = 1;
+        constexpr int8_t DISTANCE_PORT = 13;
+    }
+
+    namespace controls
+    {
+        // subsystem controls
+        constexpr auto INTAKE_LOADER = pros::E_CONTROLLER_DIGITAL_L1;
+        constexpr auto INTAKE_FLOOR = pros::E_CONTROLLER_DIGITAL_L2;
+        constexpr auto SCORE = pros::E_CONTROLLER_DIGITAL_R2;
+        constexpr auto OUTTAKE_LOW = pros::E_CONTROLLER_DIGITAL_A;
+        constexpr auto ADJUST_DOWN = pros::E_CONTROLLER_DIGITAL_R1;
+        constexpr auto PARK = pros::E_CONTROLLER_DIGITAL_LEFT;
+        constexpr auto UNPARK = pros::E_CONTROLLER_DIGITAL_RIGHT;
+        constexpr auto WINGS_DOWN = pros::E_CONTROLLER_DIGITAL_Y;
+        constexpr auto WINGS_UP = pros::E_CONTROLLER_DIGITAL_X;
+
+        // swerve controls
+        constexpr auto RESET_POSE = pros::E_CONTROLLER_DIGITAL_UP;
+        constexpr auto X_WHEELS = pros::E_CONTROLLER_DIGITAL_B;
+        constexpr auto HEADING_HOLD_TOGGLE = pros::E_CONTROLLER_DIGITAL_DOWN;
     }
 
     namespace drivetrain
@@ -83,9 +103,9 @@ namespace constants
         inline pros::Imu IMU(ports::IMU_PORT);
         inline pros::Distance DISTANCE(ports::DISTANCE_PORT);
 
-        inline constexpr double distOffsetX = TRACK_WIDTH / 2 - 2.755906;
-        inline constexpr double distOffsetY = TRACK_LENGTH / 2 - 2.273622;
-        inline constexpr double wallY = 140.41; // y coordinate of wall
+        inline constexpr double distOffsetX = TRACK_WIDTH / 2 - 1.77;
+        inline constexpr double distOffsetY = TRACK_LENGTH / 2 - 1;
+        inline constexpr double wallY = 0; // y coordinate of wall
 
         constexpr std::array<std::array<double, 2>, 4> wheelPositions = {
             std::array<double, 2>{TRACK_LENGTH / 2.0, -TRACK_WIDTH / 2.0}, // Front Right
@@ -110,25 +130,29 @@ namespace constants
 
         inline Matrix<double, 8, 3> CONVERSION_MATRIX = initializeConversionMatrix();
 
+        constexpr double kP = 0.02;
+        constexpr double kI = 0.0;
+        constexpr double kD = 0.001;
+
         constexpr std::array<double, 3> FRONT_LEFT_PID = {
-            0.02,
-            0.0,
-            0.001,
+            kP,
+            kI,
+            kD,
         };
         constexpr std::array<double, 3> FRONT_RIGHT_PID = {
-            0.02,
-            0.0,
-            0.001,
+            kP,
+            kI,
+            kD,
         };
         constexpr std::array<double, 3> BACK_LEFT_PID = {
-            0.02,
-            0.0,
-            0.001,
+            kP,
+            kI,
+            kD,
         };
         constexpr std::array<double, 3> BACK_RIGHT_PID = {
-            0.02,
-            0.0,
-            0.001,
+            kP,
+            kI,
+            kD,
         };
 
         constexpr std::array<double, 3> X_PID = {
@@ -174,33 +198,33 @@ namespace constants
         inline constexpr int SLOW_CONVEYOR_SPEED = 7500;
         inline constexpr int SLOW_REVERSE_SPEED = 7500;
         inline constexpr std::array<int8_t, 3> CONVEYOR_PORTS = {
-            3,   // intake
-            5,   // conveyor
-            -12, // outtake
+            -8,   // intake
+            -19,   // conveyor
+            9, // outtake
         };
-        inline constexpr char HEIGHT_ADJUST_PORT = 'B';
+        inline constexpr char HEIGHT_ADJUST_PORT = 'D';
     }
 
     namespace loader
     {
-        inline constexpr char LOADER_PORT = 'A';
+        inline constexpr char LOADER_PORT = 'C';
     }
 
     namespace blocker
     {
-        inline constexpr char BLOCKER_PORT = 'H';
+        inline constexpr char BLOCKER_PORT = 'B';
     }
 
     namespace wings
     {
-        inline constexpr char WINGS_PORT = 'C';
+        inline constexpr char WINGS_PORT = 'A';
     }
 
     namespace park
     {
         inline constexpr std::array<int8_t, 2> PARK_PORTS = {
-            6,   // left
-            -18, // right (reversed)
+            -3,   // left
+            17, // right (reversed)
         };
         inline constexpr int MAX_PARK_SPEED = 12000;
         inline constexpr int SETUP_POSITION = 50; // degrees to rotate for setup
