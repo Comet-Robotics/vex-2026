@@ -227,7 +227,7 @@ namespace constants
             17, // right (reversed)
         };
         inline constexpr int MAX_PARK_SPEED = 12000;
-        inline constexpr int SETUP_POSITION = 50; // degrees to rotate for setup
+        inline constexpr int SETUP_POSITION = 450; // degrees to rotate for setup
     }
 
     constexpr int MOTOR_TEMPERATURE_THRESHOLD = 55; // degrees Celsius

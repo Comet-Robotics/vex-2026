@@ -64,6 +64,10 @@ void events(const std::string &eventName)
     else if (eventName == "resetDistance")
     {
         drivebase->setY(drivebase->getDistanceOffset());
+    } 
+    else if (eventName == "setupPark")
+    {
+        park->setup();
     }
 }
 
@@ -158,31 +162,33 @@ void autonomousTest3()
     // }
 
     // Go to loader
+    events("setupPark");
     events("resetDistance");
     runPath(paths[0]);
     events("resetDistance");
+    runPath(paths[1]);
     wait(3);
 
     // Go to mid goal
-    runPath(paths[1]);
+    runPath(paths[2]);
     events("reverse");
     wait(0.65);
 
     // Go back to loader
-    runPath(paths[2]);
-    events("resetDistance");
     runPath(paths[3]);
+    events("resetDistance");
+    runPath(paths[4]);
     wait(3);
 
     // Go to long goal
-    runPath(paths[4]);
+    runPath(paths[5]);
     events("score");
     events("resetDistance");
     wait(2.5);
 
     // wing
-    runPath(paths[5]);
     runPath(paths[6]);
+    runPath(paths[7]);
 
     // lock wheels after finishing to prevent pushing
     while (true)

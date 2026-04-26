@@ -11,7 +11,7 @@ class Loader : public pros::adi::Pneumatics
 {
 public:
     // Initialize the single motor directly using the first element of your port array
-    Loader() : pros::adi::Pneumatics(LOADER_PORT, false, true)
+    Loader() : pros::adi::Pneumatics(LOADER_PORT, true, true)
     {
     }
 

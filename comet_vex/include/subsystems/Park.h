@@ -35,8 +35,8 @@ public:
      */
     inline void setup()
     {
-        m1.move_relative(-SETUP_POSITION, MAX_PARK_SPEED);
-        m2.move_relative(-SETUP_POSITION, MAX_PARK_SPEED);
+        m1.move_relative(SETUP_POSITION, MAX_PARK_SPEED);
+        m2.move_relative(SETUP_POSITION, MAX_PARK_SPEED);
     }
 
     /**
