@@ -8,37 +8,40 @@
 #include "simdjson/simdjson.h"
 #include "utils/MathUtils.h"
 #include "utils/AngleUtils.h"
-#include "paths.hpp"
 
 #include <fstream>
 
 class Trajectory
 {
 public:
-    Trajectory(std::string pathName)
+    Trajectory(std::string fileName)
     {
-        parseFile(pathName);
+        parseFile(fileName);
     }
 
     Trajectory() = default;
 
-    void parseFile(std::string pathName)
+    void parseFile(std::string fileName)
     {
-        auto path = AUTO_TRAJECTORIES.find(pathName);
-        if (path == AUTO_TRAJECTORIES.end())
-        {
-            throw std::runtime_error("Trajectory not found: " + pathName);
-        }
+        // auto path = AUTO_TRAJECTORIES.find(pathName);
+        // if (path == AUTO_TRAJECTORIES.end())
+        // {
+        //     throw std::runtime_error("Trajectory not found: " + pathName);
+        // }
+
+        // simdjson::ondemand::parser parser;
+        // simdjson::padded_string json_str(path->second);
+        // simdjson::ondemand::document doc = parser.iterate(json_str);
 
         simdjson::ondemand::parser parser;
-        simdjson::padded_string json_str(path->second);
+        simdjson::padded_string json_str = simdjson::padded_string::load(fileName);
         simdjson::ondemand::document doc = parser.iterate(json_str);
 
         auto samples = doc["trajectory"]["samples"];
 
         if (samples.error() != simdjson::SUCCESS)
         {
-            throw std::runtime_error("Failed to parse trajectory file: " + pathName);
+            throw std::runtime_error("Failed to parse trajectory file: " + fileName);
         }
 
         // trajectory points
@@ -71,7 +74,7 @@ public:
                 // verify that it's a named event marker
                 if (type != "named")
                 {
-                    throw std::runtime_error("Unsupported event marker type " + type + " in trajectory: " + pathName + ". Only named event markers are supported.");
+                    throw std::runtime_error("Unsupported event marker type " + type + " in trajectory: " + fileName + ". Only named event markers are supported.");
                 }
 
                 std::string_view name_view = event["event"]["data"]["name"];
@@ -84,7 +87,7 @@ public:
         }
         else
         {
-            throw std::runtime_error("Failed to parse event markers from trajectory: " + pathName);
+            throw std::runtime_error("Failed to parse event markers from trajectory: " + fileName);
         }
 
         // sort event markers by time in case they aren't already sorted

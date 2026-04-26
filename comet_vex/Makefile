@@ -44,7 +44,7 @@ TEMPLATE_FILES=$(INCDIR)/$(LIBNAME)/*.h $(INCDIR)/$(LIBNAME)/*.hpp
 ################################################################################
 ################################################################################
 ########## Nothing below this line should be edited by typical users ###########
-$(info [Pre-build] Generating trajectory headers...)
-$(shell python3 src/generate_traj_header.py)
-$(info [Pre-build] Done generating trajectory headers.)
+# $(info [Pre-build] Generating trajectory headers...)
+# $(shell python3 src/generate_traj_header.py)
+# $(info [Pre-build] Done generating trajectory headers.)
 -include ./common.mk

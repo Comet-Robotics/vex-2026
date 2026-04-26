@@ -124,7 +124,7 @@ void wait(double seconds)
 
 void autonomousTest3()
 {
-    Trajectory trajectory("AWP_Virgo");
+    Trajectory trajectory("/usd/paths/AWP_Virgo.traj");
     std::vector<Trajectory> paths = trajectory.getSplits();
 
     drivebase->setPose(trajectory.getStart().pose);
@@ -170,7 +170,7 @@ void autonomousTest3()
 
     // Go back to loader
     runPath(paths[2]);
-    events("resetDistance");
+    events("resetDistance"); 
     wait(4);
 
     // Go to long goal
