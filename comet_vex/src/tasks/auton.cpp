@@ -161,7 +161,7 @@ void autonomousTest3()
     events("resetDistance");
     runPath(paths[0]);
     events("resetDistance");
-    wait(5);
+    wait(4);
 
     // Go to mid goal
     runPath(paths[1]);
@@ -171,7 +171,7 @@ void autonomousTest3()
     // Go back to loader
     runPath(paths[2]);
     events("resetDistance");
-    wait(5);
+    wait(4);
 
     // Go to long goal
     runPath(paths[3]);

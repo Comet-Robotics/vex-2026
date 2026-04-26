@@ -37,7 +37,7 @@ void controls()
         blocker->unblock();
         drivebase->xWheels();
     }
-    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) // reverse
+    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) // reverse
     {
         loaderDeployed = false;
         conveyor->reverse();
@@ -71,7 +71,7 @@ void controls()
     {
         park->park();
     }
-    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
+    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
     {
         park->unpark();
     }
@@ -80,11 +80,11 @@ void controls()
         park->stop();
     }
 
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
     {
         wings->down();
     }
-    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
+    else
     {
         wings->up();
     }
@@ -106,7 +106,7 @@ void drivebase_controls()
     double strafe = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X) / 127.0 * constants::drivetrain::MAX_LINEAR_SPEED;
     double rotation = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X) / 127.0 * constants::drivetrain::MAX_ANGULAR_SPEED;
 
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) // reset pose
     {
         drivebase->resetPose();
     }
@@ -121,7 +121,7 @@ void drivebase_controls()
         drivebase->setModuleSpeeds(forward, strafe, rotation, constants::drivetrain::FIELD_CENTRIC_DEFAULT);
     }
 
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP))
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN))
     {
         drivebase->toggleHeadingHold();
     }
@@ -153,29 +153,29 @@ void opcontrol()
 
     while (true)
     {
-        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN))
-        {
-            isTestMode = !isTestMode;
-            if (isTestMode)
-            {
-                // pros::lcd::print(x, "Switched to TEST MODE");
-            }
-            else
-            {
-                // pros::lcd::print(x, "Switched to COMP MODE");
-            }
-        }
+        // if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN))
+        // {
+        //     isTestMode = !isTestMode;
+        //     if (isTestMode)
+        //     {
+        //         // pros::lcd::print(x, "Switched to TEST MODE");
+        //     }
+        //     else
+        //     {
+        //         // pros::lcd::print(x, "Switched to COMP MODE");
+        //     }
+        // }
 
-        if (isTestMode)
-        {
-            runTestModeIteration(controller);
-        }
-        else
-        {
-            controls();
-        }
+        // if (isTestMode)
+        // {
+        //     runTestModeIteration(controller);
+        // }
+        // else
+        // {
+        //     controls();
+        // }
 
-        // controls();
+        controls();
 
         // drivebase_controls();
 
